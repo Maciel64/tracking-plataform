@@ -3,6 +3,7 @@ import { CoordinatesService } from "@/domain/coordinates/coordinates.service";
 import { firestoreAdapter } from "@/libs/adapters/firebase.adapter";
 import { createCoordinateSchema } from "@/schemas/coordinate.schema";
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 const coordinatesRepository = new CoordinatesRepository(firestoreAdapter);
 const coordinatesService = new CoordinatesService(coordinatesRepository);
@@ -13,11 +14,20 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const data = await request.json();
+  try {
+    const data = await request.json();
 
-  createCoordinateSchema.parse(data);
+    createCoordinateSchema.parse(data);
 
-  const coordinate = await coordinatesService.create(data);
+    const coordinate = await coordinatesService.create(data);
 
-  return NextResponse.json(coordinate, { status: 201 });
+    return NextResponse.json(coordinate, { status: 201 });
+  } catch (e: unknown) {
+    if (e instanceof ZodError) {
+      return NextResponse.json(
+        { error: JSON.parse(e.message) },
+        { status: 500 }
+      );
+    }
+  }
 }

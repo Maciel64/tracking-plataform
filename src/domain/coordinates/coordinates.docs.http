@@ -4,7 +4,7 @@ POST {{base_url}}/coordinates
 Content-Type: application/json
 
 {
-  "latitude": "12.345678",
+  "latitude": 12.345678,
   "longitude": 23.456789,
   "microcontroller_uid": "123456"
 }

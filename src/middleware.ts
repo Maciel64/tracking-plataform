@@ -25,7 +25,7 @@ export class CustomError extends Error {
 }
 
 export function handleError(error: unknown) {
-  console.error("Error:", error);
+  console.error("Entrou no error handler:");
 
   let status = 500;
   let message = "Erro interno do servidor";
