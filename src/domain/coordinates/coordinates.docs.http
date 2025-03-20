@@ -1,0 +1,10 @@
+@base_url = http://localhost:3000/api/v1
+
+POST {{base_url}}/coordinates
+Content-Type: application/json
+
+{
+  "latitude": "12.345678",
+  "longitude": 23.456789,
+  "microcontroller_uid": "123456"
+}
