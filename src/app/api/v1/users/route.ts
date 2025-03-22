@@ -1,6 +1,6 @@
 import { UsersRepository } from "@/domain/users/users.repository";
 import { UsersService } from "@/domain/users/users.service";
-import { firestoreAdapter } from "@/libs/adapters/firebase.adapter";
+import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 import { NextResponse } from "next/server";
 
 const usersRepository = new UsersRepository(firestoreAdapter);

@@ -1,5 +1,5 @@
 import { Coordinates } from "@/@types/coordinates";
-import { db, TFirestoreAdapter } from "@/libs/adapters/firebase.adapter";
+import { db, TFirestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
 export class CoordinatesRepository implements ICoodinatesRepository {
   private readonly coordinatesCollection;

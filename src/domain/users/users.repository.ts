@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { User } from "@/@types/user";
-import { db, TFirestoreAdapter } from "@/libs/adapters/firebase.adapter";
+import { db, TFirestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
 export class UsersRepository implements IUsersRepository {
   private readonly usersCollection;

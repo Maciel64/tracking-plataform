@@ -1,6 +1,6 @@
 import { CoordinatesRepository } from "@/domain/coordinates/coordinates.repository";
 import { CoordinatesService } from "@/domain/coordinates/coordinates.service";
-import { firestoreAdapter } from "@/libs/adapters/firebase.adapter";
+import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 import { createCoordinateSchema } from "@/schemas/coordinate.schema";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
