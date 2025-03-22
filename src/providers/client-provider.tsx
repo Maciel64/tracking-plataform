@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const query = new QueryClient();
 
-export function ClientProvider({ children }: { children: React.ReactNode }) {
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  return <QueryClientProvider client={query}>{children}</QueryClientProvider>;
+}
+
+export function ClientProvider() {
   return (
-    <QueryClientProvider client={query}>
-      {children}
+    <>
       <Toaster />
-    </QueryClientProvider>
+    </>
   );
 }

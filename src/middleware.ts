@@ -35,31 +35,6 @@ export class CustomError extends Error {
   }
 }
 
-export function handleError(error: unknown) {
-  let status = 500;
-  let message = "Erro interno do servidor";
-
-  if (error instanceof CustomError) {
-    status = error.statusCode;
-    message = error.message;
-  }
-
-  return NextResponse.json(
-    {
-      error: {
-        message,
-        status,
-      },
-    },
-    {
-      status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-}
-
 export const config = {
   matcher: "/api/:path*",
 };
