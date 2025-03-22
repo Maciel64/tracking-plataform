@@ -27,22 +27,22 @@ import {
 } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
 import { loginSchema } from "@/schemas/user.schema";
 import { AxiosError } from "axios";
+import {} from "next";
+import { signIn, SignInResponse } from "next-auth/react";
 
 type LoginSchema = z.infer<typeof loginSchema>;
-type PromiseUserWrongData = { email: string; password: string };
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const loginMutation = useMutation<
-    LoginSchema,
+    SignInResponse | undefined,
     AxiosError,
-    PromiseUserWrongData
+    LoginSchema
   >({
-    mutationFn: (data: LoginSchema) => api.post("/auth/login", data),
+    mutationFn: (data: LoginSchema) => signIn("credentials", { ...data }),
     onSuccess: () => {
       toast("Login realizado com sucesso");
     },
@@ -229,7 +229,10 @@ export default function LoginPage() {
           <CardFooter className="flex justify-center border-t pt-4">
             <p className="text-sm text-muted-foreground">
               Não tem uma conta?{" "}
-              <a href="#" className="text-primary font-medium hover:underline">
+              <a
+                href="/auth/register"
+                className="text-primary font-medium hover:underline"
+              >
                 Cadastre-se
               </a>
             </p>
