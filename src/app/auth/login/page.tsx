@@ -29,7 +29,6 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { loginSchema } from "@/schemas/user.schema";
 import { AxiosError } from "axios";
-import {} from "next";
 import { signIn, SignInResponse } from "next-auth/react";
 
 type LoginSchema = z.infer<typeof loginSchema>;
