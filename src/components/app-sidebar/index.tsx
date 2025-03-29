@@ -1,16 +1,12 @@
 "use client";
 
 import {
-  Layers,
   LayoutDashboard,
   Users,
-  MessageSquare,
-  Calendar,
-  BarChart3,
-  PieChart,
   User as UserIcon,
   Settings,
   LogOut,
+  Microchip,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,125 +21,139 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import Link from "next/link";
+import { User } from "@/@types/user";
+
+const roleBasedRoutes = {
+  ADMIN: {
+    Admin: [
+      {
+        label: "Microcontroladores",
+        href: "/microcontrollers",
+        icon: Microchip,
+      },
+    ],
+    Menu: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        label: "Usuários",
+        href: "/users",
+        icon: Users,
+      },
+    ],
+    Configurações: [
+      {
+        label: "Perfil",
+        href: "/profile",
+        icon: UserIcon,
+      },
+      {
+        label: "Configurações",
+        href: "/settings",
+        icon: Settings,
+      },
+    ],
+  },
+  USER: {
+    Menu: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+      },
+    ],
+    Configurações: [
+      {
+        label: "Perfil",
+        href: "/profile",
+        icon: UserIcon,
+      },
+    ],
+  },
+  undefined: {
+    Menu: [],
+    Configurações: [],
+  },
+};
 
 export function AppSidebar() {
   const { data } = useSession();
+
+  const user = data?.user as User;
+
+  const routes = user?.role as keyof typeof roleBasedRoutes;
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-6 py-3">
         <div className="flex items-center gap-2">
-          <Layers className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">Maciel</span>
+          <Image src="/logo.png" alt="Raster Logo" width={16} height={16} />
+          <span className="text-xl font-bold">Raster</span>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive tooltip="Dashboard">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Usuários">
-                  <Users className="h-4 w-4" />
-                  <span>Usuários</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Mensagens">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>Mensagens</span>
-                  <Badge className="ml-auto">5</Badge>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Calendário">
-                  <Calendar className="h-4 w-4" />
-                  <span>Calendário</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Análises</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Relatórios">
-                  <BarChart3 className="h-4 w-4" />
-                  <span>Relatórios</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Estatísticas">
-                  <PieChart className="h-4 w-4" />
-                  <span>Estatísticas</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Configurações</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Perfil">
-                  <UserIcon className="h-4 w-4" />
-                  <span>Perfil</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Configurações">
-                  <Settings className="h-4 w-4" />
-                  <span>Configurações</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {Object.keys(roleBasedRoutes[routes]).map((item) => (
+          <SidebarGroup key={item}>
+            <SidebarGroupLabel>{item}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {roleBasedRoutes[routes][
+                  item as keyof (typeof roleBasedRoutes)[typeof routes]
+                ].map((route) => (
+                  <SidebarMenuItem key={route.label}>
+                    <SidebarMenuButton asChild>
+                      <Link href={route.href}>
+                        <route.icon className="h-4 w-4" />
+                        {route.label}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src="/placeholder.svg" />
-            <AvatarFallback>
-              {data?.user?.email?.substring(0, 2)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">{data?.user?.name}</span>
-            <span className="text-xs text-muted-foreground">
-              {data?.user?.email}
-            </span>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-auto"
-            onClick={() => signOut()}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-3 cursor-pointer">
+              <Avatar>
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>{user?.email?.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{user?.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {user?.email}
+                </span>
+              </div>
+            </div>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent className="w-64">
+            <DropdownMenuItem
+              className="flex items-center justify-between gap-2"
+              onClick={() => signOut()}
+            >
+              Sair <LogOut className="h-4 w-4" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
