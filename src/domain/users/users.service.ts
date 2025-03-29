@@ -1,19 +1,27 @@
 import { User } from "@/@types/user";
-import { IUsersRepository } from "./users.repository";
+import { UsersRepository } from "./users.repository";
+import {
+  createUserSchema,
+  CreateUserSchema,
+  loginSchema,
+  LoginSchema,
+} from "@/schemas/user.schema";
 
-export class UsersService implements IUsersService {
-  constructor(private readonly usersRepository: IUsersRepository) {}
+export class UsersService {
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async find(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  async findById(id: string): Promise<User> {
+  async findById(id: string): Promise<User | null> {
     return this.usersRepository.findById(id);
   }
 
-  async create(user: User): Promise<User> {
-    return this.usersRepository.create(user);
+  async create(data: CreateUserSchema): Promise<User> {
+    createUserSchema.parse(data);
+
+    return this.usersRepository.create(data);
   }
 
   async update(id: string, user: User): Promise<User> {
@@ -23,12 +31,10 @@ export class UsersService implements IUsersService {
   async delete(id: string): Promise<void> {
     return this.usersRepository.delete(id);
   }
-}
 
-export interface IUsersService {
-  find(): Promise<User[]>;
-  findById(id: string): Promise<User>;
-  create(user: User): Promise<User>;
-  update(id: string, user: User): Promise<User>;
-  delete(id: string): Promise<void>;
+  async login(data: LoginSchema) {
+    loginSchema.parse(data);
+
+    return this.usersRepository.login(data);
+  }
 }

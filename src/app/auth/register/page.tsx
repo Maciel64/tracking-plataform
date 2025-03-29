@@ -26,14 +26,14 @@ import {
 } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RegisterSchema, registerSchema } from "@/schemas/user.schema";
+import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
 import { api } from "@/lib/api";
 
 export default function SignupPage() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const registerMutation = useMutation({
-    mutationFn: (data: RegisterSchema) => api.post("/auth/register", data),
+    mutationFn: (data: CreateUserSchema) => api.post("/auth/register", data),
     onSuccess: () => {
       toast("Cadastro realizado com sucesso");
     },
@@ -42,8 +42,8 @@ export default function SignupPage() {
     },
   });
 
-  const form = useForm<RegisterSchema>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<CreateUserSchema>({
+    resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: "",
       email: "",

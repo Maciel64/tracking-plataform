@@ -1,9 +1,11 @@
 import NextAuth from "next-auth";
 import { pages } from "./domain/config/pages";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { loginSchema } from "./schemas/user.schema";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth as fireauth } from "@/lib/adapters/firebase.adapter";
+import { firestoreAdapter } from "./lib/adapters/firebase.adapter";
+import { UsersService } from "./domain/users/users.service";
+import { UsersRepository } from "./domain/users/users.repository";
+
+const usersService = new UsersService(new UsersRepository(firestoreAdapter));
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages,
@@ -19,22 +21,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        loginSchema.parse(credentials);
+        const email = credentials.email as string;
+        const password = credentials.password as string;
 
-        const email = credentials?.email as string;
-        const password = credentials?.password as string;
+        const user = await usersService.login({ email, password });
 
-        const res = await signInWithEmailAndPassword(
-          fireauth,
-          email!,
-          password!
-        );
-
-        return {
-          id: res.user.uid,
-          name: "Ainda não tem kkkkkk",
-          email: res.user.email,
-        };
+        return user;
       },
     }),
   ],

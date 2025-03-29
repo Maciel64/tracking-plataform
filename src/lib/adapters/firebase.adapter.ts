@@ -6,8 +6,10 @@ import {
   getFirestore,
   collection,
   doc,
+  getDoc,
   getDocs,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
@@ -32,7 +34,9 @@ export const storage = getStorage(app);
 export const firestoreAdapter = {
   collection,
   doc,
+  getDoc,
   getDocs,
+  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,

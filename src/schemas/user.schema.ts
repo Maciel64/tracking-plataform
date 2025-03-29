@@ -3,10 +3,10 @@ import { z } from "zod";
 export const userSchema = z.object({
   uid: z.string({ message: "uid must be a string" }),
   email: z.string({ message: "email must be a string" }),
-  displayName: z.string({ message: "name must be a string" }),
+  name: z.string({ message: "name must be a string" }),
 });
 
-export const registerSchema = z
+export const createUserSchema = z
   .object({
     name: z
       .string()
@@ -22,11 +22,10 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
-export type RegisterSchema = z.infer<typeof registerSchema>;
-
 export const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   password: z.string().min(1, { message: "A senha é obrigatória" }),
 });
 
 export type LoginSchema = z.infer<typeof loginSchema>;
+export type CreateUserSchema = z.infer<typeof createUserSchema>;
