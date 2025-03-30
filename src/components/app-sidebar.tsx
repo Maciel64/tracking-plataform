@@ -46,6 +46,11 @@ const roleBasedRoutes = {
         href: "/maps",
         icon: MapIcon,
       },
+      {
+        label: "Usuários",
+        href: "/users",
+        icon: Users,
+      },
     ],
     Menu: [
       {
@@ -53,13 +58,8 @@ const roleBasedRoutes = {
         href: "/dashboard",
         icon: LayoutDashboard,
       },
-      {
-        label: "Usuários",
-        href: "/users",
-        icon: Users,
-      },
     ],
-    Configurações: [
+    Pessoal: [
       {
         label: "Perfil",
         href: "/profile",
@@ -80,11 +80,16 @@ const roleBasedRoutes = {
         icon: LayoutDashboard,
       },
     ],
-    Configurações: [
+    Pessoal: [
       {
         label: "Perfil",
         href: "/profile",
         icon: UserIcon,
+      },
+      {
+        label: "Configurações",
+        href: "/settings",
+        icon: Settings,
       },
     ],
   },

@@ -1,10 +1,11 @@
 "use client";
 
 import { User } from "@/@types/user";
-import Map from "@/components/map/map";
+import Map from "@/components/map";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Car,
   Shield,
@@ -22,7 +23,7 @@ import { useState } from "react";
 
 export default function RasterLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data } = useSession();
+  const { data, status } = useSession();
 
   const user = data?.user as User | undefined;
 
@@ -30,9 +31,9 @@ export default function RasterLandingPage() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 flex h-16 items-center justify-between">
-          <Link href="#" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/images/logo-raster.png"
+              src="/logo.png"
               alt="Raster Logo"
               width={40}
               height={40}
@@ -66,29 +67,36 @@ export default function RasterLandingPage() {
               Contato
             </Link>
           </nav>
-          <div className="hidden md:flex md:gap-4">
-            <Avatar>
-              <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback>{user?.email?.substring(0, 2)}</AvatarFallback>
-            </Avatar>
-            <Button variant="outline" asChild>
-              <Link href={user ? "/dashboard" : "/auth/login"}>
-                {user ? "Acessar Plataforma" : "Faça Login"}
-              </Link>
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </Button>
+          {status === "loading" ? (
+            <div className="hidden md:flex md:gap-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="h-10 w-36 rounded-ld" />
+            </div>
+          ) : (
+            <div className="hidden md:flex md:gap-4">
+              <Avatar>
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <Button variant="outline" asChild>
+                <Link href={user ? "/dashboard" : "/auth/login"}>
+                  {user ? "Acessar Plataforma" : "Faça Login"}
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </Button>
+            </div>
+          )}
         </div>
         {mobileMenuOpen && (
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 border-t py-4 md:hidden">
@@ -136,7 +144,7 @@ export default function RasterLandingPage() {
         <section className="relative py-16 md:py-24">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/hero-background.png"
+              src="/hero-background.png"
               alt="Background"
               fill
               className="object-cover"

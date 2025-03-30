@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClientProvider, QueryProvider } from "@/providers/client-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Raster | Dashboard",
+  title: "Raster: A melhor solução para rastreio de veículos",
   description: "Locazação e rastreio de veículos gerenciados por você",
 };
 
@@ -24,13 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <QueryProvider>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {children}
-          <ClientProvider />
+          <ThemeProvider>
+            {children}
+            <ClientProvider />
+          </ThemeProvider>
         </body>
       </QueryProvider>
     </html>

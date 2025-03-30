@@ -1,14 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { User } from "./@types/user";
+
+const routesByRole = {
+  ADMIN: [
+    "/profile",
+    "/dashboard",
+    "/users",
+    "/settings",
+    "/microcontrollers",
+    "/maps",
+  ],
+  USER: ["/profile", "/settings"],
+};
 
 const publicRoutes = ["/auth/login", "/auth/register", "/"];
 
 export async function middleware(request: NextRequest) {
   const session = await auth();
+  const user = session?.user as User | null;
   const path = request.nextUrl.pathname;
 
-  if (!session?.user && !publicRoutes.includes(path)) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+  if (publicRoutes.includes(path)) {
+    return NextResponse.next();
+  }
+
+  const userCanAccess = user ? routesByRole[user.role].includes(path) : false;
+
+  if (!userCanAccess) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    return NextResponse.error();
   }
 
   return NextResponse.next();

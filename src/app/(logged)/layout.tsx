@@ -4,6 +4,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { User } from "@/components/server/user";
 import { AppHeader } from "@/components/app-header";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Raster | Dashboard",
+  description: "Locazação e rastreio de veículos gerenciados por você",
+};
 
 export default async function DashboardLayout({
   children,
