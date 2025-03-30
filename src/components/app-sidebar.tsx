@@ -7,6 +7,7 @@ import {
   Settings,
   LogOut,
   Microchip,
+  MapIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,14 +22,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "./ui/dropdown-menu";
 import Link from "next/link";
 import { User } from "@/@types/user";
 
@@ -39,6 +40,11 @@ const roleBasedRoutes = {
         label: "Microcontroladores",
         href: "/microcontrollers",
         icon: Microchip,
+      },
+      {
+        label: "Mapas",
+        href: "/maps",
+        icon: MapIcon,
       },
     ],
     Menu: [
@@ -88,18 +94,14 @@ const roleBasedRoutes = {
   },
 };
 
-export function AppSidebar() {
-  const { data } = useSession();
-
-  const user = data?.user as User;
-
+export function AppSidebar({ user }: { user: User }) {
   const routes = user?.role as keyof typeof roleBasedRoutes;
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-6 py-3">
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="Raster Logo" width={16} height={16} />
+          <Image src="/logo.png" alt="Raster Logo" width={16} height={26} />
           <span className="text-xl font-bold">Raster</span>
         </div>
       </SidebarHeader>

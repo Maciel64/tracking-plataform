@@ -1,6 +1,7 @@
 "use client";
 
 import { User } from "@/@types/user";
+import Map from "@/components/map/map";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -132,7 +133,6 @@ export default function RasterLandingPage() {
         )}
       </header>
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="relative py-16 md:py-24">
           <div className="absolute inset-0 z-0">
             <Image
@@ -193,15 +193,9 @@ export default function RasterLandingPage() {
               </div>
               <div className="flex items-center justify-center">
                 <div className="relative h-[350px] w-full max-w-[500px] overflow-hidden rounded-lg shadow-xl">
-                  <Image
-                    src="/placeholder.svg?height=350&width=500&text=Mapa+de+Rastreamento"
-                    width={500}
-                    height={350}
-                    alt="Mapa de rastreamento"
-                    className="h-full w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4 rounded-lg bg-white/90 p-4 backdrop-blur-sm">
+                  <Map className="z-0" showZoomControls={false} />
+                  <div className="z-10 absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent"></div>
+                  <div className="z-10 absolute bottom-4 left-4 right-4 rounded-lg bg-white/90 p-4 backdrop-blur-sm">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
                         <Car className="h-5 w-5 text-blue-600" />
