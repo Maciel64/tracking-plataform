@@ -21,6 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import logo from '@/assets/images/logo.png'
+import back from '@/assets/images/back.png'
+
+
+import { ThemeSwitcher } from "@/components/theme-switcher" // Ajuste o caminho
+
 export default function RasterLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data, status } = useSession();
@@ -29,11 +35,12 @@ export default function RasterLandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-[oklch(0.145_0_0)] ">
         <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 flex h-16 items-center justify-between">
+        
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src={logo}
               alt="Raster Logo"
               width={40}
               height={40}
@@ -78,7 +85,7 @@ export default function RasterLandingPage() {
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
               </Avatar>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="bg-blue-600">
                 <Link href={user ? "/dashboard" : "/auth/login"}>
                   {user ? "Acessar Plataforma" : "Faça Login"}
                 </Link>
@@ -95,11 +102,13 @@ export default function RasterLandingPage() {
                   <Menu className="h-6 w-6" />
                 )}
               </Button>
+              <ThemeSwitcher />
             </div>
           )}
         </div>
         {mobileMenuOpen && (
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 border-t py-4 md:hidden">
+            
             <nav className="flex flex-col gap-4">
               <Link
                 href="#features"
@@ -135,21 +144,23 @@ export default function RasterLandingPage() {
                 <Button className="w-full bg-blue-600 text-white hover:bg-blue-700">
                   Acessar Plataforma
                 </Button>
+              
               </div>
             </nav>
+            
           </div>
         )}
       </header>
       <main className="flex-1">
         <section className="relative py-16 md:py-24">
           <div className="absolute inset-0 z-0">
-            <Image
-              src="/hero-background.png"
-              alt="Background"
-              fill
-              className="object-cover"
-              priority
-            />
+          <Image
+            src={back}  // Caminho corrigido
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
             <div className="absolute inset-0 bg-black/50"></div>
           </div>
           <div className="container relative z-10 mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
@@ -212,7 +223,7 @@ export default function RasterLandingPage() {
                         <p className="text-xs text-gray-500">
                           Veículo em movimento
                         </p>
-                        <p className="font-medium">Caminhão 2 - Rota SP-RJ</p>
+                        <p className="font-medium text-blue-600">Caminhão 2 - Rota SP-RJ</p>
                       </div>
                       <div className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-blue-600">
                         <ChevronRight className="h-5 w-5 text-white" />
@@ -244,7 +255,7 @@ export default function RasterLandingPage() {
                 <CardContent className="flex flex-col items-center gap-2 p-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <Image
-                      src="/logo.png"
+                      src={logo}
                       alt="Raster Logo"
                       width={24}
                       height={24}
@@ -611,7 +622,7 @@ export default function RasterLandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Image
-                  src="/images/logo-raster.png"
+                  src={logo}
                   alt="Raster Logo"
                   width={32}
                   height={32}

@@ -6,11 +6,15 @@ import { Search } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { ThemeSwitcher } from "@/components/theme-switcher" // Ajuste o caminho
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
+    <header className={`
+     sticky top-0 z-50 w-full 
+     `}>
       <SidebarTrigger />
+      <ThemeSwitcher />
 
       <div className="flex flex-1 items-center gap-4 md:ml-auto md:gap-6">
         <form className="relative flex-1 md:flex-initial">
@@ -30,3 +34,8 @@ export function AppHeader() {
     </header>
   );
 }
+
+
+
+
+
