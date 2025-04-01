@@ -21,6 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import logo from '@/assets/images/logo.png'
+import back from '@/assets/images/back.png'
+
+
+import { ThemeSwitcher } from "@/components/theme-switcher" // Ajuste o caminho
+
 export default function RasterLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data, status } = useSession();
@@ -29,17 +35,18 @@ export default function RasterLandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-[oklch(0.145_0_0)] ">
         <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 flex h-16 items-center justify-between">
+        
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src={logo}
               alt="Raster Logo"
               width={40}
               height={40}
               className="h-10 w-auto"
             />
-            <span className="text-xl font-bold text-blue-600">Raster</span>
+            <span className="text-xl font-bold text-blue-600">RASTER</span>
           </Link>
           <nav className="hidden gap-6 md:flex">
             <Link
@@ -67,18 +74,32 @@ export default function RasterLandingPage() {
               Contato
             </Link>
           </nav>
+          <div>
+            {/* Botão do menu mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <span className="sr-only">Abrir menu</span>
+            </Button>
+          </div>
           {status === "loading" ? (
             <div className="hidden md:flex md:gap-4">
               <Skeleton className="h-10 w-10 rounded-full" />
               <Skeleton className="h-10 w-36 rounded-ld" />
             </div>
+            
           ) : (
             <div className="hidden md:flex md:gap-4">
+              
               <Avatar>
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
               </Avatar>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="bg-blue-600 text-white">
                 <Link href={user ? "/dashboard" : "/auth/login"}>
                   {user ? "Acessar Plataforma" : "Faça Login"}
                 </Link>
@@ -95,61 +116,63 @@ export default function RasterLandingPage() {
                   <Menu className="h-6 w-6" />
                 )}
               </Button>
+              <ThemeSwitcher />
             </div>
           )}
         </div>
         {mobileMenuOpen && (
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 border-t py-4 md:hidden">
             <nav className="flex flex-col gap-4">
-              <Link
-                href="#features"
-                className="text-sm font-medium hover:text-blue-600"
-              >
+              <Link href="#features" className="text-sm font-medium hover:text-blue-600">
                 Recursos
               </Link>
-              <Link
-                href="#how-it-works"
-                className="text-sm font-medium hover:text-blue-600"
-              >
+              <Link href="#how-it-works" className="text-sm font-medium hover:text-blue-600">
                 Como Funciona
               </Link>
-              <Link
-                href="#clients"
-                className="text-sm font-medium hover:text-blue-600"
-              >
+              <Link href="#clients" className="text-sm font-medium hover:text-blue-600">
                 Clientes
               </Link>
-              <Link
-                href="#contact"
-                className="text-sm font-medium hover:text-blue-600"
-              >
+              <Link href="#contact" className="text-sm font-medium hover:text-blue-600">
                 Contato
               </Link>
-              <div className="flex flex-col gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-                >
-                  Entrar
-                </Button>
-                <Button className="w-full bg-blue-600 text-white hover:bg-blue-700">
-                  Acessar Plataforma
-                </Button>
-              </div>
             </nav>
+
+            {/* Botões de login e acesso */}
+            <div className="flex flex-col gap-2 pt-4">
+            <Avatar>
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <Button variant="outline" asChild className="bg-blue-600 text-white">
+                <Link href={user ? "/dashboard" : "/auth/login"}>
+                  {user ? "Acessar Plataforma" : "Faça Login"}
+                </Link>
+              </Button>
+            </div>
+
+            {/* Botão de Fechar Menu (X) */}
+            <div className="flex justify-center pt-4">
+              <button
+                className="p-2 rounded-md border border-gray-300"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         )}
       </header>
+      
       <main className="flex-1">
         <section className="relative py-16 md:py-24">
           <div className="absolute inset-0 z-0">
-            <Image
-              src="/hero-background.png"
-              alt="Background"
-              fill
-              className="object-cover"
-              priority
-            />
+          <Image
+            src={back}  // Caminho corrigido
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
             <div className="absolute inset-0 bg-black/50"></div>
           </div>
           <div className="container relative z-10 mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
@@ -212,7 +235,7 @@ export default function RasterLandingPage() {
                         <p className="text-xs text-gray-500">
                           Veículo em movimento
                         </p>
-                        <p className="font-medium">Caminhão 2 - Rota SP-RJ</p>
+                        <p className="font-medium text-blue-600">Caminhão 2 - Rota SP-RJ</p>
                       </div>
                       <div className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-blue-600">
                         <ChevronRight className="h-5 w-5 text-white" />
@@ -244,7 +267,7 @@ export default function RasterLandingPage() {
                 <CardContent className="flex flex-col items-center gap-2 p-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <Image
-                      src="/logo.png"
+                      src={logo}
                       alt="Raster Logo"
                       width={24}
                       height={24}
@@ -611,7 +634,7 @@ export default function RasterLandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Image
-                  src="/images/logo-raster.png"
+                  src={logo}
                   alt="Raster Logo"
                   width={32}
                   height={32}
@@ -766,7 +789,7 @@ export default function RasterLandingPage() {
               <h3 className="font-medium text-white mb-4">Contato</h3>
               <ul className="space-y-2">
                 <li>contato@raster.com.br</li>
-                <li>(11) 3456-7890</li>
+                <li>(83) 981448111</li>
                 <li>Av. Paulista, 1000 - São Paulo, SP</li>
               </ul>
             </div>

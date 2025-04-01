@@ -1,8 +1,7 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Monitor } from "lucide-react"; // Adicionei o ícone de sistema
 import { useTheme } from "next-themes";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,10 +14,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
 
+  // Mapeamento seguro de temas
+  const themes = [
+    { value: "light", label: "Claro", icon: Sun },
+    { value: "dark", label: "Escuro", icon: Moon },
+    { value: "system", label: "Sistema", icon: Monitor },
+  ];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" aria-label="Alternar tema">
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Alternar tema</span>
@@ -26,38 +32,24 @@ export function ThemeSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
         <div className="p-4">
-          <Label>Tema</Label>
+          <Label className="text-sm font-medium">Tema</Label>
           <RadioGroup
             value={theme}
-            onValueChange={(value) => setTheme(value)}
-            className="flex flex-col space-y-1 mt-2"
+            onValueChange={setTheme} // Já é uma função (não precisa de wrapper)
+            className="mt-2 space-y-2"
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="light" id="light" />
-              <Label
-                htmlFor="light"
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <Sun className="h-4 w-4" />
-                Claro
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="dark" id="dark" />
-              <Label
-                htmlFor="dark"
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <Moon className="h-4 w-4" />
-                Escuro
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="system" id="system" />
-              <Label htmlFor="system" className="cursor-pointer">
-                Sistema
-              </Label>
-            </div>
+            {themes.map(({ value, label, icon: Icon }) => (
+              <div key={value} className="flex items-center space-x-2">
+                <RadioGroupItem value={value} id={value} />
+                <Label
+                  htmlFor={value}
+                  className="flex items-center gap-2 cursor-pointer text-sm"
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Label>
+              </div>
+            ))}
           </RadioGroup>
         </div>
       </DropdownMenuContent>
