@@ -33,6 +33,8 @@ import {
 import Link from "next/link";
 import { User } from "@/@types/user";
 
+import logo from "@/assets/images/logo.png";
+
 const roleBasedRoutes = {
   ADMIN: {
     Admin: [
@@ -106,7 +108,7 @@ export function AppSidebar({ user }: { user: User }) {
     <Sidebar>
       <SidebarHeader className="border-b px-6 py-3">
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="Raster Logo" width={16} height={26} />
+          <Image src={logo} alt="Raster Logo" width={16} height={26} />
           <span className="text-xl font-bold">Raster</span>
         </div>
       </SidebarHeader>

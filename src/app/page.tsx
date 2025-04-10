@@ -30,10 +30,21 @@ import { ThemeSwitcher } from "@/components/theme-switcher"; // Ajuste o caminho
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
+
 export default function RasterLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data, status } = useSession();
   const { theme } = useTheme();
+  const isAuthenticated = status === "authenticated"; // Defina a variável aqui
 
   const user = data?.user as User | undefined;
 
@@ -100,10 +111,27 @@ export default function RasterLandingPage() {
             </div>
           ) : (
             <div className="hidden md:flex md:gap-4">
-              <Avatar>
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
-              </Avatar>
+              {/*============Teste sair =========*/}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-3 cursor-pointer">
+                    <Avatar>
+                      <AvatarImage src="/placeholder.svg" />
+
+                      <AvatarFallback>
+                        {user?.email?.substring(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{user?.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuTrigger>
+              </DropdownMenu>
+
               <Button
                 variant="outline"
                 asChild
@@ -113,6 +141,7 @@ export default function RasterLandingPage() {
                   {user ? "Acessar Plataforma" : "Faça Login"}
                 </Link>
               </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -125,10 +154,25 @@ export default function RasterLandingPage() {
                   <Menu className="h-6 w-6" />
                 )}
               </Button>
+              {/* ========================================*/}
+
+              {/* Botão condicional */}
+              {isAuthenticated && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  aria-label="Sair"
+                >
+                  <LogOut className="h-4 w-4 cursor-pointer" />
+                </Button>
+              )}
               <ThemeSwitcher />
             </div>
           )}
         </div>
+
+        {/*================  MOBILE   ================= */}
         {mobileMenuOpen && (
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 border-t py-4 md:hidden">
             <nav className="flex flex-col gap-4">
@@ -161,10 +205,29 @@ export default function RasterLandingPage() {
             {/* Botões de login e acesso */}
             <div className="flex flex-col gap-2 pt-4">
               <ThemeSwitcher />
-              <Avatar>
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
-              </Avatar>
+              <div className="inline-flex h-10 w-12">
+                <span>
+                  <Avatar className="">
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback>
+                      {user?.name?.substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                </span>
+                <span>
+                  {/* Botão condicional */}
+                  {isAuthenticated && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      aria-label="Sair"
+                    >
+                      <LogOut className="m-3.5 h-4 w-4 cursor-pointer" />
+                    </Button>
+                  )}
+                </span>
+              </div>
               <Button
                 variant="outline"
                 asChild
@@ -225,7 +288,9 @@ export default function RasterLandingPage() {
                   </Button>
                 </div>
                 <div className="flex items-center gap-4 pt-4">
-                  <div className="flex -space-x-2">
+                  {/*ABA DE CLIENTES*/}
+
+                  {/* <div className="flex -space-x-2">
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
@@ -241,11 +306,12 @@ export default function RasterLandingPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="text-sm text-gray-200">
+
+                    <div className="text-sm text-gray-200">
                     Mais de{" "}
                     <span className="font-medium text-blue-300">2,000+</span>{" "}
                     clientes satisfeitos
-                  </div>
+                  </div>*/}
                 </div>
               </div>
               <div className="flex items-center justify-center">
@@ -447,7 +513,7 @@ export default function RasterLandingPage() {
         </section>
 
         {/* Clients Section */}
-        <section id="clients" className="py-16 md:py-24">
+        {/* <section id="clients" className="py-16 md:py-24">
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
             <div className="flex flex-col items-center justify-center gap-4 text-center">
               <div className="space-y-2">
@@ -496,7 +562,7 @@ export default function RasterLandingPage() {
                       />
                     </div>
                     <div>
-                      <p className="font-medium text-white">Carlos Silva</p>
+                      <p className="font-medium text-white">Carlos Andrade</p>
                       <p className="text-sm text-blue-100">
                         Diretor de Logística, Transportadora Express
                       </p>
@@ -530,7 +596,7 @@ export default function RasterLandingPage() {
               </div>
             </div>
           </div>
-        </section>
+        </section>*/}
 
         {/* CTA / Contato - Design melhorado */}
         <section
@@ -557,7 +623,7 @@ export default function RasterLandingPage() {
             </div>
           </div>
 
-          <div className="container relative z-10">
+          <div className="container relative ml-auto mr-auto">
             <div className="max-w-5xl mx-auto">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 {/* Coluna de texto */}
@@ -571,7 +637,7 @@ export default function RasterLandingPage() {
                   </p>
 
                   <div className="space-y-6 mt-8">
-                    <div className="flex items-start gap-3">
+                    {/* <div className="flex items-start gap-3">
                       <div className="bg-blue-800/50 p-3 rounded-full">
                         <MapPin className="h-5 w-5 text-blue-200" />
                       </div>
@@ -581,7 +647,7 @@ export default function RasterLandingPage() {
                           Av. Paulista, 1000 - São Paulo, SP
                         </p>
                       </div>
-                    </div>
+                    </div>*/}
 
                     <div className="flex items-start gap-3">
                       <div className="bg-blue-800/50 p-3 rounded-full">
@@ -589,7 +655,8 @@ export default function RasterLandingPage() {
                       </div>
                       <div>
                         <h3 className="font-medium text-white">Telefone</h3>
-                        <p className="text-blue-200">(11) 3456-7890</p>
+                        <p className="text-blue-200">(83) 98144-8111</p>
+                        <p className="text-blue-200">(84) 99648-3096</p>
                       </div>
                     </div>
 
@@ -613,8 +680,8 @@ export default function RasterLandingPage() {
                 <div className="flex items-center ">
                   <Card
                     className={cn(
-                      "w-full max-w-md border-blue-100 bg-background ",
-                      theme == "light" ? "bg-white" : "bg-black"
+                      "w-full max-w-md border-blue-100",
+                      theme === "light" ? "bg-white" : "bg-black"
                     )}
                   >
                     <CardContent className="p-6">
@@ -896,8 +963,8 @@ export default function RasterLandingPage() {
               <ul className="space-y-2">
                 <li>lucassa1324@gmail.com</li>
                 <li>macielsuassuna14@gmail.com</li>
-                <li>(83) 981448111</li>
-                <li>Av. Paulista, 1000 - São Paulo, SP</li>
+                <li>(83) 98144-8111</li>
+                <li>(84) 99648-3096</li>
               </ul>
             </div>
           </div>
