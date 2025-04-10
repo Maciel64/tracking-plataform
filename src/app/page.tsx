@@ -21,15 +21,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import logo from '@/assets/images/logo.png'
-import back from '@/assets/images/back.png'
+import { CheckCircle, MapPin, Smartphone, Star, Mail } from "lucide-react";
 
+import logo from "@/assets/images/logo.png";
+import back from "@/assets/images/back.png";
 
-import { ThemeSwitcher } from "@/components/theme-switcher" // Ajuste o caminho
+import { ThemeSwitcher } from "@/components/theme-switcher"; // Ajuste o caminho
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export default function RasterLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data, status } = useSession();
+  const { theme } = useTheme();
+  const isAuthenticated = status === "authenticated"; // Defina a variável aqui
 
   const user = data?.user as User | undefined;
 
@@ -37,7 +52,6 @@ export default function RasterLandingPage() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-[oklch(0.145_0_0)] ">
         <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 flex h-16 items-center justify-between">
-        
           <Link href="/" className="flex items-center gap-2">
             <Image
               src={logo}
@@ -82,7 +96,11 @@ export default function RasterLandingPage() {
               className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
               <span className="sr-only">Abrir menu</span>
             </Button>
           </div>
@@ -91,19 +109,39 @@ export default function RasterLandingPage() {
               <Skeleton className="h-10 w-10 rounded-full" />
               <Skeleton className="h-10 w-36 rounded-ld" />
             </div>
-            
           ) : (
             <div className="hidden md:flex md:gap-4">
-              
-              <Avatar>
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
-              </Avatar>
-              <Button variant="outline" asChild className="bg-blue-600 text-white">
+              {/*============Teste sair =========*/}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-3 cursor-pointer">
+                    <Avatar>
+                      <AvatarImage src="/placeholder.svg" />
+
+                      <AvatarFallback>
+                        {user?.email?.substring(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{user?.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuTrigger>
+              </DropdownMenu>
+
+              <Button
+                variant="outline"
+                asChild
+                className="bg-blue-600 text-white"
+              >
                 <Link href={user ? "/dashboard" : "/auth/login"}>
                   {user ? "Acessar Plataforma" : "Faça Login"}
                 </Link>
               </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -116,34 +154,85 @@ export default function RasterLandingPage() {
                   <Menu className="h-6 w-6" />
                 )}
               </Button>
+              {/* ========================================*/}
+
+              {/* Botão condicional */}
+              {isAuthenticated && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  aria-label="Sair"
+                >
+                  <LogOut className="h-4 w-4 cursor-pointer" />
+                </Button>
+              )}
               <ThemeSwitcher />
             </div>
           )}
         </div>
+
+        {/*================  MOBILE   ================= */}
         {mobileMenuOpen && (
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16 border-t py-4 md:hidden">
             <nav className="flex flex-col gap-4">
-              <Link href="#features" className="text-sm font-medium hover:text-blue-600">
+              <Link
+                href="#features"
+                className="text-sm font-medium hover:text-blue-600"
+              >
                 Recursos
               </Link>
-              <Link href="#how-it-works" className="text-sm font-medium hover:text-blue-600">
+              <Link
+                href="#how-it-works"
+                className="text-sm font-medium hover:text-blue-600"
+              >
                 Como Funciona
               </Link>
-              <Link href="#clients" className="text-sm font-medium hover:text-blue-600">
+              <Link
+                href="#clients"
+                className="text-sm font-medium hover:text-blue-600"
+              >
                 Clientes
               </Link>
-              <Link href="#contact" className="text-sm font-medium hover:text-blue-600">
+              <Link
+                href="#contact"
+                className="text-sm font-medium hover:text-blue-600"
+              >
                 Contato
               </Link>
             </nav>
 
             {/* Botões de login e acesso */}
             <div className="flex flex-col gap-2 pt-4">
-            <Avatar>
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
-              </Avatar>
-              <Button variant="outline" asChild className="bg-blue-600 text-white">
+              <ThemeSwitcher />
+              <div className="inline-flex h-10 w-12">
+                <span>
+                  <Avatar className="">
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback>
+                      {user?.name?.substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                </span>
+                <span>
+                  {/* Botão condicional */}
+                  {isAuthenticated && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      aria-label="Sair"
+                    >
+                      <LogOut className="m-3.5 h-4 w-4 cursor-pointer" />
+                    </Button>
+                  )}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                asChild
+                className="bg-blue-600 text-white"
+              >
                 <Link href={user ? "/dashboard" : "/auth/login"}>
                   {user ? "Acessar Plataforma" : "Faça Login"}
                 </Link>
@@ -162,17 +251,17 @@ export default function RasterLandingPage() {
           </div>
         )}
       </header>
-      
+
       <main className="flex-1">
         <section className="relative py-16 md:py-24">
           <div className="absolute inset-0 z-0">
-          <Image
-            src={back}  // Caminho corrigido
-            alt="Background"
-            fill
-            className="object-cover"
-            priority
-          />
+            <Image
+              src={back} // Caminho corrigido
+              alt="Background"
+              fill
+              className="object-cover"
+              priority
+            />
             <div className="absolute inset-0 bg-black/50"></div>
           </div>
           <div className="container relative z-10 mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
@@ -199,7 +288,9 @@ export default function RasterLandingPage() {
                   </Button>
                 </div>
                 <div className="flex items-center gap-4 pt-4">
-                  <div className="flex -space-x-2">
+                  {/*ABA DE CLIENTES*/}
+
+                  {/* <div className="flex -space-x-2">
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
@@ -215,11 +306,12 @@ export default function RasterLandingPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="text-sm text-gray-200">
+
+                    <div className="text-sm text-gray-200">
                     Mais de{" "}
                     <span className="font-medium text-blue-300">2,000+</span>{" "}
                     clientes satisfeitos
-                  </div>
+                  </div>*/}
                 </div>
               </div>
               <div className="flex items-center justify-center">
@@ -235,7 +327,9 @@ export default function RasterLandingPage() {
                         <p className="text-xs text-gray-500">
                           Veículo em movimento
                         </p>
-                        <p className="font-medium text-blue-600">Caminhão 2 - Rota SP-RJ</p>
+                        <p className="font-medium text-blue-600">
+                          Caminhão 2 - Rota SP-RJ
+                        </p>
                       </div>
                       <div className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-blue-600">
                         <ChevronRight className="h-5 w-5 text-white" />
@@ -252,8 +346,13 @@ export default function RasterLandingPage() {
         <section id="features" className="py-16 md:py-24">
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
             <div className="flex flex-col items-center justify-center gap-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter text-blue-900 sm:text-4xl md:text-5xl">
+              <div className="space-y-2 ">
+                <h2
+                  className={cn(
+                    "text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl ",
+                    theme == "light" ? "text-blue-800" : "text-white"
+                  )}
+                >
                   Recursos Avançados
                 </h2>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
@@ -414,11 +513,16 @@ export default function RasterLandingPage() {
         </section>
 
         {/* Clients Section */}
-        <section id="clients" className="py-16 md:py-24">
+        {/* <section id="clients" className="py-16 md:py-24">
           <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
             <div className="flex flex-col items-center justify-center gap-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter text-blue-900 sm:text-4xl md:text-5xl">
+                <h2
+                  className={cn(
+                    "text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-[--chart-2]",
+                    theme == "light" ? "text-blue-800" : ""
+                  )}
+                >
                   Nossos Clientes
                 </h2>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
@@ -458,7 +562,7 @@ export default function RasterLandingPage() {
                       />
                     </div>
                     <div>
-                      <p className="font-medium text-white">Carlos Silva</p>
+                      <p className="font-medium text-white">Carlos Andrade</p>
                       <p className="text-sm text-blue-100">
                         Diretor de Logística, Transportadora Express
                       </p>
@@ -492,142 +596,211 @@ export default function RasterLandingPage() {
               </div>
             </div>
           </div>
-        </section>
+        </section>*/}
 
-        {/* CTA Section */}
+        {/* CTA / Contato - Design melhorado */}
         <section
           id="contact"
-          className="bg-gradient-to-b from-white to-blue-50 py-16 md:py-24"
+          className="relative py-16 md:py-24 overflow-hidden"
         >
-          <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter text-blue-900 sm:text-4xl md:text-5xl">
-                    Pronto para começar a rastrear sua frota?
+          {/* Fundo com gradiente e elementos decorativos */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950">
+            {/* Elementos decorativos */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+              <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-700 opacity-10 blur-3xl"></div>
+              <div className="absolute top-1/2 -right-24 w-80 h-80 rounded-full bg-blue-600 opacity-10 blur-3xl"></div>
+              <div className="absolute -bottom-24 left-1/3 w-72 h-72 rounded-full bg-blue-500 opacity-10 blur-3xl"></div>
+
+              {/* Padrão de grade */}
+              <div
+                className="absolute inset-0 opacity-5"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)",
+                  backgroundSize: "30px 30px",
+                }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="container relative ml-auto mr-auto">
+            <div className="max-w-5xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                {/* Coluna de texto */}
+                <div className="text-white">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+                    Vamos conversar?
                   </h2>
-                  <p className="max-w-[600px] text-gray-500 md:text-xl">
-                    Entre em contato conosco hoje mesmo e descubra como a Raster
-                    pode ajudar sua empresa a economizar tempo e dinheiro.
+                  <p className="text-blue-100 mb-6">
+                    Entre em contato conosco e descubra como o Raster pode
+                    trazer mais segurança e tranquilidade para você e sua frota.
                   </p>
+
+                  <div className="space-y-6 mt-8">
+                    {/* <div className="flex items-start gap-3">
+                      <div className="bg-blue-800/50 p-3 rounded-full">
+                        <MapPin className="h-5 w-5 text-blue-200" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-white">Endereço</h3>
+                        <p className="text-blue-200">
+                          Av. Paulista, 1000 - São Paulo, SP
+                        </p>
+                      </div>
+                    </div>*/}
+
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-800/50 p-3 rounded-full">
+                        <Smartphone className="h-5 w-5 text-blue-200" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-white">Telefone</h3>
+                        <p className="text-blue-200">(83) 98144-8111</p>
+                        <p className="text-blue-200">(84) 99648-3096</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-800/50 p-3 rounded-full">
+                        <Mail className="h-5 w-5 text-blue-200" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-white">Email</h3>
+                        <p className="text-blue-200">lucassa1324@gmail.com</p>
+                        <p className="text-blue-200">
+                          macielsuassuna14@gmail.com
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                    Solicitar Orçamento
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+
+                {/*------FORMULARIO -------*/}
+
+                <div className="flex items-center ">
+                  <Card
+                    className={cn(
+                      "w-full max-w-md border-blue-100",
+                      theme === "light" ? "bg-white" : "bg-black"
+                    )}
                   >
-                    Falar com Consultor
-                  </Button>
+                    <CardContent className="p-6">
+                      <form className="space-y-4">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <label
+                              htmlFor="name"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              Nome
+                            </label>
+                            <input
+                              id="name"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder="Seu nome"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label
+                              htmlFor="company"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              Empresa
+                            </label>
+                            <input
+                              id="company"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder="Sua empresa"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="email"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Email
+                          </label>
+                          <input
+                            id="email"
+                            type="email"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="seu@email.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="phone"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Telefone
+                          </label>
+                          <input
+                            id="phone"
+                            type="tel"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="(00) 00000-0000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="vehicles"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Quantidade de Veículos
+                          </label>
+                          <select
+                            id="vehicles"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Selecione</option>
+                            <option value="1-5">1-5</option>
+                            <option value="6-20">6-20</option>
+                            <option value="21-50">21-50</option>
+                            <option value="51+">51+</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="message"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Mensagem
+                          </label>
+                          <textarea
+                            id="message"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Como podemos ajudar?"
+                          />
+                        </div>
+                        <Button
+                          type="submit"
+                          className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                          Enviar Mensagem
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
-              <div className="flex items-center justify-center">
-                <Card className="w-full max-w-md border-blue-100">
-                  <CardContent className="p-6">
-                    <form className="space-y-4">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <label
-                            htmlFor="name"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Nome
-                          </label>
-                          <input
-                            id="name"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Seu nome"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label
-                            htmlFor="company"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Empresa
-                          </label>
-                          <input
-                            id="company"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Sua empresa"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="email"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Email
-                        </label>
-                        <input
-                          id="email"
-                          type="email"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          placeholder="seu@email.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="phone"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Telefone
-                        </label>
-                        <input
-                          id="phone"
-                          type="tel"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          placeholder="(00) 00000-0000"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="vehicles"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Quantidade de Veículos
-                        </label>
-                        <select
-                          id="vehicles"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="">Selecione</option>
-                          <option value="1-5">1-5</option>
-                          <option value="6-20">6-20</option>
-                          <option value="21-50">21-50</option>
-                          <option value="51+">51+</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="message"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Mensagem
-                        </label>
-                        <textarea
-                          id="message"
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          placeholder="Como podemos ajudar?"
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                      >
-                        Enviar Mensagem
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+                <Button className="bg-white text-blue-900 hover:bg-blue-50 h-12 px-8 text-base">
+                  Fale Conosco
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-white text-white hover:bg-blue-800 h-12 px-8 text-base"
+                >
+                  Agendar Demonstração
+                </Button>
               </div>
             </div>
           </div>
         </section>
       </main>
+
       <footer className="bg-blue-950 text-blue-200 py-8 sm:py-12">
         <div className="container mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -788,9 +961,10 @@ export default function RasterLandingPage() {
             <div>
               <h3 className="font-medium text-white mb-4">Contato</h3>
               <ul className="space-y-2">
-                <li>contato@raster.com.br</li>
-                <li>(83) 981448111</li>
-                <li>Av. Paulista, 1000 - São Paulo, SP</li>
+                <li>lucassa1324@gmail.com</li>
+                <li>macielsuassuna14@gmail.com</li>
+                <li>(83) 98144-8111</li>
+                <li>(84) 99648-3096</li>
               </ul>
             </div>
           </div>
