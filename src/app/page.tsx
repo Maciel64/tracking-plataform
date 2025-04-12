@@ -21,7 +21,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { CheckCircle, MapPin, Smartphone, Star, Mail } from "lucide-react";
+import { Smartphone, Mail } from "lucide-react";
 
 import logo from "@/assets/images/logo.png";
 import back from "@/assets/images/back.png";
@@ -32,8 +32,6 @@ import { cn } from "@/lib/utils";
 
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 

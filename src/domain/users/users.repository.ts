@@ -58,24 +58,28 @@ export class UsersRepository {
   }
 
   async login(data: LoginSchema) {
-    const { email, password } = data;
+    try {
+      const { email, password } = data;
 
-    const res = await signInWithEmailAndPassword(auth, email, password);
+      const res = await signInWithEmailAndPassword(auth, email, password);
 
-    const ref = this.firebaseAdapter.doc(db, "users", res.user.uid);
-    const snapshot = await this.firebaseAdapter.getDoc(ref);
+      const ref = this.firebaseAdapter.doc(db, "users", res.user.uid);
+      const snapshot = await this.firebaseAdapter.getDoc(ref);
 
-    if (!snapshot.exists()) {
+      if (!snapshot.exists()) {
+        return null;
+      }
+
+      return {
+        email: res.user.email,
+        uid: res.user.uid,
+        name: snapshot.data()?.name,
+        createdAt: snapshot.data()?.createdAt,
+        updatedAt: snapshot.data()?.updatedAt,
+        role: snapshot.data()?.role,
+      } as User;
+    } catch {
       return null;
     }
-
-    return {
-      email: res.user.email,
-      uid: res.user.uid,
-      name: snapshot.data()?.name,
-      createdAt: snapshot.data()?.createdAt,
-      updatedAt: snapshot.data()?.updatedAt,
-      role: snapshot.data()?.role,
-    } as User;
   }
 }

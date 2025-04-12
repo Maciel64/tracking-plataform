@@ -4,7 +4,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,25 +26,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
-import { api } from "@/lib/api";
+import { createUserSchema } from "@/schemas/user.schema";
+import { registerAction } from "./actions";
+import { z } from "zod";
 
 export default function SignupPage() {
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const registerMutation = useMutation({
-    mutationFn: (data: CreateUserSchema) => api.post("/auth/register", data),
-    onSuccess: () => {
-      toast("Cadastro realizado com sucesso");
-    },
-    onError: (e) => {
-      toast(e.message);
-    },
-  });
-
-  const form = useForm<CreateUserSchema>({
+  const form = useForm<z.infer<typeof createUserSchema>>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: "",
@@ -51,6 +43,26 @@ export default function SignupPage() {
       confirmPassword: "",
     },
   });
+
+  async function onSubmit(data: z.infer<typeof createUserSchema>) {
+    try {
+      setIsLoading(true);
+      const result = await registerAction(data);
+
+      if (result.success) {
+        toast.success("Cadastro realizado com sucesso");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error("Email já cadastrado no sistema");
+      } else {
+        toast.error("Ocorreu um erro durante o cadastro");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -90,147 +102,113 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isSuccess ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-8 space-y-4"
-              >
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-4"
                 >
-                  <Check className="w-8 h-8 text-green-600" />
-                </motion.div>
-                <h3 className="text-xl font-medium">
-                  Cadastro realizado com sucesso!
-                </h3>
-                <p className="text-muted-foreground text-center">
-                  Seu cadastro foi concluído. Você já pode fazer login na
-                  plataforma.
-                </p>
-                <Button className="mt-4" onClick={() => setIsSuccess(false)}>
-                  Voltar
-                </Button>
-              </motion.div>
-            ) : (
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((data) =>
-                    registerMutation.mutate(data)
-                  )}
-                >
-                  <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="space-y-4"
-                  >
-                    <motion.div variants={itemVariants}>
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Seu nome completo"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-
-                    <motion.div variants={itemVariants}>
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="seu@email.com"
-                                type="email"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-
-                    <motion.div variants={itemVariants}>
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Senha</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="********"
-                                type="password"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-
-                    <motion.div variants={itemVariants}>
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirmar senha</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="********"
-                                type="password"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Button
-                        type="submit"
-                        className="w-full mt-6"
-                        disabled={registerMutation.isPending}
-                      >
-                        {registerMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processando...
-                          </>
-                        ) : (
-                          "Criar conta"
-                        )}
-                      </Button>
-                    </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Seu nome completo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </motion.div>
-                </form>
-              </Form>
-            )}
+
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="seu@email.com"
+                              type="email"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="********"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar senha</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="********"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  <motion.div
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      type="submit"
+                      className="w-full mt-6"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processando...
+                        </>
+                      ) : (
+                        "Criar conta"
+                      )}
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              </form>
+            </Form>
           </CardContent>
           <CardFooter className="flex justify-center border-t pt-4">
             <p className="text-sm text-muted-foreground">
