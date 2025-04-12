@@ -18,6 +18,8 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
+  DialogHeader,
+  DialogOverlay,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -37,12 +39,16 @@ import {
   PlusCircle,
   Cpu,
 } from "lucide-react";
+import { useTheme } from "next-themes"; // Para pegar o tema global
+import { DialogPortal } from "@radix-ui/react-dialog";
 
 const generateRandomName = () => {
   return Math.random().toString(36).substring(2, 10);
 };
 
 export default function MicrocontrollersPage() {
+  const { theme } = useTheme(); // Acessa o tema global
+
   // Estados para listagem e edição
   const [microcontrollers, setMicrocontrollers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -233,9 +239,9 @@ export default function MicrocontrollersPage() {
   });
 
   return (
-    <div className="p-4 text-white bg-black min-h-screen ">
+    <div className="p-4 min-h-screen bg-background text-foreground">
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
-        <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           Microcontroladores
         </span>
       </h1>
@@ -243,37 +249,49 @@ export default function MicrocontrollersPage() {
         Gerencie todos os microcontroladores
       </p>
 
+      {/*=============Adicionar microcontrolador================ */}
       <div className="mb-4">
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button className="cursor-pointer">
+            <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Microcontrolador
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <div className="space-y-4">
-              <DialogTitle className="text-lg pb-2">
+          <DialogContent
+            className={`sm:max-w-[425px] ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <DialogHeader>
+              <DialogTitle
+                className={`${theme === "dark" ? "text-white" : "text-black"}`}
+              >
                 Adicionar Microcontrolador
               </DialogTitle>
-
-              <div>
-                <Label className="pb-1">Nome</Label>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome" className="text-foreground">
+                  Nome
+                </Label>
                 <Input
+                  id="nome"
                   value={addData.nome}
                   onChange={(e) =>
                     setAddData({ ...addData, nome: e.target.value })
                   }
-                  placeholder="Digite o nome"
+                  className="bg-card"
                 />
                 {addErrors.nome && (
-                  <p className="text-red-500 text-xs">{addErrors.nome}</p>
+                  <p className="text-sm text-destructive">{addErrors.nome}</p>
                 )}
               </div>
 
-              <div>
-                <Label className="pb-1">MAC Address</Label>
+              <div className="space-y-2">
+                <Label htmlFor="mac">MAC Address</Label>
                 <Input
+                  id="mac"
                   value={addData.mac_address}
                   onChange={(e) =>
                     setAddData({ ...addData, mac_address: e.target.value })
@@ -281,14 +299,14 @@ export default function MicrocontrollersPage() {
                   placeholder="00:11:22:33:44:55"
                 />
                 {addErrors.mac_address && (
-                  <p className="text-red-500 text-xs">
+                  <p className="text-sm text-destructive">
                     {addErrors.mac_address}
                   </p>
                 )}
               </div>
 
-              <div>
-                <Label className="pb-1">Modelo</Label>
+              <div className="space-y-2">
+                <Label>Modelo</Label>
                 <Select
                   value={addData.modelo}
                   onValueChange={(value) =>
@@ -304,12 +322,12 @@ export default function MicrocontrollersPage() {
                   </SelectContent>
                 </Select>
                 {addErrors.modelo && (
-                  <p className="text-red-500 text-xs">{addErrors.modelo}</p>
+                  <p className="text-sm text-destructive">{addErrors.modelo}</p>
                 )}
               </div>
 
-              <div>
-                <Label className="pb-1">Chip</Label>
+              <div className="space-y-2">
+                <Label>Chip</Label>
                 <Select
                   value={addData.chip}
                   onValueChange={(value) =>
@@ -326,13 +344,14 @@ export default function MicrocontrollersPage() {
                   </SelectContent>
                 </Select>
                 {addErrors.chip && (
-                  <p className="text-red-500 text-xs">{addErrors.chip}</p>
+                  <p className="text-sm text-destructive">{addErrors.chip}</p>
                 )}
               </div>
 
-              <div>
-                <Label className="pb-1">Placa</Label>
+              <div className="space-y-2">
+                <Label htmlFor="placa">Placa</Label>
                 <Input
+                  id="placa"
                   value={addData.placa}
                   onChange={(e) =>
                     setAddData({
@@ -343,12 +362,12 @@ export default function MicrocontrollersPage() {
                   placeholder="ABC1A23"
                 />
                 {addErrors.placa && (
-                  <p className="text-red-500 text-xs">{addErrors.placa}</p>
+                  <p className="text-sm text-destructive">{addErrors.placa}</p>
                 )}
               </div>
 
-              <div>
-                <Label className="pb-1">Tipo de veículo</Label>
+              <div className="space-y-2">
+                <Label>Tipo de veículo</Label>
                 <Select
                   value={addData.tipo}
                   onValueChange={(value) =>
@@ -365,28 +384,24 @@ export default function MicrocontrollersPage() {
                   </SelectContent>
                 </Select>
                 {addErrors.tipo && (
-                  <p className="text-red-500 text-xs">{addErrors.tipo}</p>
+                  <p className="text-sm text-destructive">{addErrors.tipo}</p>
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  className="cursor-pointer"
-                  variant="ghost"
-                  onClick={() => setIsAddOpen(false)}
-                >
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsAddOpen(false)}>
                   Cancelar
                 </Button>
-                <Button className="cursor-pointer" onClick={handleAdd}>
-                  Cadastrar
-                </Button>
+                <Button onClick={handleAdd}>Cadastrar</Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="border p-4 rounded-lg mb-4">
+      {/*==========Filtro depesquisa=============== */}
+
+      <div className="border rounded-lg mb-4 p-4 bg-card">
         <div className="flex items-center gap-2 mb-2">
           <Filter className="w-5 h-5" />
           <span className="font-medium">Filtros e pesquisa</span>
@@ -401,7 +416,7 @@ export default function MicrocontrollersPage() {
         </div>
       </div>
 
-      <div className="border p-4 rounded-lg">
+      <div className="border rounded-lg p-4 bg-card">
         <div className="flex items-center gap-2 mb-2">
           <Cpu className="w-5 h-5" />
           <h2 className="text-xl font-semibold">Lista de microcontroladores</h2>
@@ -413,7 +428,7 @@ export default function MicrocontrollersPage() {
         <div className="overflow-auto">
           <table className="w-full text-sm border">
             <thead>
-              <tr className="bg-zinc-900 border-b">
+              <tr className="bg-secondary border-b">
                 <th className="p-2 text-left">ID</th>
                 <th className="p-2 text-left">Nome</th>
                 <th className="p-2 text-left">MAC Address</th>
@@ -427,7 +442,7 @@ export default function MicrocontrollersPage() {
             </thead>
             <tbody>
               {filteredData.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-zinc-800">
+                <tr key={item.id} className="border-b hover:bg-accent">
                   <td className="p-2">{item.index}</td>
                   <td className="p-2">{item.nome}</td>
                   <td className="p-2">{item.mac_address}</td>
@@ -437,175 +452,189 @@ export default function MicrocontrollersPage() {
                   <td className="p-2">{item.tipo}</td>
                   <td className="p-2">{item.ativo ? "SIM" : "NÃO"}</td>
                   <td className="p-2 flex gap-2">
+                    {/*===============EDITAR=============== {cn("sm:max-w-[425px]",theme === "light" ? "bg-white" : "bg-black")}*/}
+
                     <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                       <DialogTrigger asChild>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-500 border-green-500 cursor-pointer"
+                          className="text-primary border-primary"
                           onClick={() => setEditData(item)}
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
-                        <div className="space-y-2">
-                          <DialogTitle className="text-lg pb-2">
-                            Editar Microcontrolador
-                          </DialogTitle>
-                          <div>
-                            <Label className="pb-1">Nome</Label>
-                            <Input
-                              value={editData.nome}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  nome: e.target.value,
-                                })
-                              }
-                              placeholder="Digite o nome"
-                            />
-                            {errors.nome && (
-                              <p className="text-red-500 text-xs">
-                                {errors.nome}
-                              </p>
-                            )}
+
+                      <DialogPortal>
+                        <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+                        <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white/90 dark:bg-gray-900/90 p-6 shadow-lg backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+                          <DialogHeader>
+                            <DialogTitle>Editar Microcontrolador</DialogTitle>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-nome">Nome</Label>
+                              <Input
+                                id="edit-nome"
+                                className="bg-white dark:bg-zinc-800 dark:text-white"
+                                value={editData.nome}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    nome: e.target.value,
+                                  })
+                                }
+                              />
+                              {errors.nome && (
+                                <p className="text-sm text-destructive">
+                                  {errors.nome}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-mac">MAC Address</Label>
+                              <Input
+                                id="edit-mac"
+                                className="bg-white dark:bg-zinc-800 dark:text-white"
+                                value={editData.mac_address}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    mac_address: e.target.value,
+                                  })
+                                }
+                                placeholder="00:11:22:33:44:55"
+                              />
+                              {errors.mac_address && (
+                                <p className="text-sm text-destructive">
+                                  {errors.mac_address}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Modelo</Label>
+                              <Select
+                                value={editData.modelo}
+                                onValueChange={(value) =>
+                                  setEditData({ ...editData, modelo: value })
+                                }
+                              >
+                                <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
+                                  <SelectValue placeholder="Selecione o modelo" />
+                                </SelectTrigger>
+                                <SelectContent className="dark:bg-zinc-800 dark:text-white">
+                                  <SelectItem value="Raster1">
+                                    Raster 1
+                                  </SelectItem>
+                                  <SelectItem value="Raster2">
+                                    Raster 2
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {errors.modelo && (
+                                <p className="text-sm text-destructive">
+                                  {errors.modelo}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Chip</Label>
+                              <Select
+                                value={editData.chip}
+                                onValueChange={(value) =>
+                                  setEditData({ ...editData, chip: value })
+                                }
+                              >
+                                <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
+                                  <SelectValue placeholder="Selecione o chip" />
+                                </SelectTrigger>
+                                <SelectContent className="dark:bg-zinc-800 dark:text-white">
+                                  <SelectItem value="VIVO">VIVO</SelectItem>
+                                  <SelectItem value="CLARO">CLARO</SelectItem>
+                                  <SelectItem value="TIM">TIM</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {errors.chip && (
+                                <p className="text-sm text-destructive">
+                                  {errors.chip}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-placa">Placa</Label>
+                              <Input
+                                id="edit-placa"
+                                className="bg-white dark:bg-zinc-800 dark:text-white"
+                                value={editData.placa}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    placa: e.target.value.toUpperCase(),
+                                  })
+                                }
+                                placeholder="ABC1A23"
+                              />
+                              {errors.placa && (
+                                <p className="text-sm text-destructive">
+                                  {errors.placa}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Tipo de veículo</Label>
+                              <Select
+                                value={editData.tipo}
+                                onValueChange={(value) =>
+                                  setEditData({ ...editData, tipo: value })
+                                }
+                              >
+                                <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
+                                  <SelectValue placeholder="Tipo de veículo" />
+                                </SelectTrigger>
+                                <SelectContent className="dark:bg-zinc-800 dark:text-white">
+                                  <SelectItem value="carro">Carro</SelectItem>
+                                  <SelectItem value="moto">Moto</SelectItem>
+                                  <SelectItem value="caminhão">
+                                    Caminhão
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {errors.tipo && (
+                                <p className="text-sm text-destructive">
+                                  {errors.tipo}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-4">
+                              <Button
+                                variant="outline"
+                                onClick={() => setIsEditOpen(false)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button onClick={handleEditSubmit}>Salvar</Button>
+                            </div>
                           </div>
-                          <div>
-                            <Label className="pb-1">MAC Address</Label>
-                            <Input
-                              value={editData.mac_address}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  mac_address: e.target.value,
-                                })
-                              }
-                              placeholder="00:11:22:33:44:55"
-                            />
-                            {errors.mac_address && (
-                              <p className="text-red-500 text-xs">
-                                {errors.mac_address}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="pb-1">Modelo</Label>
-                            <Select
-                              value={editData.modelo}
-                              onValueChange={(value) =>
-                                setEditData({ ...editData, modelo: value })
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o modelo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Raster1">
-                                  Raster 1
-                                </SelectItem>
-                                <SelectItem value="Raster2">
-                                  Raster 2
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {errors.modelo && (
-                              <p className="text-red-500 text-xs">
-                                {errors.modelo}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="pb-1">Chip</Label>
-                            <Select
-                              value={editData.chip}
-                              onValueChange={(value) =>
-                                setEditData({ ...editData, chip: value })
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o chip" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="VIVO">VIVO</SelectItem>
-                                <SelectItem value="CLARO">CLARO</SelectItem>
-                                <SelectItem value="TIM">TIM</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {errors.chip && (
-                              <p className="text-red-500 text-xs">
-                                {errors.chip}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="pb-1">Placa</Label>
-                            <Input
-                              value={editData.placa}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  placa: e.target.value.toUpperCase(),
-                                })
-                              }
-                              placeholder="ABC1A23"
-                            />
-                            {errors.placa && (
-                              <p className="text-red-500 text-xs">
-                                {errors.placa}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="pb-1">Tipo de veículo</Label>
-                            <Select
-                              value={editData.tipo}
-                              onValueChange={(value) =>
-                                setEditData({ ...editData, tipo: value })
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Tipo de veículo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="carro">Carro</SelectItem>
-                                <SelectItem value="moto">Moto</SelectItem>
-                                <SelectItem value="caminhão">
-                                  Caminhão
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {errors.tipo && (
-                              <p className="text-red-500 text-xs">
-                                {errors.tipo}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex justify-end gap-2 pt-2">
-                            <Button
-                              variant="ghost"
-                              onClick={() => setIsEditOpen(false)}
-                              className="cursor-pointer"
-                            >
-                              Cancelar
-                            </Button>
-                            <Button
-                              className="cursor-pointer"
-                              onClick={handleEditSubmit}
-                            >
-                              Salvar
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
+                        </DialogContent>
+                      </DialogPortal>
                     </Dialog>
+
+                    {/*===============Ativar/Desativar=============== */}
+
                     <Button
                       size="sm"
                       variant="outline"
                       className={
                         item.ativo
-                          ? "text-blue-500 border-blue-500 cursor-pointer"
-                          : "text-red-500 border-red-500 cursor-pointer"
+                          ? "text-blue-500 border-blue-500"
+                          : "text-destructive border-destructive"
                       }
                       onClick={() => toggleActive(item.id, item.ativo)}
                     >
@@ -615,31 +644,31 @@ export default function MicrocontrollersPage() {
                         <XCircle className="w-4 h-4" />
                       )}
                     </Button>
+
+                    {/*======================Excluir================== */}
+
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-500 border-red-500 cursor-pointer"
+                          className="text-destructive border-destructive"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
-                        <div className="space-y-4">
-                          <DialogTitle className="text-lg">
-                            Confirmar exclusão
-                          </DialogTitle>
+                      <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white/90 dark:bg-gray-900/90 p-6 shadow-lg backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+                        <DialogHeader>
+                          <DialogTitle>Confirmar exclusão</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
                           <p>
                             Tem certeza que deseja excluir este
                             microcontrolador?
                           </p>
                           <div className="flex justify-end gap-2">
-                            <Button className="cursor-pointer" variant="ghost">
-                              Cancelar
-                            </Button>
+                            <Button variant="outline">Cancelar</Button>
                             <Button
-                              className="cursor-pointer"
                               variant="destructive"
                               onClick={() => handleDelete(item.id)}
                             >
