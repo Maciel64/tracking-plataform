@@ -11,7 +11,7 @@ const routesByRole = {
     "/microcontrollers",
     "/maps",
   ],
-  USER: ["/profile", "/settings"],
+  USER: ["/profile", "/settings", "/dashboard"],
 };
 
 const publicRoutes = ["/auth/login", "/auth/register", "/"];

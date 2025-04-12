@@ -6,6 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, LogIn } from "lucide-react";
+import { toast } from "sonner";
+import { loginSchema } from "@/schemas/user.schema";
+import { useRouter } from "next/navigation";
+import { loginAction } from "./actions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,32 +29,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { loginSchema } from "@/schemas/user.schema";
-import { AxiosError } from "axios";
-import { signIn, SignInResponse } from "next-auth/react";
-
-type LoginSchema = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const loginMutation = useMutation<
-    SignInResponse | undefined,
-    AxiosError,
-    LoginSchema
-  >({
-    mutationFn: (data: LoginSchema) => signIn("credentials", { ...data }),
-    onSuccess: () => {
-      toast("Login realizado com sucesso");
-    },
-    onError: (error) => {
-      toast(error.response?.data as string);
-    },
-  });
-
-  const form = useForm<LoginSchema>({
+  const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -80,6 +65,26 @@ export default function LoginPage() {
     },
   };
 
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
+    try {
+      setIsLoading(true);
+      const result = await loginAction(data);
+
+      if (result.success) {
+        toast.success("Login realizado com sucesso");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Ocorreu um erro durante o login");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <motion.div
@@ -96,9 +101,7 @@ export default function LoginPage() {
           <CardContent>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((data) =>
-                  loginMutation.mutate(data)
-                )}
+                onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
                 <motion.div
@@ -182,9 +185,9 @@ export default function LoginPage() {
                     <Button
                       type="submit"
                       className="w-full mt-6"
-                      disabled={loginMutation.isPending}
+                      disabled={isLoading}
                     >
-                      {loginMutation.isPending ? (
+                      {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Entrando...
