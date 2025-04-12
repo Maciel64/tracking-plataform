@@ -7,237 +7,191 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  query,
   updateDoc,
 } from "firebase/firestore";
-
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import AddMicrocontroller from "@/components/microcontroller/add-microcontroller";
-
-interface Microcontroller {
-  id: string;
-  nome: string;
-  mac_address: string;
-  modelo: string;
-  chip: string;
-  placa: string;
-  tipo: string;
-  ativo: boolean;
-}
+import {
+  Pencil,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Filter,
+  Plus,
+} from "lucide-react";
 
 export default function Page() {
-  const [microcontroladores, setMicrocontroladores] = useState<
-    Microcontroller[]
-  >([]);
-  const [busca, setBusca] = useState("");
-  const [editando, setEditando] = useState<Microcontroller | null>(null);
-  const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(
-    null
-  );
+  const [microcontrollers, setMicrocontrollers] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const getMicrocontroladores = async () => {
-    const querySnapshot = await getDocs(collection(db, "microcontrollers"));
-    const lista: Microcontroller[] = [];
-
-    querySnapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      lista.push({
-        id: docSnap.id,
-        nome: data.nome,
-        mac_address: data.mac_address,
-        modelo: data.modelo,
-        chip: data.chip,
-        placa: data.placa,
-        tipo: data.tipo,
-        ativo: data.ativo,
-      });
-    });
-
-    setMicrocontroladores(lista);
+  const fetchData = async () => {
+    const snapshot = await getDocs(collection(db, "microcontrollers"));
+    const data = snapshot.docs.map((doc, index) => ({
+      id: doc.id,
+      index: index + 1,
+      ...doc.data(),
+    }));
+    setMicrocontrollers(data);
+    setLoading(false);
   };
 
-  const handleDesativar = async (id: string, ativoAtual: boolean) => {
-    await updateDoc(doc(db, "microcontrollers", id), {
-      ativo: !ativoAtual,
-    });
-    getMicrocontroladores();
-  };
-
-  const handleExcluir = async (id: string) => {
+  const handleDelete = async (id: string) => {
     await deleteDoc(doc(db, "microcontrollers", id));
-    setConfirmarExclusao(null);
-    getMicrocontroladores();
+    fetchData();
   };
 
-  const handleEditar = async () => {
-    if (!editando) return;
-    await updateDoc(doc(db, "microcontrollers", editando.id), {
-      nome: editando.nome,
-      mac_address: editando.mac_address,
-      modelo: editando.modelo,
-      chip: editando.chip,
-      placa: editando.placa,
-      tipo: editando.tipo,
+  const toggleActive = async (id: string, current: boolean) => {
+    await updateDoc(doc(db, "microcontrollers", id), {
+      ativo: !current,
     });
-    setEditando(null);
-    getMicrocontroladores();
+    fetchData();
   };
-
-  const microFiltrados = microcontroladores.filter((micro) =>
-    micro.placa.toLowerCase().includes(busca.toLowerCase())
-  );
 
   useEffect(() => {
-    getMicrocontroladores();
+    fetchData();
   }, []);
 
+  const filteredData = microcontrollers.filter((item) => {
+    return (
+      item.nome?.toLowerCase().includes(search.toLowerCase()) ||
+      item.mac_address?.toLowerCase().includes(search.toLowerCase()) ||
+      item.modelo?.toLowerCase().includes(search.toLowerCase()) ||
+      item.placa?.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <Input
-          placeholder="Buscar pela placa..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="max-w-xs"
-        />
-        <AddMicrocontroller onAdd={getMicrocontroladores} />
+    <div className="p-4 text-white bg-black min-h-screen">
+      <h1 className="text-4xl font-bold mb-1">
+        Micro<span className="text-purple-500">controladores</span>
+      </h1>
+      <p className="text-sm mb-4 text-muted-foreground">
+        Gerencie todos os microcontroladores
+      </p>
+
+      <div className="mb-4">
+        <AddMicrocontroller onAdd={fetchData} />
       </div>
 
-      <table className="w-full table-auto border">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2">Nome</th>
-            <th className="p-2">Placa</th>
-            <th className="p-2">MAC</th>
-            <th className="p-2">Modelo</th>
-            <th className="p-2">Chip</th>
-            <th className="p-2">Tipo</th>
-            <th className="p-2">Ativo</th>
-            <th className="p-2">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {microFiltrados.map((micro) => (
-            <tr key={micro.id} className="border-t">
-              <td className="p-2">{micro.nome}</td>
-              <td className="p-2">{micro.placa}</td>
-              <td className="p-2">{micro.mac_address}</td>
-              <td className="p-2">{micro.modelo}</td>
-              <td className="p-2">{micro.chip}</td>
-              <td className="p-2">{micro.tipo}</td>
-              <td className="p-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleDesativar(micro.id, micro.ativo)}
-                  className={micro.ativo ? "text-blue-600" : "text-red-600"}
-                >
-                  {micro.ativo ? <Check /> : <X />}
-                </Button>
-              </td>
-              <td className="p-2 flex gap-2">
-                <Dialog
-                  open={editando?.id === micro.id}
-                  onOpenChange={(open) => !open && setEditando(null)}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      size="icon"
-                      className="text-green-600"
-                      onClick={() => setEditando(micro)}
-                    >
-                      <Pencil />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="Nome"
-                        value={editando?.nome || ""}
-                        onChange={(e) =>
-                          setEditando({ ...editando!, nome: e.target.value })
-                        }
-                      />
-                      <Input
-                        placeholder="MAC"
-                        value={editando?.mac_address || ""}
-                        onChange={(e) =>
-                          setEditando({
-                            ...editando!,
-                            mac_address: e.target.value,
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder="Modelo"
-                        value={editando?.modelo || ""}
-                        onChange={(e) =>
-                          setEditando({ ...editando!, modelo: e.target.value })
-                        }
-                      />
-                      <Input
-                        placeholder="Chip"
-                        value={editando?.chip || ""}
-                        onChange={(e) =>
-                          setEditando({ ...editando!, chip: e.target.value })
-                        }
-                      />
-                      <Input
-                        placeholder="Placa"
-                        value={editando?.placa || ""}
-                        onChange={(e) =>
-                          setEditando({ ...editando!, placa: e.target.value })
-                        }
-                      />
-                      <Input
-                        placeholder="Tipo"
-                        value={editando?.tipo || ""}
-                        onChange={(e) =>
-                          setEditando({ ...editando!, tipo: e.target.value })
-                        }
-                      />
-                      <div className="flex justify-end">
-                        <Button onClick={handleEditar}>Salvar</Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+      <div className="border p-4 rounded-lg mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Filter className="w-5 h-5" />
+          <span className="font-medium">Filtros e pesquisa</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Input
+            placeholder="Buscar por nome, email ou cargo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-sm"
+          />
+          <Button variant="outline">Todos os Status</Button>
+          <Button variant="outline">Todos os Departamentos</Button>
+          <Button variant="outline"></Button>
+        </div>
+      </div>
 
-                <Dialog
-                  open={confirmarExclusao === micro.id}
-                  onOpenChange={(open) => !open && setConfirmarExclusao(null)}
-                >
-                  <DialogTrigger asChild>
+      <div className="border p-4 rounded-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <Plus className="w-5 h-5" />
+          <h2 className="text-xl font-semibold">Lista de microcontroladores</h2>
+        </div>
+        <p className="text-muted-foreground mb-4">
+          {microcontrollers.length} microcontroladores
+        </p>
+
+        <div className="overflow-auto">
+          <table className="w-full text-sm border">
+            <thead>
+              <tr className="bg-zinc-900 border-b">
+                <th className="p-2 text-left">ID</th>
+                <th className="p-2 text-left">Nome</th>
+                <th className="p-2 text-left">MAC Adress</th>
+                <th className="p-2 text-left">Modelo</th>
+                <th className="p-2 text-left">Chip</th>
+                <th className="p-2 text-left">Ativo</th>
+                <th className="p-2 text-left">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((item, index) => (
+                <tr key={item.id} className="border-b hover:bg-zinc-800">
+                  <td className="p-2">{item.index}</td>
+                  <td className="p-2">{item.nome}</td>
+                  <td className="p-2">{item.mac_address}</td>
+                  <td className="p-2">{item.modelo}</td>
+                  <td className="p-2">{item.chip}</td>
+                  <td className="p-2">{item.ativo ? "SIM" : "NÃO"}</td>
+                  <td className="p-2 flex gap-2">
+                    {/* Botão editar (você pode conectar ao modal que já tem) */}
                     <Button
-                      size="icon"
-                      className="text-red-600"
-                      onClick={() => setConfirmarExclusao(micro.id)}
+                      size="sm"
+                      variant="outline"
+                      className="text-green-500 border-green-500"
                     >
-                      <Trash2 />
+                      <Pencil className="w-4 h-4" />
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="text-center">
-                    <p className="mb-4">Tem certeza que deseja excluir?</p>
-                    <div className="flex justify-center gap-4">
-                      <Button onClick={() => handleExcluir(micro.id)}>
-                        Confirmar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setConfirmarExclusao(null)}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    {/* Botão desativar */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={
+                        item.ativo
+                          ? "text-blue-500 border-blue-500"
+                          : "text-red-500 border-red-500"
+                      }
+                      onClick={() => toggleActive(item.id, item.ativo)}
+                    >
+                      {item.ativo ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                    </Button>
+                    {/* Botão excluir */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-500 border-red-500"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-bold">
+                            Confirmar exclusão
+                          </h3>
+                          <p>
+                            Tem certeza que deseja excluir este
+                            microcontrolador?
+                          </p>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost">Cancelar</Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              Excluir
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
