@@ -241,7 +241,7 @@ export default function MicrocontrollersPage() {
   return (
     <div className="p-4 min-h-screen bg-background text-foreground">
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
-        <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
           Microcontroladores
         </span>
       </h1>
@@ -253,7 +253,7 @@ export default function MicrocontrollersPage() {
       <div className="mb-4">
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="cursor-pointer">
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Microcontrolador
             </Button>
@@ -389,10 +389,16 @@ export default function MicrocontrollersPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+                <Button
+                  className="cursor-pointer"
+                  variant="outline"
+                  onClick={() => setIsAddOpen(false)}
+                >
                   Cancelar
                 </Button>
-                <Button onClick={handleAdd}>Cadastrar</Button>
+                <Button className="cursor-pointer" onClick={handleAdd}>
+                  Cadastrar
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -459,7 +465,7 @@ export default function MicrocontrollersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-primary border-primary"
+                          className="text-primary border-primary cursor-pointer"
                           onClick={() => setEditData(item)}
                         >
                           <Pencil className="w-4 h-4" />
@@ -616,10 +622,16 @@ export default function MicrocontrollersPage() {
                               <Button
                                 variant="outline"
                                 onClick={() => setIsEditOpen(false)}
+                                className="cursor-pointer"
                               >
                                 Cancelar
                               </Button>
-                              <Button onClick={handleEditSubmit}>Salvar</Button>
+                              <Button
+                                className="cursor-pointer"
+                                onClick={handleEditSubmit}
+                              >
+                                Salvar
+                              </Button>
                             </div>
                           </div>
                         </DialogContent>
@@ -633,8 +645,8 @@ export default function MicrocontrollersPage() {
                       variant="outline"
                       className={
                         item.ativo
-                          ? "text-blue-500 border-blue-500"
-                          : "text-destructive border-destructive"
+                          ? "text-blue-500 border-blue-500 cursor-pointer"
+                          : "text-destructive border-destructive cursor-pointer"
                       }
                       onClick={() => toggleActive(item.id, item.ativo)}
                     >
@@ -652,7 +664,7 @@ export default function MicrocontrollersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-destructive border-destructive"
+                          className="text-destructive border-destructive cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -667,7 +679,12 @@ export default function MicrocontrollersPage() {
                             microcontrolador?
                           </p>
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline">Cancelar</Button>
+                            <Button
+                              className="cursor-pointer"
+                              variant="outline"
+                            >
+                              Cancelar
+                            </Button>
                             <Button
                               variant="destructive"
                               onClick={() => handleDelete(item.id)}
