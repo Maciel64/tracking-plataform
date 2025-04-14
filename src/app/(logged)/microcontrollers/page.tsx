@@ -46,15 +46,38 @@ const generateRandomName = () => {
   return Math.random().toString(36).substring(2, 10);
 };
 
-export default function MicrocontrollersPage() {
-  const { theme } = useTheme(); // Acessa o tema global
+interface Microcontroller {
+  id: string;
+  index?: number;
+  nome: string;
+  mac_address: string;
+  modelo: string;
+  chip: string;
+  placa: string;
+  tipo: string;
+  ativo?: boolean;
+}
 
-  // Estados para listagem e edição
-  const [microcontrollers, setMicrocontrollers] = useState<any[]>([]);
+interface FormErrors {
+  nome?: string;
+  mac_address?: string;
+  modelo?: string;
+  chip?: string;
+  placa?: string;
+  tipo?: string;
+}
+
+export default function MicrocontrollersPage() {
+  const { theme } = useTheme();
+
+  // Estados tipados
+  const [microcontrollers, setMicrocontrollers] = useState<Microcontroller[]>(
+    []
+  );
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editData, setEditData] = useState<any>({
+  const [editData, setEditData] = useState<Microcontroller>({
+    id: "",
     nome: "",
     mac_address: "",
     modelo: "",
@@ -62,11 +85,13 @@ export default function MicrocontrollersPage() {
     placa: "",
     tipo: "",
   });
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<FormErrors>({});
 
   // Estados para adição
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [addData, setAddData] = useState({
+  const [addData, setAddData] = useState<
+    Omit<Microcontroller, "id" | "index" | "ativo">
+  >({
     nome: generateRandomName(),
     mac_address: "",
     modelo: "",
@@ -74,26 +99,31 @@ export default function MicrocontrollersPage() {
     placa: "",
     tipo: "",
   });
-  const [addErrors, setAddErrors] = useState<any>({});
+  const [addErrors, setAddErrors] = useState<FormErrors>({});
 
+  // Função fetchData permanece igual, mas agora retorna Microcontroller[]
   const fetchData = async () => {
-    const snapshot = await getDocs(collection(db, "microcontrollers"));
-    const data = snapshot.docs.map((doc, index) => ({
-      id: doc.id,
-      index: index + 1,
-      ...doc.data(),
-    }));
-    setMicrocontrollers(data);
-    setLoading(false);
+    try {
+      const snapshot = await getDocs(collection(db, "microcontrollers"));
+      const data = snapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        index: index + 1,
+        ...doc.data(),
+      })) as Microcontroller[];
+      setMicrocontrollers(data);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+    }
   };
 
   // Funções para adição
-  const isValidMac = (mac: string) => {
+  const isValidMac = (mac: string): boolean => {
     const regex = /^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/;
     return regex.test(mac);
   };
 
-  const isValidPlate = (plate: string) => {
+  const isValidPlate = (plate: string): boolean => {
     const regex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
     return regex.test(plate);
   };
@@ -110,8 +140,8 @@ export default function MicrocontrollersPage() {
     setAddErrors({});
   };
 
-  const validateAddFields = () => {
-    const newErrors: any = {};
+  const validateAddFields = (): boolean => {
+    const newErrors: FormErrors = {};
 
     if (!addData.nome.trim()) newErrors.nome = "Nome é obrigatório";
     else if (addData.nome.length > 10)
@@ -136,7 +166,7 @@ export default function MicrocontrollersPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAdd = async () => {
+  const handleAdd = async (): Promise<void> => {
     if (!validateAddFields()) return;
 
     const microRef = collection(db, "microcontrollers");
@@ -148,7 +178,7 @@ export default function MicrocontrollersPage() {
       ),
     ]);
 
-    const newErrors: any = {};
+    const newErrors: FormErrors = {};
 
     if (!macSnapshot.empty) {
       newErrors.mac_address = "Já existe um microcontrolador com esse MAC.";
@@ -159,17 +189,13 @@ export default function MicrocontrollersPage() {
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setAddErrors((prev: any) => ({ ...prev, ...newErrors }));
+      setAddErrors((prev) => ({ ...prev, ...newErrors }));
       return;
     }
 
     await addDoc(microRef, {
-      nome: addData.nome,
-      mac_address: addData.mac_address,
-      modelo: addData.modelo,
-      chip: addData.chip,
+      ...addData,
       placa: addData.placa.toUpperCase(),
-      tipo: addData.tipo,
       ativo: true,
     });
 
@@ -191,26 +217,40 @@ export default function MicrocontrollersPage() {
     fetchData();
   };
 
-  const validateEdit = () => {
-    const newErrors: any = {};
+  const validateEdit = (): boolean => {
+    const newErrors: FormErrors = {}; // Usando sua interface existente
 
-    if (!editData.nome) newErrors.nome = "Nome é obrigatório.";
-    if (!editData.mac_address.match(/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i))
-      newErrors.mac_address = "MAC inválido. Ex: 00:11:22:33:44:55";
-    if (!editData.modelo) newErrors.modelo = "Modelo é obrigatório.";
-    if (!editData.chip) newErrors.chip = "Chip é obrigatório.";
-    if (!editData.tipo) newErrors.tipo = "Tipo de veículo é obrigatório.";
-    if (!editData.placa.match(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/))
-      newErrors.placa = "Placa inválida. Ex: ABC1A23";
+    // Validações dos campos
+    if (!editData.nome?.trim()) newErrors.nome = "Nome é obrigatório";
+    if (!editData.mac_address?.trim()) {
+      newErrors.mac_address = "MAC é obrigatório";
+    } else if (
+      !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(editData.mac_address)
+    ) {
+      newErrors.mac_address = "Formato inválido (use 00:11:22:33:44:55)";
+    }
 
-    const existsMac = microcontrollers.find(
-      (mc) => mc.mac_address === editData.mac_address && mc.id !== editData.id
+    if (!editData.modelo?.trim()) newErrors.modelo = "Modelo é obrigatório";
+    if (!editData.chip?.trim()) newErrors.chip = "Chip é obrigatório";
+    if (!editData.tipo?.trim()) newErrors.tipo = "Tipo é obrigatório";
+
+    // Validação específica para placa
+    if (!editData.placa?.trim()) {
+      newErrors.placa = "Placa é obrigatória";
+    } else if (!/^[A-Z]{3}\d[A-Z]\d{2}$/.test(editData.placa.toUpperCase())) {
+      newErrors.placa = "Formato inválido (ex: ABC1D23)";
+    }
+
+    // Verificação de duplicados
+    const isDuplicateMac = microcontrollers.some(
+      (mc) => mc.id !== editData.id && mc.mac_address === editData.mac_address
     );
-    const existsPlaca = microcontrollers.find(
-      (mc) => mc.placa === editData.placa && mc.id !== editData.id
+    const isDuplicatePlaca = microcontrollers.some(
+      (mc) => mc.id !== editData.id && mc.placa === editData.placa.toUpperCase()
     );
-    if (existsMac) newErrors.mac_address = "MAC já cadastrado.";
-    if (existsPlaca) newErrors.placa = "Placa já cadastrada.";
+
+    if (isDuplicateMac) newErrors.mac_address = "MAC já cadastrado";
+    if (isDuplicatePlaca) newErrors.placa = "Placa já cadastrada";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -648,7 +688,7 @@ export default function MicrocontrollersPage() {
                           ? "text-blue-500 border-blue-500 cursor-pointer"
                           : "text-destructive border-destructive cursor-pointer"
                       }
-                      onClick={() => toggleActive(item.id, item.ativo)}
+                      onClick={() => toggleActive(item.id, item.ativo ?? false)}
                     >
                       {item.ativo ? (
                         <CheckCircle className="w-4 h-4" />
