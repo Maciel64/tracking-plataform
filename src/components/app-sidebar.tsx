@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useState, useEffect } from "react"; // Importação de useState e useEffect
+
 import {
   LayoutDashboard,
   Users,
@@ -35,7 +37,20 @@ import { User } from "@/@types/user";
 
 import logo from "@/assets/images/logo.png";
 
-const roleBasedRoutes = {
+// Definindo o tipo para as rotas
+type Route = {
+  label: string;
+  href: string;
+  icon: React.ElementType;
+};
+
+type RoleBasedRoutes = {
+  [role: string]: {
+    [section: string]: Route[];
+  };
+};
+
+const roleBasedRoutes: RoleBasedRoutes = {
   ADMIN: {
     Admin: [
       {
@@ -75,6 +90,18 @@ const roleBasedRoutes = {
     ],
   },
   USER: {
+    Microcontroladores: [
+      {
+        label: "Microcontroladores",
+        href: "/microcontrollers",
+        icon: Microchip,
+      },
+      {
+        label: "Mapas",
+        href: "/maps",
+        icon: MapIcon,
+      },
+    ],
     Menu: [
       {
         label: "Dashboard",
@@ -95,14 +122,23 @@ const roleBasedRoutes = {
       },
     ],
   },
-  undefined: {
-    Menu: [],
-    Configurações: [],
-  },
 };
 
 export function AppSidebar({ user }: { user: User }) {
-  const routes = user?.role as keyof typeof roleBasedRoutes;
+  const [isClient, setIsClient] = useState(false);
+
+  // Garantir que o componente seja renderizado no cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Garantir que o sidebar só seja renderizado no cliente para evitar mismatch
+  if (!isClient) {
+    return null; // Ou outro componente de fallback
+  }
+
+  // Verificando se o usuário tem um papel válido
+  const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER"; // Definindo "USER" como fallback
 
   return (
     <Sidebar>
@@ -114,27 +150,32 @@ export function AppSidebar({ user }: { user: User }) {
       </SidebarHeader>
 
       <SidebarContent>
-        {Object.keys(roleBasedRoutes[routes]).map((item) => (
-          <SidebarGroup key={item}>
-            <SidebarGroupLabel>{item}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {roleBasedRoutes[routes][
-                  item as keyof (typeof roleBasedRoutes)[typeof routes]
-                ].map((route) => (
-                  <SidebarMenuItem key={route.label}>
-                    <SidebarMenuButton asChild>
-                      <Link href={route.href}>
-                        <route.icon className="h-4 w-4" />
-                        {route.label}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {/* Verificar se o usuário tem rotas para exibir */}
+        {roleBasedRoutes[routes] ? (
+          Object.keys(roleBasedRoutes[routes]).map((section) => (
+            <SidebarGroup key={section}>
+              <SidebarGroupLabel>{section}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {roleBasedRoutes[routes][section].map((route: Route) => (
+                    <SidebarMenuItem key={route.label}>
+                      <SidebarMenuButton asChild>
+                        <Link href={route.href}>
+                          <route.icon className="h-4 w-4" />
+                          {route.label}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))
+        ) : (
+          <div className="text-center">
+            Nenhuma rota disponível para este usuário.
+          </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">

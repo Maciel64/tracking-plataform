@@ -11,7 +11,7 @@ const routesByRole = {
     "/microcontrollers",
     "/maps",
   ],
-  USER: ["/profile", "/settings", "/dashboard"],
+  USER: ["/microcontrollers", "/maps", "/profile", "/settings", "/dashboard"],
 };
 
 const publicRoutes = ["/auth/login", "/auth/register", "/"];
@@ -24,8 +24,13 @@ export async function middleware(request: NextRequest) {
   if (publicRoutes.includes(path)) {
     return NextResponse.next();
   }
+  const role = user?.role?.toUpperCase();
 
-  const userCanAccess = user ? routesByRole[user.role].includes(path) : false;
+  const isValidRole =
+    typeof role === "string" && Object.keys(routesByRole).includes(role);
+  
+  const userCanAccess =
+    isValidRole && routesByRole[role as keyof typeof routesByRole]?.includes(path);
 
   if (!userCanAccess) {
     if (!user) {
