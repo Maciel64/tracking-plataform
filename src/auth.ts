@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { firestoreAdapter } from "./lib/adapters/firebase.adapter";
 import { UsersService } from "./domain/users/users.service";
 import { UsersRepository } from "./domain/users/users.repository";
+import { User } from "@/@types/user";
 
 // Inicializando o serviço de usuários
 const usersService = new UsersService(new UsersRepository(firestoreAdapter));
