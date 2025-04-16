@@ -5,6 +5,7 @@ import { firestoreAdapter } from "./lib/adapters/firebase.adapter";
 import { UsersService } from "./domain/users/users.service";
 import { UsersRepository } from "./domain/users/users.repository";
 
+
 const usersService = new UsersService(new UsersRepository(firestoreAdapter));
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
