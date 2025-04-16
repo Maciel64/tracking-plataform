@@ -15,13 +15,21 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = (user as any).role ?? "USER";
+        token.id = (user as any).id ?? "";
+        token.name = (user as any).name ?? "";
+        token.email = (user as any).email ?? "";
       }
+    
+      console.log("Token gerado:", token); // <-- Adiciona esse log
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role as string | undefined;
+        session.user.role = typeof token.role === "string" ? token.role : "";
+        session.user.id = typeof token.id === "string" ? token.id : "";
+        session.user.name = typeof token.name === "string" ? token.name : "";
+        session.user.email = typeof token.email === "string" ? token.email : "";
       }
       return session;
     },
@@ -33,13 +41,22 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email = credentials.email as string;
-        const password = credentials.password as string;
+        const email = credentials?.email as string;
+        const password = credentials?.password as string;
 
         try {
-          return await usersService.login({ email, password });
+          const user = await usersService.login({ email, password });
+
+          if (!user) return null;
+
+          return {
+            id: user.id ?? "",
+            name: user.name ?? "",
+            email: user.email ?? "",
+            role: user.role ?? "USER",
+          };
         } catch (e) {
-          console.log(e);
+          console.error("Erro ao logar:", e);
           return null;
         }
       },

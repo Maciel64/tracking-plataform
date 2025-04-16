@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/adapters/firebase.adapter";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -42,7 +43,6 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { DialogPortal } from "@radix-ui/react-dialog";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const generateRandomName = () => {
   return Math.random().toString(36).substring(2, 10);
@@ -163,6 +163,9 @@ export default function MicrocontrollersPage() {
       ),
     ]);
 
+    const auth = getAuth();
+    const user = auth.currentUser;
+    console.log("Usuário atual no momento do clique:", user);
     const newErrors: FormErrors = {};
 
     if (!macSnapshot.empty) {
@@ -178,19 +181,25 @@ export default function MicrocontrollersPage() {
       return;
     }
 
+    if (!currentUserId) {
+      console.error("Usuário não autenticado.");
+      alert("Usuário não autenticado. Faça login novamente.");
+
+      return;
+    }
+
     await addDoc(microRef, {
       ...addData,
       placa: addData.placa.toUpperCase(),
       ativo: true,
-      userid: currentUserId, // <- Aqui está o campo necessário!
+      userid: currentUserId, // Aqui o userid está garantido
     });
 
-    console.log("currentUserId no cadastro:", currentUserId);
+    console.log("✅ Microcontrolador adicionado com userid:", currentUserId);
     setIsAddOpen(false);
     resetAddForm();
     fetchData();
   };
-
   {
     /*=================handledelete============================*/
   }
@@ -274,12 +283,14 @@ export default function MicrocontrollersPage() {
   };
 
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const authInstance = getAuth();
+    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
       if (user) {
-        setCurrentUserId(user.uid);
+        console.log("Usuário logado:", user.uid);
+        setCurrentUserId(user.uid); // ✅ Nome correto da função
       } else {
-        setCurrentUserId(null);
+        console.log("Nenhum usuário logado");
+        setCurrentUserId(null); // ✅ Nome correto da função
       }
     });
 
@@ -298,6 +309,7 @@ export default function MicrocontrollersPage() {
       item.placa?.toLowerCase().includes(search.toLowerCase())
     );
   });
+
   {
     /*========================RETORNO=========================*/
   }
