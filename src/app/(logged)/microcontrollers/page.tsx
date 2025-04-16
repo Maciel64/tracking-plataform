@@ -260,13 +260,14 @@ export default function MicrocontrollersPage() {
 
     try {
       const userDoc = await getDoc(doc(db, "users", currentUserId));
-      const isAdmin = userDoc.exists() && userDoc.data()?.role === "admin";
+      const isAdmin = userDoc.exists() && userDoc.data()?.role === "ADMIN";
 
+      // Para o admin, busca todos os microcontroladores
       const q = isAdmin
         ? collection(db, "microcontrollers")
         : query(
             collection(db, "microcontrollers"),
-            where("userid", "==", currentUserId)
+            where("userid", "==", currentUserId) // Para usuários comuns, busca microcontroladores do próprio usuário
           );
 
       const snapshot = await getDocs(q);

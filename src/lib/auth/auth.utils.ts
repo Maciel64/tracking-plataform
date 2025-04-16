@@ -12,7 +12,10 @@ export async function authenticate(
       email,
       password,
       redirect: false,
+      callbackUrl: "/dashboard" 
     });
+
+    console.log("🔍 signIn response:", res);
 
     if (!res?.ok) {
       return {

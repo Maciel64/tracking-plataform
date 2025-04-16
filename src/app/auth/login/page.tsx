@@ -72,7 +72,14 @@ export default function LoginPage() {
 
     if (success) {
       toast.success("Login realizado com sucesso");
-      router.push("/dashboard");
+
+      // Redireciona para um caminho padrão seguro
+      try {
+        router.push("/dashboard");
+      } catch (err) {
+        console.error("Erro ao redirecionar:", err);
+        toast.error("Erro ao redirecionar após login.");
+      }
     } else {
       toast.error(error || "Erro ao fazer login");
     }
