@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/adapters/firebase.adapter";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -11,6 +12,7 @@ import {
   query,
   updateDoc,
   where,
+  getDoc,
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +41,7 @@ import {
   PlusCircle,
   Cpu,
 } from "lucide-react";
-import { useTheme } from "next-themes"; // Para pegar o tema global
+import { useTheme } from "next-themes";
 import { DialogPortal } from "@radix-ui/react-dialog";
 
 const generateRandomName = () => {
@@ -70,7 +72,6 @@ interface FormErrors {
 export default function MicrocontrollersPage() {
   const { theme } = useTheme();
 
-  // Estados tipados
   const [microcontrollers, setMicrocontrollers] = useState<Microcontroller[]>(
     []
   );
@@ -86,8 +87,6 @@ export default function MicrocontrollersPage() {
     tipo: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // Estados para adição
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addData, setAddData] = useState<
     Omit<Microcontroller, "id" | "index" | "ativo">
@@ -100,24 +99,8 @@ export default function MicrocontrollersPage() {
     tipo: "",
   });
   const [addErrors, setAddErrors] = useState<FormErrors>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Função fetchData permanece igual, mas agora retorna Microcontroller[]
-  const fetchData = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, "microcontrollers"));
-      const data = snapshot.docs.map((doc, index) => ({
-        id: doc.id,
-        index: index + 1,
-        ...doc.data(),
-      })) as Microcontroller[];
-      setMicrocontrollers(data);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    } finally {
-    }
-  };
-
-  // Funções para adição
   const isValidMac = (mac: string): boolean => {
     const regex = /^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/;
     return regex.test(mac);
@@ -153,9 +136,7 @@ export default function MicrocontrollersPage() {
       newErrors.mac_address = "MAC inválido. Ex: 00:11:22:33:44:55";
 
     if (!addData.modelo.trim()) newErrors.modelo = "Modelo é obrigatório";
-
     if (!addData.chip.trim()) newErrors.chip = "Chip é obrigatório";
-
     if (!addData.placa.trim()) newErrors.placa = "Placa é obrigatória";
     else if (!isValidPlate(addData.placa.trim()))
       newErrors.placa = "Placa inválida. Ex: ABC1A23";
@@ -165,6 +146,10 @@ export default function MicrocontrollersPage() {
     setAddErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  {
+    /*======================handleadd============================= */
+  }
 
   const handleAdd = async (): Promise<void> => {
     if (!validateAddFields()) return;
@@ -178,6 +163,9 @@ export default function MicrocontrollersPage() {
       ),
     ]);
 
+    const auth = getAuth();
+    const user = auth.currentUser;
+    console.log("Usuário atual no momento do clique:", user);
     const newErrors: FormErrors = {};
 
     if (!macSnapshot.empty) {
@@ -193,55 +181,58 @@ export default function MicrocontrollersPage() {
       return;
     }
 
+    if (!currentUserId) {
+      console.error("Usuário não autenticado.");
+      alert("Usuário não autenticado. Faça login novamente.");
+
+      return;
+    }
+
     await addDoc(microRef, {
       ...addData,
       placa: addData.placa.toUpperCase(),
       ativo: true,
+      userid: currentUserId, // Aqui o userid está garantido
     });
 
+    console.log("✅ Microcontrolador adicionado com userid:", currentUserId);
     setIsAddOpen(false);
     resetAddForm();
     fetchData();
   };
+  {
+    /*=================handledelete============================*/
+  }
 
-  // Funções para edição/exclusão
   const handleDelete = async (id: string) => {
     await deleteDoc(doc(db, "microcontrollers", id));
     fetchData();
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await updateDoc(doc(db, "microcontrollers", id), {
-      ativo: !current,
-    });
+    await updateDoc(doc(db, "microcontrollers", id), { ativo: !current });
     fetchData();
   };
 
   const validateEdit = (): boolean => {
-    const newErrors: FormErrors = {}; // Usando sua interface existente
+    const newErrors: FormErrors = {};
 
-    // Validações dos campos
     if (!editData.nome?.trim()) newErrors.nome = "Nome é obrigatório";
-    if (!editData.mac_address?.trim()) {
+    if (!editData.mac_address?.trim())
       newErrors.mac_address = "MAC é obrigatório";
-    } else if (
+    else if (
       !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(editData.mac_address)
-    ) {
+    )
       newErrors.mac_address = "Formato inválido (use 00:11:22:33:44:55)";
-    }
 
     if (!editData.modelo?.trim()) newErrors.modelo = "Modelo é obrigatório";
     if (!editData.chip?.trim()) newErrors.chip = "Chip é obrigatório";
     if (!editData.tipo?.trim()) newErrors.tipo = "Tipo é obrigatório";
 
-    // Validação específica para placa
-    if (!editData.placa?.trim()) {
-      newErrors.placa = "Placa é obrigatória";
-    } else if (!/^[A-Z]{3}\d[A-Z]\d{2}$/.test(editData.placa.toUpperCase())) {
+    if (!editData.placa?.trim()) newErrors.placa = "Placa é obrigatória";
+    else if (!/^[A-Z]{3}\d[A-Z]\d{2}$/.test(editData.placa.toUpperCase()))
       newErrors.placa = "Formato inválido (ex: ABC1D23)";
-    }
 
-    // Verificação de duplicados
     const isDuplicateMac = microcontrollers.some(
       (mc) => mc.id !== editData.id && mc.mac_address === editData.mac_address
     );
@@ -258,16 +249,58 @@ export default function MicrocontrollersPage() {
 
   const handleEditSubmit = async () => {
     if (!validateEdit()) return;
-    await updateDoc(doc(db, "microcontrollers", editData.id), {
-      ...editData,
-    });
+
+    await updateDoc(doc(db, "microcontrollers", editData.id), { ...editData });
     setIsEditOpen(false);
     fetchData();
   };
 
+  const fetchData = async () => {
+    if (!currentUserId) return;
+
+    try {
+      const userDoc = await getDoc(doc(db, "users", currentUserId));
+      const isAdmin = userDoc.exists() && userDoc.data()?.role === "ADMIN";
+
+      // Para o admin, busca todos os microcontroladores
+      const q = isAdmin
+        ? collection(db, "microcontrollers")
+        : query(
+            collection(db, "microcontrollers"),
+            where("userid", "==", currentUserId) // Para usuários comuns, busca microcontroladores do próprio usuário
+          );
+
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        index: index + 1,
+        ...doc.data(),
+      })) as Microcontroller[];
+
+      setMicrocontrollers(data);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    }
+  };
+
   useEffect(() => {
-    fetchData();
+    const authInstance = getAuth();
+    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+      if (user) {
+        console.log("Usuário logado:", user.uid);
+        setCurrentUserId(user.uid); // ✅ Nome correto da função
+      } else {
+        console.log("Nenhum usuário logado");
+        setCurrentUserId(null); // ✅ Nome correto da função
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (currentUserId) fetchData();
+  }, [currentUserId]);
 
   const filteredData = microcontrollers.filter((item) => {
     return (
@@ -277,6 +310,10 @@ export default function MicrocontrollersPage() {
       item.placa?.toLowerCase().includes(search.toLowerCase())
     );
   });
+
+  {
+    /*========================RETORNO=========================*/
+  }
 
   return (
     <div className="p-4 min-h-screen bg-background text-foreground">

@@ -7,6 +7,7 @@ import {
   LoginSchema,
 } from "@/schemas/user.schema";
 
+
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
@@ -20,7 +21,6 @@ export class UsersService {
 
   async create(data: CreateUserSchema): Promise<User> {
     createUserSchema.parse(data);
-
     return this.usersRepository.create(data);
   }
 
@@ -28,12 +28,21 @@ export class UsersService {
     return this.usersRepository.update(id, user);
   }
 
+  // Método de exclusão de usuário
   async delete(id: string): Promise<void> {
-    return this.usersRepository.delete(id);
+    try {
+      // Chama o método de exclusão no repositório
+      await this.usersRepository.delete(id);
+      console.log('Usuário deletado com sucesso');
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      throw new Error('Não foi possível excluir o usuário.');
+    }
   }
 
   async login(data: LoginSchema) {
     loginSchema.parse(data);
+    console.log('Tentando login com:', data);
 
     return this.usersRepository.login(data);
   }

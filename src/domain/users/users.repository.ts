@@ -13,21 +13,22 @@ export class UsersRepository {
   constructor(private readonly firebaseAdapter: TFirestoreAdapter) {
     this.usersCollection = this.firebaseAdapter.collection(db, "users");
   }
+
   async create(data: CreateUserSchema): Promise<User> {
     const { email, name, password } = data;
 
     const res = await createUserWithEmailAndPassword(auth, email, password);
 
-    const user = {
+    const user: User = {
+      id: res.user.uid, // 👈 alterado de uid para id
       email,
-      uid: res.user.uid,
       name,
       createdAt: new Date(),
       updatedAt: null,
       role: "USER",
-    } as User;
+    };
 
-    const userDoc = this.firebaseAdapter.doc(this.usersCollection, user.uid);
+    const userDoc = this.firebaseAdapter.doc(this.usersCollection, user.id);
     await this.firebaseAdapter.setDoc(userDoc, user);
 
     return user;
@@ -52,12 +53,12 @@ export class UsersRepository {
     throw new Error("Method not implemented.");
   }
 
-  async find() {
+  async find(): Promise<User[]> {
     const snapshot = await this.firebaseAdapter.getDocs(this.usersCollection);
-    return snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() } as User));
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as User)); // 👈 id
   }
 
-  async login(data: LoginSchema) {
+  async login(data: LoginSchema): Promise<User | null> {
     try {
       const { email, password } = data;
 
@@ -71,12 +72,12 @@ export class UsersRepository {
       }
 
       return {
-        email: res.user.email,
-        uid: res.user.uid,
-        name: snapshot.data()?.name,
-        createdAt: snapshot.data()?.createdAt,
-        updatedAt: snapshot.data()?.updatedAt,
-        role: snapshot.data()?.role,
+        id: res.user.uid, // 👈 alterado de uid para id
+        email: res.user.email ?? "",
+        name: snapshot.data()?.name ?? "",
+        createdAt: snapshot.data()?.createdAt ?? new Date(),
+        updatedAt: snapshot.data()?.updatedAt ?? null,
+        role: snapshot.data()?.role ?? "USER",
       } as User;
     } catch {
       return null;
