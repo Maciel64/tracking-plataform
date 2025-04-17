@@ -11,8 +11,7 @@ export async function authenticate(
     const res = await signIn("credentials", {
       email,
       password,
-      redirect: false,
-      callbackUrl: "/dashboard" 
+      redirect: false
     });
 
     console.log("🔍 signIn response:", res);
