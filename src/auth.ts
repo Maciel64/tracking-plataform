@@ -25,7 +25,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.email = (user as any).email ?? "";
       }
     
-      console.log("Token gerado:", token); // Log para verificar os dados do token
+      
       return token;
     },
     // Callback de session para manipulação de sessão

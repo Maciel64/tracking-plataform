@@ -33,7 +33,7 @@ export class UsersService {
     try {
       // Chama o método de exclusão no repositório
       await this.usersRepository.delete(id);
-      console.log('Usuário deletado com sucesso');
+      
     } catch (error) {
       console.error('Erro ao excluir usuário:', error);
       throw new Error('Não foi possível excluir o usuário.');
@@ -42,7 +42,7 @@ export class UsersService {
 
   async login(data: LoginSchema) {
     loginSchema.parse(data);
-    console.log('Tentando login com:', data);
+    
 
     return this.usersRepository.login(data);
   }

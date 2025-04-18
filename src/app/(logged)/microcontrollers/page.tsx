@@ -165,7 +165,7 @@ export default function MicrocontrollersPage() {
 
     const auth = getAuth();
     const user = auth.currentUser;
-    console.log("Usuário atual no momento do clique:", user);
+
     const newErrors: FormErrors = {};
 
     if (!macSnapshot.empty) {
@@ -182,7 +182,6 @@ export default function MicrocontrollersPage() {
     }
 
     if (!currentUserId) {
-      console.error("Usuário não autenticado.");
       alert("Usuário não autenticado. Faça login novamente.");
 
       return;
@@ -195,7 +194,6 @@ export default function MicrocontrollersPage() {
       userid: currentUserId, // Aqui o userid está garantido
     });
 
-    console.log("✅ Microcontrolador adicionado com userid:", currentUserId);
     setIsAddOpen(false);
     resetAddForm();
     fetchData();
@@ -287,10 +285,8 @@ export default function MicrocontrollersPage() {
     const authInstance = getAuth();
     const unsubscribe = onAuthStateChanged(authInstance, (user) => {
       if (user) {
-        console.log("Usuário logado:", user.uid);
         setCurrentUserId(user.uid); // ✅ Nome correto da função
       } else {
-        console.log("Nenhum usuário logado");
         setCurrentUserId(null); // ✅ Nome correto da função
       }
     });
