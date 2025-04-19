@@ -26,6 +26,7 @@ export class UsersRepository {
       createdAt: new Date(),
       updatedAt: null,
       role: "USER",
+      status: "ENABLED",
     };
 
     const userDoc = this.firebaseAdapter.doc(this.usersCollection, user.id);

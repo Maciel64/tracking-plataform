@@ -5,4 +5,5 @@ export type User = {
   createdAt: Date;
   updatedAt: Date | null;
   role: "USER" | "ADMIN";
+  status: "ENABLED" | "DISABLED";
 };

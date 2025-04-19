@@ -14,7 +14,7 @@ export async function authenticate(
       redirect: false
     });
 
-    console.log("🔍 signIn response:", res);
+    
 
     if (!res?.ok) {
       return {

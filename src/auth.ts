@@ -20,14 +20,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
     async jwt(params) {
       const { token, user } = params;
-      
+
       if (user) {
         token.role = (user as User).role ?? "USER";
         token.id = user.id ?? "";
         token.name = user.name ?? "";
         token.email = user.email ?? "";
       }
-      
+
       return token;
     },
 
