@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/adapters/firebase.adapter";
+import { db, auth } from "@/lib/adapters/firebase.adapter";
 import {
   collection,
   getDocs,
-  addDoc,
   doc,
   updateDoc,
   deleteDoc,
+  setDoc,
 } from "firebase/firestore";
-
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  deleteUser,
+  signOut,
+} from "firebase/auth";
 import { motion } from "framer-motion";
 import {
   Download,
@@ -22,7 +27,6 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -83,20 +87,23 @@ export default function UsuariosPage() {
   // Form states
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [cargo, setCargo] = useState("");
+  const [cargo, setCargo] = useState("USER");
   const [departamento, setDepartamento] = useState("");
   const [status, setStatus] = useState("ativo");
+  const [password] = useState("SenhaPadrao123!"); // Senha padrão
 
   const fetchUsuarios = async () => {
     try {
       const snapshot = await getDocs(collection(db, "users"));
       const listaUsuarios = snapshot.docs.map((doc) => ({
         id: doc.id,
-        nome: doc.data().nome || "",
+        uid: doc.data().uid || doc.id,
+        nome: doc.data().name || doc.data().nome || "",
         email: doc.data().email || "",
-        cargo: doc.data().cargo || "",
+        cargo: doc.data().cargo || "USER",
         departamento: doc.data().departamento || "",
         status: doc.data().status || "ativo",
+        role: doc.data().role || "user",
         createdAt: doc.data().createdAt || "",
         updatedAt: doc.data().updatedAt || "",
       }));
@@ -113,7 +120,7 @@ export default function UsuariosPage() {
   const resetForm = () => {
     setNome("");
     setEmail("");
-    setCargo("");
+    setCargo("USER");
     setDepartamento("");
     setStatus("ativo");
     setCurrentUser(null);
@@ -148,7 +155,7 @@ export default function UsuariosPage() {
     try {
       if (currentUser) {
         await updateDoc(doc(db, "users", currentUser.id), {
-          nome,
+          name: nome,
           email,
           cargo,
           departamento,
@@ -156,22 +163,41 @@ export default function UsuariosPage() {
           updatedAt: new Date().toISOString(),
         });
       } else {
-        await addDoc(collection(db, "users"), {
-          nome,
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
           email,
-          cargo,
+          password
+        );
+
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          name: nome,
+          email,
+          cargo: cargo || "USER",
           departamento,
-          status,
+          status: status || "ativo",
+          role: "user",
+          uid: user.uid,
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         });
       }
 
       setIsDialogOpen(false);
       resetForm();
       fetchUsuarios();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar usuário:", error);
-      setErrors({ submit: "Erro ao salvar usuário. Tente novamente." });
+      let errorMessage = "Erro ao salvar usuário. Tente novamente.";
+
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "Este email já está em uso por outro usuário.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "O email fornecido é inválido.";
+      }
+
+      setErrors({ submit: errorMessage });
     }
   };
 
@@ -195,13 +221,31 @@ export default function UsuariosPage() {
 
     setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, "users", userToDelete));
+      // Excluindo o usuário do Firestore antes de apagar o usuário do Firebase Authentication
+      const userRef = doc(db, "users", userToDelete); // Referência do documento do usuário no Firestore
+      await deleteDoc(userRef); // Deletando o documento do usuário no Firestore
+
+      // Agora, excluindo o usuário no Firebase Authentication
+      const response = await fetch("/api/delete-firebase-user", {
+        method: "POST",
+        body: JSON.stringify({ uid: userToDelete }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao deletar o usuário.");
+      }
+
+      // Atualizando a lista de usuários após exclusão
       fetchUsuarios();
+
+      // Fechando o modal de confirmação de exclusão
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Erro ao apagar usuário:", error);
     } finally {
       setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -259,8 +303,12 @@ export default function UsuariosPage() {
     show: { opacity: 1, y: 0 },
   };
 
+  {
+    /*======================================= RETURN============================== */
+  }
+
   return (
-    <div className="container py-10 overflow-x-auto">
+    <div className="container py-10 overflow-x-auto h-[calc(100vh-6rem)]">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -277,6 +325,7 @@ export default function UsuariosPage() {
         </p>
       </motion.div>
 
+      {/*===================================Adiciona usuario============================== */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -297,104 +346,98 @@ export default function UsuariosPage() {
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <form onSubmit={handleSubmit} noValidate>
-              <DialogHeader>
-                <DialogTitle>
-                  {currentUser ? "Editar Usuário" : "Adicionar Novo Usuário"}
-                </DialogTitle>
-                <DialogDescription>
-                  {currentUser
-                    ? "Atualize os dados do usuário selecionado."
-                    : "Preencha os dados para adicionar um novo usuário ao sistema."}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                {errors.submit && (
-                  <div className="text-red-500 text-sm">{errors.submit}</div>
-                )}
+            <DialogHeader>
+              <DialogTitle>
+                {currentUser ? "Editar Usuário" : "Adicionar Novo Usuário"}
+              </DialogTitle>
+              <DialogDescription>
+                {currentUser
+                  ? "Atualize os dados do usuário selecionado."
+                  : "Preencha os dados para adicionar um novo usuário ao sistema."}
+              </DialogDescription>
+            </DialogHeader>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome</Label>
-                    <Input
-                      id="nome"
-                      placeholder="Nome completo"
-                      value={nome}
-                      onChange={(e) =>
-                        handleFieldChange("nome", e.target.value)
-                      }
-                      className={errors.nome ? "border-red-500" : ""}
-                      required={false}
-                    />
-                    {errors.nome && (
-                      <p className="text-sm text-red-500">{errors.nome}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="email@exemplo.com"
-                      value={email}
-                      onChange={(e) =>
-                        handleFieldChange("email", e.target.value)
-                      }
-                      className={errors.email ? "border-red-500" : ""}
-                      required={false}
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-red-500">{errors.email}</p>
-                    )}
-                  </div>
+            <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
+              {errors.submit && (
+                <div className="text-red-500 text-sm">{errors.submit}</div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome Completo</Label>
+                  <Input
+                    id="nome"
+                    placeholder="Nome completo"
+                    value={nome}
+                    onChange={(e) => handleFieldChange("nome", e.target.value)}
+                    className={errors.nome ? "border-red-500" : ""}
+                  />
+                  {errors.nome && (
+                    <p className="text-sm text-red-500">{errors.nome}</p>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cargo">Cargo</Label>
-                    <Input
-                      id="cargo"
-                      placeholder="Cargo do usuário"
-                      value={cargo}
-                      onChange={(e) =>
-                        handleFieldChange("cargo", e.target.value)
-                      }
-                      className={errors.cargo ? "border-red-500" : ""}
-                      required={false}
-                    />
-                    {errors.cargo && (
-                      <p className="text-sm text-red-500">{errors.cargo}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="departamento">Departamento</Label>
-                    <Select
-                      value={departamento}
-                      onValueChange={(value) =>
-                        handleFieldChange("departamento", value)
-                      }
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    value={email}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-500">{errors.email}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cargo">Cargo</Label>
+                  <Input
+                    id="cargo"
+                    placeholder="Cargo"
+                    value={cargo}
+                    onChange={(e) => handleFieldChange("cargo", e.target.value)}
+                    className={errors.cargo ? "border-red-500" : ""}
+                  />
+                  {errors.cargo && (
+                    <p className="text-sm text-red-500">{errors.cargo}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="departamento">Departamento</Label>
+                  <Select
+                    value={departamento}
+                    onValueChange={(value) =>
+                      handleFieldChange("departamento", value)
+                    }
+                  >
+                    <SelectTrigger
+                      id="departamento"
+                      className={errors.departamento ? "border-red-500" : ""}
                     >
-                      <SelectTrigger
-                        id="departamento"
-                        className={errors.departamento ? "border-red-500" : ""}
-                      >
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                        <SelectItem value="produto">Produto</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="financeiro">Financeiro</SelectItem>
-                        <SelectItem value="rh">RH</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.departamento && (
-                      <p className="text-sm text-red-500">
-                        {errors.departamento}
-                      </p>
-                    )}
-                  </div>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                      <SelectItem value="produto">Produto</SelectItem>
+                      <SelectItem value="design">Design</SelectItem>
+                      <SelectItem value="marketing">Marketing</SelectItem>
+                      <SelectItem value="financeiro">Financeiro</SelectItem>
+                      <SelectItem value="rh">RH</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.departamento && (
+                    <p className="text-sm text-red-500">
+                      {errors.departamento}
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select
@@ -412,7 +455,9 @@ export default function UsuariosPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <input type="hidden" value="user" />
               </div>
+
               <DialogFooter>
                 <Button
                   variant="outline"
@@ -429,16 +474,23 @@ export default function UsuariosPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Confirmação de Exclusão */}
+        {/* ===========================Modal de Confirmação de Exclusão ===================*/}
+
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Confirmar Exclusão</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg font-medium leading-none tracking-tight">
+                Confirmar Exclusão
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground">
                 Tem certeza que deseja apagar este usuário? Esta ação não pode
                 ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
+              </p>
+            </div>
+
             <DialogFooter>
               <Button
                 variant="outline"
@@ -451,7 +503,33 @@ export default function UsuariosPage() {
                 onClick={confirmDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? "Apagando..." : "Confirmar Exclusão"}
+                {isDeleting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Apagando...
+                  </>
+                ) : (
+                  "Confirmar Exclusão"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
