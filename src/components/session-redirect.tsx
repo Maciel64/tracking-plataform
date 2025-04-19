@@ -9,8 +9,6 @@ export default function SessionRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("Sessão verificada:", session);
-
     if (status === "authenticated") {
       router.push("/dashboard");
     }

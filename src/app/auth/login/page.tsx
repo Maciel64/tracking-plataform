@@ -113,7 +113,7 @@ export default function LoginPage() {
                   animate="visible"
                   className="space-y-4"
                 >
-                  {/* campos do formulário permanecem iguais */}
+                  {/* campos do formulário */}
 
                   <motion.div variants={itemVariants}>
                     <FormField

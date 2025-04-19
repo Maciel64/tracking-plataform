@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { db } from "@/lib/adapters/firebase.adapter";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  setDoc,
+} from "firebase/firestore";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import { motion } from "framer-motion";
 import {
-  Download,
   Filter,
+  LoaderCircle,
   MoreHorizontal,
   Plus,
-  Search,
   Trash,
   UserCog,
   Users,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -57,121 +65,160 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
-const usuariosData = [
-  {
-    id: 1,
-    nome: "Ana Silva",
-    email: "ana.silva@exemplo.com",
-    cargo: "Gerente de Produto",
-    departamento: "Produto",
-    status: "ativo",
-    ultimoAcesso: "2023-06-15T10:30:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: 2,
-    nome: "Carlos Oliveira",
-    email: "carlos.oliveira@exemplo.com",
-    cargo: "Desenvolvedor Backend",
-    departamento: "Tecnologia",
-    status: "ativo",
-    ultimoAcesso: "2023-06-14T16:45:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: 3,
-    nome: "Mariana Costa",
-    email: "mariana.costa@exemplo.com",
-    cargo: "Designer UX/UI",
-    departamento: "Design",
-    status: "inativo",
-    ultimoAcesso: "2023-05-20T09:15:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: 4,
-    nome: "Pedro Santos",
-    email: "pedro.santos@exemplo.com",
-    cargo: "Analista de Marketing",
-    departamento: "Marketing",
-    status: "ativo",
-    ultimoAcesso: "2023-06-15T08:30:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: 5,
-    nome: "Juliana Lima",
-    email: "juliana.lima@exemplo.com",
-    cargo: "Analista Financeiro",
-    departamento: "Financeiro",
-    status: "ativo",
-    ultimoAcesso: "2023-06-13T14:20:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: 6,
-    nome: "Roberto Almeida",
-    email: "roberto.almeida@exemplo.com",
-    cargo: "Desenvolvedor Frontend",
-    departamento: "Tecnologia",
-    status: "ativo",
-    ultimoAcesso: "2023-06-14T11:10:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: 7,
-    nome: "Fernanda Martins",
-    email: "fernanda.martins@exemplo.com",
-    cargo: "Recursos Humanos",
-    departamento: "RH",
-    status: "inativo",
-    ultimoAcesso: "2023-04-30T15:45:00",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-];
+// zod <> React Hook Form
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User } from "@/@types/user";
+import { FirebaseError } from "firebase/app";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { query } from "@/providers/client-provider";
+import { deleteOnFireAuth } from "./actions";
 
-export default function UsuariosPage() {
-  const [usuarios] = useState(usuariosData);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("todos");
-  const [departamentoFilter, setDepartamentoFilter] = useState("todos");
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+export type UserRoles = "USER" | "ADMIN";
+export type UserStatus = "ENABLED" | "DISABLED";
 
-  // Filtrar usuários com base nos critérios de pesquisa e filtros
-  const usuariosFiltrados = usuarios.filter((usuario) => {
-    const matchesSearch =
-      usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.cargo.toLowerCase().includes(searchTerm.toLowerCase());
+const createUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string(),
+  role: z.enum(["USER", "ADMIN"]),
+  password: z.string(),
+  status: z.enum(["ENABLED", "DISABLED"]),
+});
 
-    const matchesStatus =
-      statusFilter === "todos" || usuario.status === statusFilter;
-    const matchesDepartamento =
-      departamentoFilter === "todos" ||
-      usuario.departamento === departamentoFilter;
+export type TCreateUserSchema = z.infer<typeof createUserSchema>;
 
-    return matchesSearch && matchesStatus && matchesDepartamento;
+export default function UsersPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  const {
+    register,
+    formState: { errors },
+    setValue,
+    reset,
+    handleSubmit,
+    watch,
+  } = useForm({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      email: currentUser?.email || "",
+      name: currentUser?.name || "",
+      password: "raster-password",
+      role: currentUser?.role || ("USER" as UserRoles),
+      status: currentUser?.status || ("ENABLED" as UserStatus),
+    },
   });
 
-  const formatarData = (dataString: string) => {
-    const data = new Date(dataString);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(data);
+  const { data: users, isLoading } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const snapshot = await getDocs(collection(db, "users"));
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        uid: doc.data().uid || doc.id,
+        name: doc.data().name || doc.data().nome || "",
+        email: doc.data().email || "",
+        status: doc.data().status || "ENABLED",
+        role: doc.data().role || "USER",
+        createdAt: doc.data().createdAt || "",
+        updatedAt: doc.data().updatedAt || "",
+      }));
+    },
+  });
+
+  const createEditUserMutation = useMutation<
+    void,
+    FirebaseError,
+    TCreateUserSchema
+  >({
+    mutationFn: async (data) => {
+      const { email, name, password, role, status } = data;
+
+      if (currentUser) {
+        console.log(currentUser);
+        const updatedUser = {
+          name,
+          email,
+          role,
+          status,
+          updatedAt: new Date().toISOString(),
+        };
+
+        await updateDoc(doc(db, "users", currentUser.id), updatedUser);
+        return;
+      }
+
+      const auth = getAuth();
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+
+      const userCreated = {
+        name,
+        email,
+        role,
+        status,
+        uid: user.uid,
+        createdAt: new Date().toISOString(),
+        updatedAt: null,
+      };
+
+      await setDoc(doc(db, "users", user.uid), userCreated);
+    },
+    onSuccess: () => {
+      toast.success(
+        currentUser
+          ? `Usuário ${currentUser.name} atualizado com sucesso`
+          : "Usuário criado com sucesso"
+      );
+      setIsDialogOpen(false);
+      query.invalidateQueries({
+        queryKey: ["users"],
+      });
+      reset();
+    },
+    onError: () => {
+      toast.error("Não foi possível criar o usuário");
+    },
+  });
+
+  const handleDelete = (userId: string) => {
+    setUserToDelete(userId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const userRef = doc(db, "users", userToDelete);
+      await deleteDoc(userRef);
+
+      deleteOnFireAuth(userRef.id);
+
+      setIsDeleteDialogOpen(false);
+      toast.success("O usuário foi apagado com sucesso");
+      query.invalidateQueries({
+        queryKey: ["users"],
+      });
+    } catch (error) {
+      toast.error("Não foi possível apagar o usuário");
+      console.error("Erro ao apagar usuário:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const container = {
@@ -190,7 +237,7 @@ export default function UsuariosPage() {
   };
 
   return (
-    <div className="container py-10">
+    <div className="container py-10 overflow-x-auto h-[calc(100vh-6rem)]">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -213,7 +260,13 @@ export default function UsuariosPage() {
         transition={{ duration: 0.5 }}
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6"
       >
-        <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) reset();
+            setIsDialogOpen(open);
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
@@ -222,66 +275,157 @@ export default function UsuariosPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+              <DialogTitle>
+                {currentUser ? "Editar Usuário" : "Adicionar Novo Usuário"}
+              </DialogTitle>
               <DialogDescription>
-                Preencha os dados para adicionar um novo usuário ao sistema.
+                {currentUser
+                  ? "Atualize os dados do usuário selecionado."
+                  : "Preencha os dados para adicionar um novo usuário ao sistema."}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+
+            <form
+              onSubmit={handleSubmit((data) =>
+                createEditUserMutation.mutate(data)
+              )}
+              className="mt-4 space-y-4"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome</Label>
-                  <Input id="nome" placeholder="Nome completo" />
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input
+                    {...register("name")}
+                    id="name"
+                    placeholder="Nome completo"
+                    className={errors.name ? "border-red-500" : ""}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
+                    {...register("email")}
                     id="email"
                     type="email"
                     placeholder="email@exemplo.com"
+                    className={errors.email ? "border-red-500" : ""}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-red-500">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cargo">Cargo</Label>
-                  <Input id="cargo" placeholder="Cargo do usuário" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="departamento">Departamento</Label>
-                  <Select>
-                    <SelectTrigger id="departamento">
-                      <SelectValue placeholder="Selecione" />
+                  <Label htmlFor="role">Cargo</Label>
+
+                  <Select
+                    onValueChange={(value: UserRoles) =>
+                      setValue("role", value)
+                    }
+                    value={watch("role")}
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Selecione o Cargo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                      <SelectItem value="produto">Produto</SelectItem>
-                      <SelectItem value="design">Design</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="financeiro">Financeiro</SelectItem>
-                      <SelectItem value="rh">RH</SelectItem>
+                      <SelectItem value="USER">Usuário</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select defaultValue="ativo">
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    onValueChange={(value: UserStatus) =>
+                      setValue("status", value)
+                    }
+                    value={watch("status")}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ENABLED">Ativo</SelectItem>
+                      <SelectItem value="DISABLED">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <input type="hidden" value="user" />
               </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  type="button"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createEditUserMutation.isPending}
+                >
+                  {createEditUserMutation.isPending ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : currentUser ? (
+                    "Salvar Alterações"
+                  ) : (
+                    "Adicionar"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-medium leading-none tracking-tight">
+                Confirmar Exclusão
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground">
+                Tem certeza que deseja apagar este usuário? Esta ação não pode
+                ser desfeita.
+              </p>
             </div>
+
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
                 Cancelar
               </Button>
-              <Button onClick={() => setIsAddUserOpen(false)}>Adicionar</Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <LoaderCircle className="animate-spin" />
+                    Apagando...
+                  </>
+                ) : (
+                  "Confirmar Exclusão"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -299,55 +443,7 @@ export default function UsuariosPage() {
                 Refine a lista de usuários usando os filtros abaixo
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-[2fr_1fr_1fr_auto]">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome, email ou cargo..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os Status</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={departamentoFilter}
-                  onValueChange={setDepartamentoFilter}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Departamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">
-                      Todos os Departamentos
-                    </SelectItem>
-                    <SelectItem value="Tecnologia">Tecnologia</SelectItem>
-                    <SelectItem value="Produto">Produto</SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Financeiro">Financeiro</SelectItem>
-                    <SelectItem value="RH">RH</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button variant="outline" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Exportar
-                </Button>
-              </div>
-            </CardContent>
+            <CardContent></CardContent>
           </Card>
         </motion.div>
 
@@ -359,7 +455,7 @@ export default function UsuariosPage() {
                 Lista de Usuários
               </CardTitle>
               <CardDescription>
-                {usuariosFiltrados.length} usuários encontrados
+                {users?.length} usuários encontrados
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -369,113 +465,89 @@ export default function UsuariosPage() {
                     <TableRow>
                       <TableHead>Usuário</TableHead>
                       <TableHead>Cargo</TableHead>
-                      <TableHead>Departamento</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Último Acesso</TableHead>
-                      <TableHead className="w-[80px]">Ações</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usuariosFiltrados.length > 0 ? (
-                      usuariosFiltrados.map((usuario) => (
-                        <TableRow key={usuario.id}>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell>
+                          <LoaderCircle className="animate-spin" />
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      users?.map((user) => (
+                        <TableRow key={user.id}>
                           <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                <AvatarImage
-                                  src={usuario.avatar}
-                                  alt={usuario.nome}
-                                />
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src="" />
                                 <AvatarFallback>
-                                  {usuario.nome.substring(0, 2).toUpperCase()}
+                                  {user.name?.charAt(0) || "U"}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium">
-                                  {usuario.nome}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {usuario.email}
-                                </div>
+                                <p className="font-medium">{user.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {user.email}
+                                </p>
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>{usuario.cargo}</TableCell>
-                          <TableCell>{usuario.departamento}</TableCell>
+                          <TableCell>{user.role}</TableCell>
                           <TableCell>
                             <Badge
                               variant={
-                                usuario.status === "ativo"
+                                user.status === "ENABLED"
                                   ? "default"
                                   : "secondary"
                               }
                             >
-                              {usuario.status === "ativo" ? "Ativo" : "Inativo"}
+                              {user.status}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {formatarData(usuario.ultimoAcesso)}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="outline" size="icon">
                                   <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">Abrir menu</span>
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                <DropdownMenuItem className="cursor-pointer">
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setCurrentUser(user);
+                                    setIsDialogOpen(true);
+                                    reset({
+                                      email: user.email,
+                                      name: user.name,
+                                      role: user.role,
+                                      status: user.status,
+                                      password: "raster-password",
+                                    });
+                                  }}
+                                >
                                   <UserCog className="mr-2 h-4 w-4" />
                                   Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="cursor-pointer text-destructive">
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(user.id)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
                                   <Trash className="mr-2 h-4 w-4" />
-                                  Excluir
+                                  Apagar
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          Nenhum usuário encontrado.
-                        </TableCell>
-                      </TableRow>
                     )}
                   </TableBody>
                 </Table>
-              </div>
-
-              <div className="mt-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious href="#" />
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink href="#" isActive>
-                        1
-                      </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink href="#">2</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink href="#">3</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationNext href="#" />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
               </div>
             </CardContent>
           </Card>
