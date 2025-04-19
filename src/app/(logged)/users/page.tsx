@@ -15,6 +15,7 @@ import {
   getAuth,
   deleteUser,
   signOut,
+  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 import { motion } from "framer-motion";
 import {
@@ -154,6 +155,7 @@ export default function UsuariosPage() {
 
     try {
       if (currentUser) {
+        // Lógica para edição permanece a mesma
         await updateDoc(doc(db, "users", currentUser.id), {
           name: nome,
           email,
@@ -163,25 +165,50 @@ export default function UsuariosPage() {
           updatedAt: new Date().toISOString(),
         });
       } else {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        const auth = getAuth();
 
-        const user = userCredential.user;
+        // SOLUÇÃO COMPLETA COM TRATAMENTO DE ERROS ANINHADO
+        try {
+          // Tenta criar o usuário diretamente
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
 
-        await setDoc(doc(db, "users", user.uid), {
-          name: nome,
-          email,
-          cargo: cargo || "USER",
-          departamento,
-          status: status || "ativo",
-          role: "user",
-          uid: user.uid,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+          const user = userCredential.user;
+
+          await setDoc(doc(db, "users", user.uid), {
+            name: nome,
+            email,
+            cargo: cargo || "USER",
+            departamento,
+            status: status || "ativo",
+            role: "user",
+            uid: user.uid,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        } catch (createError: any) {
+          if (createError.code === "auth/email-already-in-use") {
+            // Verifica se o email existe mesmo ou se é outro problema
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+
+            if (methods.length > 0) {
+              throw {
+                code: "auth/email-already-in-use",
+                message: "Este email já está cadastrado em nosso sistema.",
+              };
+            } else {
+              throw {
+                code: "auth/unknown-error",
+                message: "Ocorreu um erro inesperado. Tente novamente.",
+              };
+            }
+          } else {
+            throw createError; // Repassa outros erros
+          }
+        }
       }
 
       setIsDialogOpen(false);
@@ -189,15 +216,39 @@ export default function UsuariosPage() {
       fetchUsuarios();
     } catch (error: any) {
       console.error("Erro ao salvar usuário:", error);
-      let errorMessage = "Erro ao salvar usuário. Tente novamente.";
 
-      if (error.code === "auth/email-already-in-use") {
-        errorMessage = "Este email já está em uso por outro usuário.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "O email fornecido é inválido.";
+      // MENSAGENS AMIGÁVEIS PARA O USUÁRIO
+      let userMessage = "Erro ao processar sua solicitação.";
+      let fieldError = "";
+
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          userMessage = "Este e-mail já está cadastrado. Deseja:";
+          fieldError = "E-mail já registrado";
+          break;
+        case "auth/invalid-email":
+          userMessage = "Por favor, insira um e-mail válido.";
+          fieldError = "Formato de e-mail inválido";
+          break;
+        case "auth/weak-password":
+          userMessage = "A senha não é forte o suficiente.";
+          fieldError = "Senha muito fraca";
+          break;
+        default:
+          userMessage = error.message || userMessage;
       }
 
-      setErrors({ submit: errorMessage });
+      setErrors({
+        submit: userMessage,
+        email: fieldError,
+        ...(fieldError
+          ? {
+              [fieldError.toLowerCase().includes("email")
+                ? "email"
+                : "password"]: fieldError,
+            }
+          : {}),
+      });
     }
   };
 
