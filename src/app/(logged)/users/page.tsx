@@ -236,6 +236,10 @@ export default function UsersPage() {
     show: { opacity: 1, y: 0 },
   };
 
+  {
+    /*======================RETURN====================== */
+  }
+
   return (
     <div className="container py-10 overflow-x-auto h-[calc(100vh-6rem)]">
       <motion.div

@@ -178,12 +178,6 @@ export default function MicrocontrollersPage() {
       return;
     }
 
-    if (!currentUserId) {
-      alert("Usuário não autenticado. Faça login novamente.");
-
-      return;
-    }
-
     await addDoc(microRef, {
       ...addData,
       placa: addData.placa.toUpperCase(),
