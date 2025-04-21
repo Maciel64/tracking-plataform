@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { db } from "@/lib/adapters/firebase.adapter";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -13,6 +13,7 @@ import {
   updateDoc,
   where,
   getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import {
   Pencil,
   Trash2,
+  LoaderCircle,
   CheckCircle,
   XCircle,
   Filter,
@@ -44,21 +46,21 @@ import {
 import { useTheme } from "next-themes";
 import { DialogPortal } from "@radix-ui/react-dialog";
 
-const generateRandomName = () => {
-  return Math.random().toString(36).substring(2, 10);
-};
+// zod <> React Hook Form
+import { z } from "zod";
+import { useForm } from "react-hook-form";
 
-interface Microcontroller {
-  id: string;
-  index?: number;
-  nome: string;
-  mac_address: string;
-  modelo: string;
-  chip: string;
-  placa: string;
-  tipo: string;
-  ativo?: boolean;
-}
+// Ensure 'reset' is available from useForm
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User } from "@/@types/user";
+import { FirebaseError } from "firebase/app";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Microcontrollers } from "@/components/server/microcontrollers";
+import { TCreateUserSchema } from "../users/page";
+import { m } from "motion/react";
+import { set } from "date-fns";
 
 interface FormErrors {
   nome?: string;
@@ -69,242 +71,167 @@ interface FormErrors {
   tipo?: string;
 }
 
-export default function MicrocontrollersPage() {
+{
+  /*==========================Cria um esquema ZOD com validações===========================*/
+}
+const microcontrollerSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório"),
+  mac_address: z
+    .string()
+    .regex(/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/, "MAC inválido"),
+  modelo: z.enum(["Raster1", "Raster2"], {
+    required_error: "Modelo é obrigatório",
+  }),
+  chip: z.enum(["VIVO", "CLARO", "TIM"], {
+    required_error: "Chip é obrigatório",
+  }),
+  placa: z.string().min(1, "Placa é obrigatória"),
+  tipo: z.enum(["carro", "moto", "caminhão"], {
+    required_error: "Tipo é obrigatório",
+  }),
+  ativo: z.boolean().default(true), // Added 'ativo' property
+});
+
+export type Microcontroller = z.infer<typeof microcontrollerSchema> & {
+  id?: string;
+};
+
+function MicrocontrollersPage() {
   const { theme } = useTheme();
+  const { reset: formReset } = useForm();
+  const queryClient = useQueryClient();
 
-  const [microcontrollers, setMicrocontrollers] = useState<Microcontroller[]>(
-    []
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentMicro, setCurrentMicro] = useState<Microcontroller | null>(
+    null
   );
-  const [search, setSearch] = useState("");
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editData, setEditData] = useState<Microcontroller>({
-    id: "",
-    nome: "",
-    mac_address: "",
-    modelo: "",
-    chip: "",
-    placa: "",
-    tipo: "",
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [microToDelete, setmicroToDelete] = useState<string | null>(null);
+
+  const {
+    register,
+    formState: { errors },
+    setValue,
+    reset,
+    handleSubmit,
+    watch,
+  } = useForm({
+    resolver: zodResolver(microcontrollerSchema),
+    defaultValues: {
+      nome: currentMicro?.nome || "",
+      mac_address: currentMicro?.mac_address || "",
+      modelo: currentMicro?.modelo || "Raster1",
+      chip: currentMicro?.chip || "VIVO",
+      placa: currentMicro?.placa || "",
+      tipo: currentMicro?.tipo || "carro",
+    },
   });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [addData, setAddData] = useState<
-    Omit<Microcontroller, "id" | "index" | "ativo">
-  >({
-    nome: generateRandomName(),
-    mac_address: "",
-    modelo: "",
-    chip: "",
-    placa: "",
-    tipo: "",
-  });
-  const [addErrors, setAddErrors] = useState<FormErrors>({});
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const isValidMac = (mac: string): boolean => {
-    const regex = /^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/;
-    return regex.test(mac);
-  };
-
-  const isValidPlate = (plate: string): boolean => {
-    const regex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
-    return regex.test(plate);
-  };
-
-  const resetAddForm = () => {
-    setAddData({
-      nome: generateRandomName(),
-      mac_address: "",
-      modelo: "",
-      chip: "",
-      placa: "",
-      tipo: "",
-    });
-    setAddErrors({});
-  };
-
-  const validateAddFields = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!addData.nome.trim()) newErrors.nome = "Nome é obrigatório";
-    else if (addData.nome.length > 10)
-      newErrors.nome = "Máximo de 10 caracteres";
-
-    if (!addData.mac_address.trim())
-      newErrors.mac_address = "MAC é obrigatório";
-    else if (!isValidMac(addData.mac_address.trim()))
-      newErrors.mac_address = "MAC inválido. Ex: 00:11:22:33:44:55";
-
-    if (!addData.modelo.trim()) newErrors.modelo = "Modelo é obrigatório";
-    if (!addData.chip.trim()) newErrors.chip = "Chip é obrigatório";
-    if (!addData.placa.trim()) newErrors.placa = "Placa é obrigatória";
-    else if (!isValidPlate(addData.placa.trim()))
-      newErrors.placa = "Placa inválida. Ex: ABC1A23";
-
-    if (!addData.tipo.trim()) newErrors.tipo = "Tipo é obrigatório";
-
-    setAddErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  {
-    /*======================handleadd============================= */
-  }
-
-  const handleAdd = async (): Promise<void> => {
-    if (!validateAddFields()) return;
-
-    const microRef = collection(db, "microcontrollers");
-
-    const [macSnapshot, placaSnapshot] = await Promise.all([
-      getDocs(query(microRef, where("mac_address", "==", addData.mac_address))),
-      getDocs(
-        query(microRef, where("placa", "==", addData.placa.toUpperCase()))
-      ),
-    ]);
-
-    const newErrors: FormErrors = {};
-
-    if (!macSnapshot.empty) {
-      newErrors.mac_address = "Já existe um microcontrolador com esse MAC.";
-    }
-
-    if (!placaSnapshot.empty) {
-      newErrors.placa = "Já existe um microcontrolador com essa placa.";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setAddErrors((prev) => ({ ...prev, ...newErrors }));
-      return;
-    }
-
-    await addDoc(microRef, {
-      ...addData,
-      placa: addData.placa.toUpperCase(),
-      ativo: true,
-      userid: currentUserId, // Aqui o userid está garantido
-    });
-
-    setIsAddOpen(false);
-    resetAddForm();
-    fetchData();
-  };
-  {
-    /*=================handledelete============================*/
-  }
-
-  const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, "microcontrollers", id));
-    fetchData();
-  };
-
-  const toggleActive = async (id: string, current: boolean) => {
-    await updateDoc(doc(db, "microcontrollers", id), { ativo: !current });
-    fetchData();
-  };
-
-  const validateEdit = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!editData.nome?.trim()) newErrors.nome = "Nome é obrigatório";
-    if (!editData.mac_address?.trim())
-      newErrors.mac_address = "MAC é obrigatório";
-    else if (
-      !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(editData.mac_address)
-    )
-      newErrors.mac_address = "Formato inválido (use 00:11:22:33:44:55)";
-
-    if (!editData.modelo?.trim()) newErrors.modelo = "Modelo é obrigatório";
-    if (!editData.chip?.trim()) newErrors.chip = "Chip é obrigatório";
-    if (!editData.tipo?.trim()) newErrors.tipo = "Tipo é obrigatório";
-
-    if (!editData.placa?.trim()) newErrors.placa = "Placa é obrigatória";
-    else if (!/^[A-Z]{3}\d[A-Z]\d{2}$/.test(editData.placa.toUpperCase()))
-      newErrors.placa = "Formato inválido (ex: ABC1D23)";
-
-    const isDuplicateMac = microcontrollers.some(
-      (mc) => mc.id !== editData.id && mc.mac_address === editData.mac_address
-    );
-    const isDuplicatePlaca = microcontrollers.some(
-      (mc) => mc.id !== editData.id && mc.placa === editData.placa.toUpperCase()
-    );
-
-    if (isDuplicateMac) newErrors.mac_address = "MAC já cadastrado";
-    if (isDuplicatePlaca) newErrors.placa = "Placa já cadastrada";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleEditSubmit = async () => {
-    if (!validateEdit()) return;
-
-    await updateDoc(doc(db, "microcontrollers", editData.id), { ...editData });
-    setIsEditOpen(false);
-    fetchData();
-  };
-
-  const fetchData = async () => {
-    if (!currentUserId) return;
-
-    try {
-      const userDoc = await getDoc(doc(db, "users", currentUserId));
-      const isAdmin = userDoc.exists() && userDoc.data()?.role === "ADMIN";
-
-      // Para o admin, busca todos os microcontroladores
-      const q = isAdmin
-        ? collection(db, "microcontrollers")
-        : query(
-            collection(db, "microcontrollers"),
-            where("userid", "==", currentUserId) // Para usuários comuns, busca microcontroladores do próprio usuário
-          );
-
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((doc, index) => ({
+  const { data: microcontrollers, isLoading } = useQuery({
+    queryKey: ["microcontrollers"],
+    queryFn: async () => {
+      const snapshot = await getDocs(collection(db, "microcontrollers"));
+      return snapshot.docs.map((doc) => ({
         id: doc.id,
-        index: index + 1,
-        ...doc.data(),
-      })) as Microcontroller[];
-
-      setMicrocontrollers(data);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    }
-  };
-
-  useEffect(() => {
-    const authInstance = getAuth();
-    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
-      if (user) {
-        setCurrentUserId(user.uid); // ✅ Nome correto da função
-      } else {
-        setCurrentUserId(null); // ✅ Nome correto da função
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (currentUserId) fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserId]);
-
-  const filteredData = microcontrollers.filter((item) => {
-    return (
-      item.nome?.toLowerCase().includes(search.toLowerCase()) ||
-      item.mac_address?.toLowerCase().includes(search.toLowerCase()) ||
-      item.modelo?.toLowerCase().includes(search.toLowerCase()) ||
-      item.placa?.toLowerCase().includes(search.toLowerCase())
-    );
+        nome: doc.data().nome || "",
+        mac_address: doc.data().mac_address || "",
+        modelo: doc.data().modelo || "",
+        chip: doc.data().chip || "",
+        ativo: doc.data().ativo || true,
+        placa: doc.data().placa || "",
+        tipo: doc.data().tipo || "",
+        createdAt: doc.data().createdAt || "",
+        updatedAt: doc.data().updatedAt || "",
+      }));
+    },
   });
 
   {
-    /*========================RETORNO=========================*/
+    /*======================adicionar /editar microcontroller====================== */
   }
+
+  const createEditMicroMutation = useMutation<
+    void,
+    FirebaseError,
+    Microcontroller
+  >({
+    mutationFn: async (data) => {
+      const { nome, mac_address, modelo, chip, placa, tipo } = data;
+
+      if (currentMicro) {
+        const updateMicro = {
+          nome,
+          mac_address,
+          modelo,
+          chip,
+          placa,
+          tipo,
+          updateDat: new Date().toISOString,
+        };
+        await updateDoc(
+          doc(db, "microcontrollers", currentMicro.id!),
+          updateMicro
+        );
+        return;
+      }
+      const newMicro = {
+        nome,
+        mac_address,
+        modelo,
+        chip,
+        placa,
+        tipo,
+        ativo: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    },
+    onSuccess: () => {
+      toast.success("Microcontrolador atualizado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["microcontrollers"] });
+      setIsDialogOpen(false);
+      reset();
+    },
+    onError: () => {
+      toast.error("Não foi possível criar o Microcontrolador");
+    },
+  });
+
+  {
+    /*===================================== DELETAR ================================== */
+  }
+
+  const handleDelete = (userId: string) => {
+    setmicroToDelete(userId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!microToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const userRef = doc(db, "microcontrollers", microToDelete);
+      await deleteDoc(userRef);
+
+      setIsDeleteDialogOpen(false);
+      toast.success("O usuário foi apagado com sucesso");
+      queryClient.invalidateQueries({
+        queryKey: ["microcontrollers"],
+      });
+    } catch (error) {
+      toast.error("Não foi possível apagar o usuário");
+      console.error("Erro ao apagar usuário:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  /*========================RETORNO=========================*/
 
   return (
-    <div className="p-4 min-h-screen bg-background text-foreground">
+    <div className="p-4 min-h-screen bg-background text-foreground overflow-x-auto h-[calc(100vh-6rem)]">
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
         <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
           Microcontroladores
@@ -315,161 +242,122 @@ export default function MicrocontrollersPage() {
       </p>
 
       {/*=============Adicionar microcontrolador================ */}
-      <div className="mb-4">
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="cursor-pointer">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Adicionar Microcontrolador
-            </Button>
-          </DialogTrigger>
-          <DialogContent
-            className={`sm:max-w-[425px] ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            <DialogHeader>
-              <DialogTitle
-                className={`${theme === "dark" ? "text-white" : "text-black"}`}
-              >
+
+      <form
+        onSubmit={handleSubmit((data) => createEditMicroMutation.mutate(data))}
+      >
+        <div className="mb-4">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="cursor-pointer">
+                <PlusCircle className="mr-2 h-4 w-4" />
                 Adicionar Microcontrolador
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome" className="text-foreground">
-                  Nome
-                </Label>
-                <Input
-                  id="nome"
-                  value={addData.nome}
-                  onChange={(e) =>
-                    setAddData({ ...addData, nome: e.target.value })
-                  }
-                  className="bg-card"
-                />
-                {addErrors.nome && (
-                  <p className="text-sm text-destructive">{addErrors.nome}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mac">MAC Address</Label>
-                <Input
-                  id="mac"
-                  value={addData.mac_address}
-                  onChange={(e) =>
-                    setAddData({ ...addData, mac_address: e.target.value })
-                  }
-                  placeholder="00:11:22:33:44:55"
-                />
-                {addErrors.mac_address && (
-                  <p className="text-sm text-destructive">
-                    {addErrors.mac_address}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Modelo</Label>
-                <Select
-                  value={addData.modelo}
-                  onValueChange={(value) =>
-                    setAddData({ ...addData, modelo: value })
-                  }
+              </Button>
+            </DialogTrigger>
+            <DialogContent
+              className={`sm:max-w-[425px] ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
+            >
+              <DialogHeader>
+                <DialogTitle
+                  className={`${
+                    theme === "dark" ? "text-white" : "text-black"
+                  }`}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o modelo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Raster1">Raster 1</SelectItem>
-                    <SelectItem value="Raster2">Raster 2</SelectItem>
-                  </SelectContent>
-                </Select>
-                {addErrors.modelo && (
-                  <p className="text-sm text-destructive">{addErrors.modelo}</p>
-                )}
-              </div>
+                  Adicionar Microcontrolador
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome" className="text-foreground">
+                    Nome
+                  </Label>
+                  <Input
+                    {...register("nome")}
+                    id="nome"
+                    value={undefined}
+                    className="bg-card"
+                  />
+                  {<p className="text-sm text-destructive"></p>}
+                </div>
 
-              <div className="space-y-2">
-                <Label>Chip</Label>
-                <Select
-                  value={addData.chip}
-                  onValueChange={(value) =>
-                    setAddData({ ...addData, chip: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o chip" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="VIVO">VIVO</SelectItem>
-                    <SelectItem value="CLARO">CLARO</SelectItem>
-                    <SelectItem value="TIM">TIM</SelectItem>
-                  </SelectContent>
-                </Select>
-                {addErrors.chip && (
-                  <p className="text-sm text-destructive">{addErrors.chip}</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mac">MAC Address</Label>
+                  <Input
+                    {...register("mac_address")}
+                    id="mac"
+                    value={undefined}
+                    placeholder="00:11:22:33:44:55"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="placa">Placa</Label>
-                <Input
-                  id="placa"
-                  value={addData.placa}
-                  onChange={(e) =>
-                    setAddData({
-                      ...addData,
-                      placa: e.target.value.toUpperCase(),
-                    })
-                  }
-                  placeholder="ABC1A23"
-                />
-                {addErrors.placa && (
-                  <p className="text-sm text-destructive">{addErrors.placa}</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label>Modelo</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Raster1">Raster 1</SelectItem>
+                      <SelectItem value="Raster2">Raster 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label>Tipo de veículo</Label>
-                <Select
-                  value={addData.tipo}
-                  onValueChange={(value) =>
-                    setAddData({ ...addData, tipo: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo de veículo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="carro">Carro</SelectItem>
-                    <SelectItem value="moto">Moto</SelectItem>
-                    <SelectItem value="caminhão">Caminhão</SelectItem>
-                  </SelectContent>
-                </Select>
-                {addErrors.tipo && (
-                  <p className="text-sm text-destructive">{addErrors.tipo}</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label>Chip</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o chip" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="VIVO">VIVO</SelectItem>
+                      <SelectItem value="CLARO">CLARO</SelectItem>
+                      <SelectItem value="TIM">TIM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {<p className="text-sm text-destructive"></p>}
+                </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  className="cursor-pointer"
-                  variant="outline"
-                  onClick={() => setIsAddOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button className="cursor-pointer" onClick={handleAdd}>
-                  Cadastrar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="placa">Placa</Label>
+                  <Input
+                    {...register("placa")}
+                    id="placa"
+                    placeholder="ABC1A23"
+                  />
+                  {<p className="text-sm text-destructive"></p>}
+                </div>
 
+                <div className="space-y-2">
+                  <Label>Tipo de veículo</Label>
+                  <Select value={undefined}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de veículo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="carro">Carro</SelectItem>
+                      <SelectItem value="moto">Moto</SelectItem>
+                      <SelectItem value="caminhão">Caminhão</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {<p className="text-sm text-destructive">{}</p>}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button className="cursor-pointer" variant="outline">
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="cursor-pointer">
+                    Cadastrar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </form>
       {/*==========Filtro depesquisa=============== */}
 
       <div className="border rounded-lg mb-4 p-4 bg-card">
@@ -480,8 +368,6 @@ export default function MicrocontrollersPage() {
         <div className="flex flex-wrap gap-2">
           <Input
             placeholder="Buscar por nome, MAC, modelo ou placa..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
           />
         </div>
@@ -493,7 +379,7 @@ export default function MicrocontrollersPage() {
           <h2 className="text-xl font-semibold">Lista de microcontroladores</h2>
         </div>
         <p className="text-muted-foreground mb-4">
-          {microcontrollers.length} microcontroladores cadastrados
+          microcontroladores cadastrados
         </p>
 
         <div className="overflow-auto">
@@ -512,9 +398,9 @@ export default function MicrocontrollersPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((item) => (
+              {microcontrollers?.map((item, index) => (
                 <tr key={item.id} className="border-b hover:bg-accent">
-                  <td className="p-2">{item.index}</td>
+                  <td className="p-2">{index + 1}</td>
                   <td className="p-2">{item.nome}</td>
                   <td className="p-2">{item.mac_address}</td>
                   <td className="p-2">{item.modelo}</td>
@@ -525,13 +411,12 @@ export default function MicrocontrollersPage() {
                   <td className="p-2 flex gap-2">
                     {/*===============EDITAR=============== {cn("sm:max-w-[425px]",theme === "light" ? "bg-white" : "bg-black")}*/}
 
-                    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                    <Dialog>
                       <DialogTrigger asChild>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-primary border-primary cursor-pointer"
-                          onClick={() => setEditData(item)}
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -549,19 +434,7 @@ export default function MicrocontrollersPage() {
                               <Input
                                 id="edit-nome"
                                 className="bg-white dark:bg-zinc-800 dark:text-white"
-                                value={editData.nome}
-                                onChange={(e) =>
-                                  setEditData({
-                                    ...editData,
-                                    nome: e.target.value,
-                                  })
-                                }
                               />
-                              {errors.nome && (
-                                <p className="text-sm text-destructive">
-                                  {errors.nome}
-                                </p>
-                              )}
                             </div>
 
                             <div className="space-y-2">
@@ -569,30 +442,13 @@ export default function MicrocontrollersPage() {
                               <Input
                                 id="edit-mac"
                                 className="bg-white dark:bg-zinc-800 dark:text-white"
-                                value={editData.mac_address}
-                                onChange={(e) =>
-                                  setEditData({
-                                    ...editData,
-                                    mac_address: e.target.value,
-                                  })
-                                }
                                 placeholder="00:11:22:33:44:55"
                               />
-                              {errors.mac_address && (
-                                <p className="text-sm text-destructive">
-                                  {errors.mac_address}
-                                </p>
-                              )}
                             </div>
 
                             <div className="space-y-2">
                               <Label>Modelo</Label>
-                              <Select
-                                value={editData.modelo}
-                                onValueChange={(value) =>
-                                  setEditData({ ...editData, modelo: value })
-                                }
-                              >
+                              <Select>
                                 <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
                                   <SelectValue placeholder="Selecione o modelo" />
                                 </SelectTrigger>
@@ -605,21 +461,11 @@ export default function MicrocontrollersPage() {
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
-                              {errors.modelo && (
-                                <p className="text-sm text-destructive">
-                                  {errors.modelo}
-                                </p>
-                              )}
                             </div>
 
                             <div className="space-y-2">
                               <Label>Chip</Label>
-                              <Select
-                                value={editData.chip}
-                                onValueChange={(value) =>
-                                  setEditData({ ...editData, chip: value })
-                                }
-                              >
+                              <Select>
                                 <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
                                   <SelectValue placeholder="Selecione o chip" />
                                 </SelectTrigger>
@@ -629,11 +475,6 @@ export default function MicrocontrollersPage() {
                                   <SelectItem value="TIM">TIM</SelectItem>
                                 </SelectContent>
                               </Select>
-                              {errors.chip && (
-                                <p className="text-sm text-destructive">
-                                  {errors.chip}
-                                </p>
-                              )}
                             </div>
 
                             <div className="space-y-2">
@@ -641,30 +482,13 @@ export default function MicrocontrollersPage() {
                               <Input
                                 id="edit-placa"
                                 className="bg-white dark:bg-zinc-800 dark:text-white"
-                                value={editData.placa}
-                                onChange={(e) =>
-                                  setEditData({
-                                    ...editData,
-                                    placa: e.target.value.toUpperCase(),
-                                  })
-                                }
                                 placeholder="ABC1A23"
                               />
-                              {errors.placa && (
-                                <p className="text-sm text-destructive">
-                                  {errors.placa}
-                                </p>
-                              )}
                             </div>
 
                             <div className="space-y-2">
                               <Label>Tipo de veículo</Label>
-                              <Select
-                                value={editData.tipo}
-                                onValueChange={(value) =>
-                                  setEditData({ ...editData, tipo: value })
-                                }
-                              >
+                              <Select>
                                 <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
                                   <SelectValue placeholder="Tipo de veículo" />
                                 </SelectTrigger>
@@ -676,27 +500,16 @@ export default function MicrocontrollersPage() {
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
-                              {errors.tipo && (
-                                <p className="text-sm text-destructive">
-                                  {errors.tipo}
-                                </p>
-                              )}
                             </div>
 
                             <div className="flex justify-end gap-2 pt-4">
                               <Button
                                 variant="outline"
-                                onClick={() => setIsEditOpen(false)}
                                 className="cursor-pointer"
                               >
                                 Cancelar
                               </Button>
-                              <Button
-                                className="cursor-pointer"
-                                onClick={handleEditSubmit}
-                              >
-                                Salvar
-                              </Button>
+                              <Button className="cursor-pointer">Salvar</Button>
                             </div>
                           </div>
                         </DialogContent>
@@ -713,7 +526,6 @@ export default function MicrocontrollersPage() {
                           ? "text-blue-500 border-blue-500 cursor-pointer"
                           : "text-destructive border-destructive cursor-pointer"
                       }
-                      onClick={() => toggleActive(item.id, item.ativo ?? false)}
                     >
                       {item.ativo ? (
                         <CheckCircle className="w-4 h-4" />
@@ -729,6 +541,7 @@ export default function MicrocontrollersPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => handleDelete(item.id)}
                           className="text-destructive border-destructive cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -751,8 +564,8 @@ export default function MicrocontrollersPage() {
                               Cancelar
                             </Button>
                             <Button
-                              variant="destructive"
-                              onClick={() => handleDelete(item.id)}
+                              onClick={confirmDelete}
+                              disabled={isDeleting}
                             >
                               Excluir
                             </Button>
@@ -770,3 +583,5 @@ export default function MicrocontrollersPage() {
     </div>
   );
 }
+
+export default MicrocontrollersPage;
