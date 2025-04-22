@@ -62,14 +62,9 @@ import { TCreateUserSchema } from "../users/page";
 import { m } from "motion/react";
 import { set } from "date-fns";
 
-interface FormErrors {
-  nome?: string;
-  mac_address?: string;
-  modelo?: string;
-  chip?: string;
-  placa?: string;
-  tipo?: string;
-}
+export type tipos = "carro" | "moto" | "caminhão";
+export type chips = "VIVO" | "CLARO" | "TIM";
+export type modelos = "Raster1" | "Raster2";
 
 {
   /*==========================Cria um esquema ZOD com validações===========================*/
@@ -108,6 +103,7 @@ function MicrocontrollersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [microToDelete, setmicroToDelete] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
 
   const {
     register,
@@ -159,7 +155,52 @@ function MicrocontrollersPage() {
     mutationFn: async (data) => {
       const { nome, mac_address, modelo, chip, placa, tipo } = data;
 
+      // Obter o ID do usuário autenticado
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error("Usuário não autenticado");
+      }
+      const userId = currentUser.uid;
+
+      // Verifica se já existe um microcontrolador com o mesmo mac_address ou placa
+      const microRef = collection(db, "microcontrollers");
+      const macQuery = query(microRef, where("mac_address", "==", mac_address));
+      const placaQuery = query(microRef, where("placa", "==", placa));
+
+      const [macSnapshot, placaSnapshot] = await Promise.all([
+        getDocs(macQuery),
+        getDocs(placaQuery),
+      ]);
+
+      // Se encontrar um documento com o mesmo mac_address ou placa, lança um erro
+      if (!currentMicro) {
+        if (!macSnapshot.empty) {
+          throw new Error(
+            "Já existe um microcontrolador com este MAC Address."
+          );
+        }
+        if (!placaSnapshot.empty) {
+          throw new Error("Já existe um microcontrolador com esta placa.");
+        }
+      } else {
+        // Se estiver editando, verifica se o documento encontrado não é o atual
+        if (!macSnapshot.empty && macSnapshot.docs[0].id !== currentMicro.id) {
+          throw new Error(
+            "Já existe um microcontrolador com este MAC Address."
+          );
+        }
+        if (
+          !placaSnapshot.empty &&
+          placaSnapshot.docs[0].id !== currentMicro.id
+        ) {
+          throw new Error("Já existe um microcontrolador com esta placa.");
+        }
+      }
+
       if (currentMicro) {
+        // Atualiza o microcontrolador existente
         const updateMicro = {
           nome,
           mac_address,
@@ -167,7 +208,7 @@ function MicrocontrollersPage() {
           chip,
           placa,
           tipo,
-          updateDat: new Date().toISOString,
+          updatedAt: new Date().toISOString(),
         };
         await updateDoc(
           doc(db, "microcontrollers", currentMicro.id!),
@@ -175,6 +216,8 @@ function MicrocontrollersPage() {
         );
         return;
       }
+
+      // Cria um novo microcontrolador com o ID do usuário
       const newMicro = {
         nome,
         mac_address,
@@ -183,9 +226,13 @@ function MicrocontrollersPage() {
         placa,
         tipo,
         ativo: true,
+        userId, // Adiciona o ID do usuário
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      await addDoc(microRef, newMicro);
+      console.log("Microcontrolador criado com sucesso", currentUser);
     },
     onSuccess: () => {
       toast.success("Microcontrolador atualizado com sucesso!");
@@ -193,8 +240,12 @@ function MicrocontrollersPage() {
       setIsDialogOpen(false);
       reset();
     },
-    onError: () => {
-      toast.error("Não foi possível criar o Microcontrolador");
+    onError: (error) => {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Não foi possível criar o Microcontrolador");
+      }
     },
   });
 
@@ -202,11 +253,13 @@ function MicrocontrollersPage() {
     /*===================================== DELETAR ================================== */
   }
 
+  //Pega o ID do microcontrolador a ser deletado e abre o dialog de confirmação
   const handleDelete = (userId: string) => {
     setmicroToDelete(userId);
     setIsDeleteDialogOpen(true);
   };
 
+  // Fecha o dialog de confirmação e apaga o microcontrolador
   const confirmDelete = async () => {
     if (!microToDelete) return;
 
@@ -216,7 +269,7 @@ function MicrocontrollersPage() {
       await deleteDoc(userRef);
 
       setIsDeleteDialogOpen(false);
-      toast.success("O usuário foi apagado com sucesso");
+      toast.success("O microcontrolador foi apagado com sucesso");
       queryClient.invalidateQueries({
         queryKey: ["microcontrollers"],
       });
@@ -226,6 +279,13 @@ function MicrocontrollersPage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const ativarDesativarMicro = async (microId: string, ativo: boolean) => {
+    const microRef = doc(db, "microcontrollers", microId);
+    await setDoc(microRef, { ativo }, { merge: true });
+    toast.success("Microcontrolador atualizado com sucesso!");
+    queryClient.invalidateQueries({ queryKey: ["microcontrollers"] });
   };
 
   /*========================RETORNO=========================*/
@@ -243,21 +303,23 @@ function MicrocontrollersPage() {
 
       {/*=============Adicionar microcontrolador================ */}
 
-      <form
-        onSubmit={handleSubmit((data) => createEditMicroMutation.mutate(data))}
-      >
-        <div className="mb-4">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="cursor-pointer">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar Microcontrolador
-              </Button>
-            </DialogTrigger>
-            <DialogContent
-              className={`sm:max-w-[425px] ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
+      <div className="mb-4">
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="cursor-pointer">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Adicionar Microcontrolador
+            </Button>
+          </DialogTrigger>
+          <DialogContent
+            className={`sm:max-w-[425px] ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <form
+              onSubmit={handleSubmit((data) =>
+                createEditMicroMutation.mutate(data)
+              )}
             >
               <DialogHeader>
                 <DialogTitle
@@ -294,7 +356,12 @@ function MicrocontrollersPage() {
 
                 <div className="space-y-2">
                   <Label>Modelo</Label>
-                  <Select>
+                  <Select
+                    onValueChange={(value: modelos) =>
+                      setValue("modelo", value)
+                    }
+                    value={watch("modelo")}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o modelo" />
                     </SelectTrigger>
@@ -307,7 +374,10 @@ function MicrocontrollersPage() {
 
                 <div className="space-y-2">
                   <Label>Chip</Label>
-                  <Select>
+                  <Select
+                    onValueChange={(value: chips) => setValue("chip", value)}
+                    value={watch("chip")}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o chip" />
                     </SelectTrigger>
@@ -332,32 +402,50 @@ function MicrocontrollersPage() {
 
                 <div className="space-y-2">
                   <Label>Tipo de veículo</Label>
-                  <Select value={undefined}>
+                  <Select
+                    onValueChange={(value: tipos) => setValue("tipo", value)}
+                    value={watch("tipo")}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Tipo de veículo" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="carro">Carro</SelectItem>
                       <SelectItem value="moto">Moto</SelectItem>
-                      <SelectItem value="caminhão">Caminhão</SelectItem>
+                      <SelectItem value="caminhao">Caminhão</SelectItem>
                     </SelectContent>
                   </Select>
                   {<p className="text-sm text-destructive">{}</p>}
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button className="cursor-pointer" variant="outline">
+                  <Button
+                    onClick={() => setIsDialogOpen(false)}
+                    className="cursor-pointer"
+                    variant="outline"
+                  >
                     Cancelar
                   </Button>
-                  <Button type="submit" className="cursor-pointer">
-                    Cadastrar
+                  <Button
+                    type="submit"
+                    className="cursor-pointer"
+                    disabled={createEditMicroMutation.isPending}
+                  >
+                    {createEditMicroMutation.isPending ? (
+                      <LoaderCircle className="animate-spin" />
+                    ) : currentMicro ? (
+                      "Salvar Alterações"
+                    ) : (
+                      "Adicionar Microcontrolador"
+                    )}
                   </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </form>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {/*==========Filtro depesquisa=============== */}
 
       <div className="border rounded-lg mb-4 p-4 bg-card">
@@ -373,13 +461,13 @@ function MicrocontrollersPage() {
         </div>
       </div>
 
-      <div className="border rounded-lg p-4 bg-card">
+      <div className="border rounded-lg p-4 bg-card h-screen overflow-auto">
         <div className="flex items-center gap-2 mb-2">
           <Cpu className="w-5 h-5" />
           <h2 className="text-xl font-semibold">Lista de microcontroladores</h2>
         </div>
         <p className="text-muted-foreground mb-4">
-          microcontroladores cadastrados
+          Microcontroladores cadastrados
         </p>
 
         <div className="overflow-auto">
@@ -411,111 +499,13 @@ function MicrocontrollersPage() {
                   <td className="p-2 flex gap-2">
                     {/*===============EDITAR=============== {cn("sm:max-w-[425px]",theme === "light" ? "bg-white" : "bg-black")}*/}
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-primary border-primary cursor-pointer"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-
-                      <DialogPortal>
-                        <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
-                        <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white/90 dark:bg-gray-900/90 p-6 shadow-lg backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                          <DialogHeader>
-                            <DialogTitle>Editar Microcontrolador</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="edit-nome">Nome</Label>
-                              <Input
-                                id="edit-nome"
-                                className="bg-white dark:bg-zinc-800 dark:text-white"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="edit-mac">MAC Address</Label>
-                              <Input
-                                id="edit-mac"
-                                className="bg-white dark:bg-zinc-800 dark:text-white"
-                                placeholder="00:11:22:33:44:55"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Modelo</Label>
-                              <Select>
-                                <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
-                                  <SelectValue placeholder="Selecione o modelo" />
-                                </SelectTrigger>
-                                <SelectContent className="dark:bg-zinc-800 dark:text-white">
-                                  <SelectItem value="Raster1">
-                                    Raster 1
-                                  </SelectItem>
-                                  <SelectItem value="Raster2">
-                                    Raster 2
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Chip</Label>
-                              <Select>
-                                <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
-                                  <SelectValue placeholder="Selecione o chip" />
-                                </SelectTrigger>
-                                <SelectContent className="dark:bg-zinc-800 dark:text-white">
-                                  <SelectItem value="VIVO">VIVO</SelectItem>
-                                  <SelectItem value="CLARO">CLARO</SelectItem>
-                                  <SelectItem value="TIM">TIM</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="edit-placa">Placa</Label>
-                              <Input
-                                id="edit-placa"
-                                className="bg-white dark:bg-zinc-800 dark:text-white"
-                                placeholder="ABC1A23"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Tipo de veículo</Label>
-                              <Select>
-                                <SelectTrigger className="dark:bg-zinc-800 dark:text-white">
-                                  <SelectValue placeholder="Tipo de veículo" />
-                                </SelectTrigger>
-                                <SelectContent className="dark:bg-zinc-800 dark:text-white">
-                                  <SelectItem value="carro">Carro</SelectItem>
-                                  <SelectItem value="moto">Moto</SelectItem>
-                                  <SelectItem value="caminhão">
-                                    Caminhão
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-4">
-                              <Button
-                                variant="outline"
-                                className="cursor-pointer"
-                              >
-                                Cancelar
-                              </Button>
-                              <Button className="cursor-pointer">Salvar</Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </DialogPortal>
-                    </Dialog>
-
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-primary border-primary cursor-pointer"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     {/*===============Ativar/Desativar=============== */}
 
                     <Button

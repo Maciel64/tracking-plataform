@@ -193,11 +193,13 @@ export default function UsersPage() {
     },
   });
 
+  //Pega o id do usuário a ser apagado e abre o dialog de confirmação
   const handleDelete = (userId: string) => {
     setUserToDelete(userId);
     setIsDeleteDialogOpen(true);
   };
 
+  //Apaga o usuário do Firestore
   const confirmDelete = async () => {
     if (!userToDelete) return;
 
