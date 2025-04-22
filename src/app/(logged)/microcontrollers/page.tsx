@@ -65,6 +65,7 @@ import { set } from "date-fns";
 export type tipos = "carro" | "moto" | "caminhão";
 export type chips = "VIVO" | "CLARO" | "TIM";
 export type modelos = "Raster1" | "Raster2";
+export type roles = "ADMIN" | "USER";
 
 {
   /*==========================Cria um esquema ZOD com validações===========================*/
@@ -104,6 +105,7 @@ function MicrocontrollersPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [microToDelete, setmicroToDelete] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<"ADMIN" | "USER" | null>(null);
 
   const {
     register,
@@ -127,18 +129,28 @@ function MicrocontrollersPage() {
   const { data: microcontrollers, isLoading } = useQuery({
     queryKey: ["microcontrollers"],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, "microcontrollers"));
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error("Usuário não autenticado");
+
+      // Busca o papel do usuário diretamente do Firestore
+      const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const userRole = userSnap.exists() ? userSnap.data().role : "USER";
+
+      const microRef = collection(db, "microcontrollers");
+
+      let q;
+      if (userRole === "ADMIN") {
+        q = microRef; // Admin vê todos
+      } else {
+        q = query(microRef, where("userId", "==", currentUser.uid)); // User vê só os dele
+      }
+
+      const snapshot = await getDocs(q);
+      console.log(snapshot.docs.map((doc) => doc.data()));
       return snapshot.docs.map((doc) => ({
         id: doc.id,
-        nome: doc.data().nome || "",
-        mac_address: doc.data().mac_address || "",
-        modelo: doc.data().modelo || "",
-        chip: doc.data().chip || "",
-        ativo: doc.data().ativo || true,
-        placa: doc.data().placa || "",
-        tipo: doc.data().tipo || "",
-        createdAt: doc.data().createdAt || "",
-        updatedAt: doc.data().updatedAt || "",
+        ...(doc.data() as Microcontroller),
       }));
     },
   });
@@ -154,15 +166,16 @@ function MicrocontrollersPage() {
   >({
     mutationFn: async (data) => {
       const { nome, mac_address, modelo, chip, placa, tipo } = data;
-
-      // Obter o ID do usuário autenticado
       const auth = getAuth();
       const currentUser = auth.currentUser;
+      // Obter o ID do usuário autenticado
 
       if (!currentUser) {
+        console.log("Usuário não autenticado", currentUser);
         throw new Error("Usuário não autenticado");
       }
       const userId = currentUser.uid;
+      console.log("Usuário autenticado:", currentUser);
 
       // Verifica se já existe um microcontrolador com o mesmo mac_address ou placa
       const microRef = collection(db, "microcontrollers");
@@ -281,13 +294,45 @@ function MicrocontrollersPage() {
     }
   };
 
-  const ativarDesativarMicro = async (microId: string, ativo: boolean) => {
+  const toggleMicroStatus = async (microId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
     const microRef = doc(db, "microcontrollers", microId);
-    await setDoc(microRef, { ativo }, { merge: true });
-    toast.success("Microcontrolador atualizado com sucesso!");
-    queryClient.invalidateQueries({ queryKey: ["microcontrollers"] });
-  };
 
+    try {
+      // 1. Cancelar queries ativas
+      await queryClient.cancelQueries({ queryKey: ["microcontrollers"] });
+
+      // 3. Atualização otimista
+      queryClient.setQueryData(
+        ["microcontrollers"],
+        (old: Microcontroller[] | undefined) =>
+          old?.map((micro) =>
+            micro.id === microId ? { ...micro, ativo: newStatus } : micro
+          ) || []
+      );
+
+      // 4. Atualização real no Firestore
+      await updateDoc(microRef, { ativo: newStatus });
+
+      // 5. Feedback visual
+      toast.success(
+        `Microcontrolador ${newStatus ? "ativado" : "desativado"} com sucesso!`
+      );
+    } catch (error) {
+      // 6. Rollback em caso de erro
+      const previousMicros = queryClient.getQueryData<Microcontroller[]>([
+        "microcontrollers",
+      ]);
+      if (previousMicros) {
+        queryClient.setQueryData(["microcontrollers"], previousMicros);
+      }
+      toast.error("Falha ao atualizar status");
+      console.error("Erro:", error);
+    } finally {
+      // 7. Sincronizar com servidor
+      queryClient.invalidateQueries({ queryKey: ["microcontrollers"] });
+    }
+  };
   /*========================RETORNO=========================*/
 
   return (
@@ -511,6 +556,7 @@ function MicrocontrollersPage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => toggleMicroStatus(item.id, item.ativo)}
                       className={
                         item.ativo
                           ? "text-blue-500 border-blue-500 cursor-pointer"
