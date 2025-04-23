@@ -141,7 +141,6 @@ export default function UsersPage() {
       const { email, name, password, role, status } = data;
 
       if (currentUser) {
-        console.log(currentUser);
         const updatedUser = {
           name,
           email,
@@ -193,11 +192,13 @@ export default function UsersPage() {
     },
   });
 
+  //Pega o id do usuário a ser apagado e abre o dialog de confirmação
   const handleDelete = (userId: string) => {
     setUserToDelete(userId);
     setIsDeleteDialogOpen(true);
   };
 
+  //Apaga o usuário do Firestore
   const confirmDelete = async () => {
     if (!userToDelete) return;
 
@@ -288,6 +289,8 @@ export default function UsersPage() {
                   : "Preencha os dados para adicionar um novo usuário ao sistema."}
               </DialogDescription>
             </DialogHeader>
+
+            {/* =======================FORMULARIO==================== */}
 
             <form
               onSubmit={handleSubmit((data) =>
