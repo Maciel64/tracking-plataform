@@ -105,7 +105,12 @@ function MicrocontrollersPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [microToDelete, setmicroToDelete] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<"ADMIN" | "USER" | null>(null);
+  const [userRole] = useState<"ADMIN" | "USER" | null>(null);
+
+  const randomName = `Micro_${Math.random()
+    .toString(36)
+    .substring(2, 8)
+    .toUpperCase()}`.substring(0, 10);
 
   const {
     register,
@@ -131,12 +136,21 @@ function MicrocontrollersPage() {
     queryFn: async () => {
       const auth = getAuth();
       const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error("Usuário não autenticado");
-
+      console.log("currentUser:", currentUser);
+      if (!currentUser) {
+        toast.error("Usuário não autenticado. Faça login novamente.");
+        throw new Error("Usuário não autenticado");
+      }
       // Busca o papel do usuário diretamente do Firestore
       const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-      const userRole = userSnap.exists() ? userSnap.data().role : "USER";
+      let userRole = userSnap.exists() ? userSnap.data().role : "USER";
+      console.log("userRole dentro da mutation:", userRole);
 
+      if (!userRole || userRole === "USER") {
+        await new Promise((res) => setTimeout(res, 2000));
+        const retrySnap = await getDoc(doc(db, "users", currentUser.uid));
+        userRole = retrySnap.exists() ? retrySnap.data().role : "USER";
+      }
       const microRef = collection(db, "microcontrollers");
 
       let q;
@@ -175,7 +189,9 @@ function MicrocontrollersPage() {
         throw new Error("Usuário não autenticado");
       }
       const userId = currentUser.uid;
-      console.log("Usuário autenticado:", currentUser);
+      console.log("currentUser:", currentUser);
+
+      console.log("userRole:", userRole);
 
       // Verifica se já existe um microcontrolador com o mesmo mac_address ou placa
       const microRef = collection(db, "microcontrollers");
@@ -382,8 +398,8 @@ function MicrocontrollersPage() {
                   </Label>
                   <Input
                     {...register("nome")}
+                    value={randomName}
                     id="nome"
-                    value={undefined}
                     className="bg-card"
                   />
                   {<p className="text-sm text-destructive"></p>}

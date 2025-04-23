@@ -9,6 +9,8 @@ import { Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { loginSchema } from "@/schemas/user.schema";
 import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth as firebaseAuth } from "@/lib/adapters/firebase.adapter";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +31,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import SessionRedirect from "@/components/session-redirect";
-import { authenticate } from "@/lib/auth/auth.utils"; // 👈 novo
+import { authenticate } from "@/lib/auth/auth.utils";
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
@@ -68,17 +70,24 @@ export default function LoginPage() {
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     setIsLoading(true);
+
+    // 1. Autenticar com NextAuth
     const { success, error } = await authenticate(data.email, data.password);
 
     if (success) {
-      toast.success("Login realizado com sucesso");
-
-      // Redireciona para um caminho padrão seguro
       try {
+        // 2. Autenticar também no Firebase
+        await signInWithEmailAndPassword(
+          firebaseAuth,
+          data.email,
+          data.password
+        );
+        console.log("Usuário Firebase:", firebaseAuth.currentUser);
+        toast.success("Login realizado com sucesso");
         router.push("/dashboard");
-      } catch (err) {
-        console.error("Erro ao redirecionar:", err);
-        toast.error("Erro ao redirecionar após login.");
+      } catch (firebaseError: any) {
+        console.error("Erro ao logar no Firebase:", firebaseError);
+        toast.error("Erro ao autenticar no Firebase");
       }
     } else {
       toast.error(error || "Erro ao fazer login");
@@ -113,8 +122,6 @@ export default function LoginPage() {
                   animate="visible"
                   className="space-y-4"
                 >
-                  {/* campos do formulário */}
-
                   <motion.div variants={itemVariants}>
                     <FormField
                       control={form.control}
@@ -205,8 +212,6 @@ export default function LoginPage() {
                       )}
                     </Button>
                   </motion.div>
-
-                  {/* botão de redes sociais e rodapé permanecem iguais */}
                 </motion.div>
               </form>
             </Form>

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react"; // Importação de useState e useEffect
+import React, { useState, useEffect } from "react";
+import { auth } from "@/lib/adapters/firebase.adapter";
 
 import {
   LayoutDashboard,
@@ -24,7 +25,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut } from "next-auth/react";
+import { signOut as nextAuthSignOut } from "next-auth/react";
+import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -34,10 +36,8 @@ import {
 } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { User } from "@/@types/user";
-
 import logo from "@/assets/images/logo.png";
 
-// Definindo o tipo para as rotas
 type Route = {
   label: string;
   href: string;
@@ -127,18 +127,23 @@ const roleBasedRoutes: RoleBasedRoutes = {
 export function AppSidebar({ user }: { user: User }) {
   const [isClient, setIsClient] = useState(false);
 
-  // Garantir que o componente seja renderizado no cliente
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Garantir que o sidebar só seja renderizado no cliente para evitar mismatch
-  if (!isClient) {
-    return null; // Ou outro componente de fallback
-  }
+  if (!isClient) return null;
 
-  // Verificando se o usuário tem um papel válido
-  const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER"; // Definindo "USER" como fallback
+  const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER";
+
+  const handleLogout = async () => {
+    try {
+      await firebaseSignOut(auth); // Firebase sign out
+      await nextAuthSignOut(); // NextAuth sign out
+      console.log("Deslogado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao deslogar:", error);
+    }
+  };
 
   return (
     <Sidebar>
@@ -150,7 +155,6 @@ export function AppSidebar({ user }: { user: User }) {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Verificar se o usuário tem rotas para exibir */}
         {roleBasedRoutes[routes] ? (
           Object.keys(roleBasedRoutes[routes]).map((section) => (
             <SidebarGroup key={section}>
@@ -198,7 +202,7 @@ export function AppSidebar({ user }: { user: User }) {
           <DropdownMenuContent className="w-64">
             <DropdownMenuItem
               className="flex items-center justify-between gap-2"
-              onClick={() => signOut()}
+              onClick={handleLogout}
             >
               Sair <LogOut className="h-4 w-4" />
             </DropdownMenuItem>

@@ -14,10 +14,11 @@ const usersService = new UsersService(new UsersRepository(firestoreAdapter));
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages,
   callbacks: {
-    async redirect() {
-      return "/dashboard";
+    async redirect({ url, baseUrl }) {
+      // Só redireciona para URLs internas do seu app
+      if (url.startsWith(baseUrl)) return url;
+      return baseUrl;
     },
-
     async jwt(params) {
       const { token, user } = params;
 
