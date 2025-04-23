@@ -13,7 +13,6 @@ import {
   updateDoc,
   where,
   getDoc,
-  setDoc,
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,6 @@ import {
   DialogTrigger,
   DialogTitle,
   DialogHeader,
-  DialogOverlay,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -89,7 +87,6 @@ export type Microcontroller = z.infer<typeof microcontrollerSchema> & {
 
 function MicrocontrollersPage() {
   const { theme } = useTheme();
-  const { reset: formReset } = useForm();
   const queryClient = useQueryClient();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,17 +96,12 @@ function MicrocontrollersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [microToDelete, setmicroToDelete] = useState<string | null>(null);
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [userRole] = useState<"ADMIN" | "USER" | null>(null);
-
-  const randomName = `Micro_${Math.random()
-    .toString(36)
-    .substring(2, 8)
-    .toUpperCase()}`.substring(0, 10);
+  const [] = useState<User | null>(null);
+  const [] = useState<"ADMIN" | "USER" | null>(null);
 
   const {
     register,
-    formState: { errors },
+
     setValue,
     reset,
     handleSubmit,
