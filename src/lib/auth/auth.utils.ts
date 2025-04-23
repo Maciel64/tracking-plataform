@@ -10,8 +10,7 @@ export async function authenticate(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-    console.log("NEXT_PUBLIC_NEXTAUTH_URL:", process.env.NEXT_PUBLIC_NEXTAUTH_URL);
+    
     // Autentica com NextAuth
     const res = await signIn("credentials", {
       email,

@@ -131,7 +131,7 @@ function MicrocontrollersPage() {
     queryFn: async () => {
       const auth = getAuth();
       const currentUser = auth.currentUser;
-      console.log("currentUser:", currentUser);
+
       if (!currentUser) {
         toast.error("Usuário não autenticado. Faça login novamente.");
         throw new Error("Usuário não autenticado");
@@ -139,7 +139,6 @@ function MicrocontrollersPage() {
       // Busca o papel do usuário diretamente do Firestore
       const userSnap = await getDoc(doc(db, "users", currentUser.uid));
       let userRole = userSnap.exists() ? userSnap.data().role : "USER";
-      console.log("userRole dentro da mutation:", userRole);
 
       if (!userRole || userRole === "USER") {
         await new Promise((res) => setTimeout(res, 2000));
@@ -156,7 +155,7 @@ function MicrocontrollersPage() {
       }
 
       const snapshot = await getDocs(q);
-      console.log(snapshot.docs.map((doc) => doc.data()));
+
       return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...(doc.data() as Microcontroller),
@@ -180,13 +179,9 @@ function MicrocontrollersPage() {
       // Obter o ID do usuário autenticado
 
       if (!currentUser) {
-        console.log("Usuário não autenticado", currentUser);
         throw new Error("Usuário não autenticado");
       }
       const userId = currentUser.uid;
-      console.log("currentUser:", currentUser);
-
-      console.log("userRole:", userRole);
 
       // Verifica se já existe um microcontrolador com o mesmo mac_address ou placa
       const microRef = collection(db, "microcontrollers");
@@ -256,7 +251,6 @@ function MicrocontrollersPage() {
       };
 
       await addDoc(microRef, newMicro);
-      console.log("Microcontrolador criado com sucesso", currentUser);
     },
     onSuccess: () => {
       toast.success("Microcontrolador atualizado com sucesso!");

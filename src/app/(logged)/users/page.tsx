@@ -141,7 +141,6 @@ export default function UsersPage() {
       const { email, name, password, role, status } = data;
 
       if (currentUser) {
-        console.log(currentUser);
         const updatedUser = {
           name,
           email,

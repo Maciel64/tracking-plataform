@@ -139,7 +139,6 @@ export function AppSidebar({ user }: { user: User }) {
     try {
       await firebaseSignOut(auth); // Firebase sign out
       await nextAuthSignOut(); // NextAuth sign out
-      console.log("Deslogado com sucesso.");
     } catch (error) {
       console.error("Erro ao deslogar:", error);
     }

@@ -82,7 +82,7 @@ export default function LoginPage() {
           data.email,
           data.password
         );
-        console.log("Usuário Firebase:", firebaseAuth.currentUser);
+
         toast.success("Login realizado com sucesso");
         router.push("/dashboard");
       } catch (firebaseError: any) {
