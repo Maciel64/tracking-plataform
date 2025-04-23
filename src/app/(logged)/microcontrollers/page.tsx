@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { db } from "@/lib/adapters/firebase.adapter";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -44,7 +44,6 @@ import {
   Cpu,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { DialogPortal } from "@radix-ui/react-dialog";
 
 // zod <> React Hook Form
 import { z } from "zod";
@@ -57,10 +56,6 @@ import { User } from "@/@types/user";
 import { FirebaseError } from "firebase/app";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Microcontrollers } from "@/components/server/microcontrollers";
-import { TCreateUserSchema } from "../users/page";
-import { m } from "motion/react";
-import { set } from "date-fns";
 
 export type tipos = "carro" | "moto" | "caminhão";
 export type chips = "VIVO" | "CLARO" | "TIM";
@@ -349,6 +344,20 @@ function MicrocontrollersPage() {
       queryClient.invalidateQueries({ queryKey: ["microcontrollers"] });
     }
   };
+
+  async function refetchRandomName(): Promise<{ data: string | null }> {
+    try {
+      const randomName = `Micro_${Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase()}`.substring(0, 10);
+      return { data: randomName };
+    } catch (error) {
+      console.error("Error generating random name:", error);
+      return { data: null };
+    }
+  }
+
   /*========================RETORNO=========================*/
 
   return (
@@ -365,9 +374,33 @@ function MicrocontrollersPage() {
       {/*=============Adicionar microcontrolador================ */}
 
       <div className="mb-4">
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              reset();
+              setCurrentMicro(null);
+            }
+          }}
+        >
           <DialogTrigger asChild>
-            <Button className="cursor-pointer">
+            <Button
+              className="cursor-pointer"
+              onClick={async () => {
+                setCurrentMicro(null);
+                setIsDialogOpen(true);
+                const res = await refetchRandomName();
+                reset({
+                  nome: res.data ?? "",
+                  mac_address: "",
+                  modelo: "Raster1",
+                  chip: "VIVO",
+                  placa: "",
+                  tipo: "carro",
+                });
+              }}
+            >
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Microcontrolador
             </Button>
@@ -396,12 +429,7 @@ function MicrocontrollersPage() {
                   <Label htmlFor="nome" className="text-foreground">
                     Nome
                   </Label>
-                  <Input
-                    {...register("nome")}
-                    value={randomName}
-                    id="nome"
-                    className="bg-card"
-                  />
+                  <Input {...register("nome")} id="nome" className="bg-card" />
                   {<p className="text-sm text-destructive"></p>}
                 </div>
 
@@ -423,7 +451,7 @@ function MicrocontrollersPage() {
                     }
                     value={watch("modelo")}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="cursor-pointer">
                       <SelectValue placeholder="Selecione o modelo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -439,7 +467,7 @@ function MicrocontrollersPage() {
                     onValueChange={(value: chips) => setValue("chip", value)}
                     value={watch("chip")}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="cursor-pointer">
                       <SelectValue placeholder="Selecione o chip" />
                     </SelectTrigger>
                     <SelectContent>
@@ -467,7 +495,7 @@ function MicrocontrollersPage() {
                     onValueChange={(value: tipos) => setValue("tipo", value)}
                     value={watch("tipo")}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="cursor-pointer">
                       <SelectValue placeholder="Tipo de veículo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -560,13 +588,29 @@ function MicrocontrollersPage() {
                   <td className="p-2 flex gap-2">
                     {/*===============EDITAR=============== {cn("sm:max-w-[425px]",theme === "light" ? "bg-white" : "bg-black")}*/}
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-primary border-primary cursor-pointer"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-primary border-primary cursor-pointer"
+                          onClick={() => {
+                            setCurrentMicro(item);
+                            setIsDialogOpen(true);
+                            reset({
+                              nome: item.nome,
+                              mac_address: item.mac_address,
+                              modelo: item.modelo,
+                              chip: item.chip,
+                              placa: item.placa,
+                              tipo: item.tipo,
+                            });
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                    </Dialog>
                     {/*===============Ativar/Desativar=============== */}
 
                     <Button
@@ -618,6 +662,7 @@ function MicrocontrollersPage() {
                             <Button
                               onClick={confirmDelete}
                               disabled={isDeleting}
+                              className="cursor-pointer"
                             >
                               Excluir
                             </Button>
