@@ -62,25 +62,30 @@ export class UsersRepository {
   async login(data: LoginSchema): Promise<User | null> {
     try {
       const { email, password } = data;
-
+      console.log("Tentando login Firebase Auth:", email);
       const res = await signInWithEmailAndPassword(auth, email, password);
-
+      console.log("Login Firebase Auth OK:", res.user.uid);
+  
       const ref = this.firebaseAdapter.doc(db, "users", res.user.uid);
       const snapshot = await this.firebaseAdapter.getDoc(ref);
-
+  
       if (!snapshot.exists()) {
+        console.log("Usuário autenticado no Auth, mas não existe na coleção users:", res.user.uid);
         return null;
       }
-
+  
+      console.log("Usuário encontrado na coleção users:", snapshot.data());
+  
       return {
-        id: res.user.uid, // 👈 alterado de uid para id
+        id: res.user.uid,
         email: res.user.email ?? "",
         name: snapshot.data()?.name ?? "",
         createdAt: snapshot.data()?.createdAt ?? new Date(),
         updatedAt: snapshot.data()?.updatedAt ?? null,
         role: snapshot.data()?.role ?? "USER",
       } as User;
-    } catch {
+    } catch (e) {
+      console.error("Erro no login do UsersRepository:", e);
       return null;
     }
   }

@@ -42,7 +42,8 @@ export class UsersService {
 
   async login(data: LoginSchema) {
     loginSchema.parse(data);
-    
+    const { email, password } = data;
+    console.log("usersService.login chamado com:", email, password);
 
     return this.usersRepository.login(data);
   }
