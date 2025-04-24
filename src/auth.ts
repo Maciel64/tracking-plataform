@@ -54,11 +54,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const email = credentials?.email as string;
         const password = credentials?.password as string;
-        console.log("Authorize chamado com:", email, password);
+        
       
         try {
           const user = await usersService.login({ email, password });
-          console.log("Usuário retornado pelo login:", user);
+          
       
           if (!user) return null;
       

@@ -10,7 +10,7 @@ export async function authenticate(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log("authenticate chamada com:", email, password);
+    
 
     // Autentica com NextAuth
     const res = await signIn("credentials", {
@@ -19,7 +19,7 @@ export async function authenticate(
       redirect: false,
     });
 
-    console.log("Resultado do signIn (NextAuth):", res);
+    
 
     if (!res?.ok) {
       return {
@@ -29,8 +29,8 @@ export async function authenticate(
     }
 
     // Autentica com Firebase
-    const firebaseResult = await signInWithEmailAndPassword(firebaseAuth, email, password);
-    console.log("Resultado do signInWithEmailAndPassword (Firebase):", firebaseResult);
+    await signInWithEmailAndPassword(firebaseAuth, email, password);
+    
 
     return { success: true };
   } catch (error) {
