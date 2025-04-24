@@ -13,7 +13,6 @@ import {
   updateDoc,
   where,
   getDoc,
-  setDoc,
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,6 @@ import {
   DialogTrigger,
   DialogTitle,
   DialogHeader,
-  DialogOverlay,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -52,7 +50,6 @@ import { useForm } from "react-hook-form";
 // Ensure 'reset' is available from useForm
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User } from "@/@types/user";
 import { FirebaseError } from "firebase/app";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -88,8 +85,12 @@ export type Microcontroller = z.infer<typeof microcontrollerSchema> & {
 };
 
 function MicrocontrollersPage() {
+  /* ===========================autenticação======================================*/
+
+  /* ========================================================================*/
+
   const { theme } = useTheme();
-  const { reset: formReset } = useForm();
+
   const queryClient = useQueryClient();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,17 +100,10 @@ function MicrocontrollersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [microToDelete, setmicroToDelete] = useState<string | null>(null);
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [userRole] = useState<"ADMIN" | "USER" | null>(null);
-
-  const randomName = `Micro_${Math.random()
-    .toString(36)
-    .substring(2, 8)
-    .toUpperCase()}`.substring(0, 10);
 
   const {
     register,
-    formState: { errors },
+
     setValue,
     reset,
     handleSubmit,
@@ -126,7 +120,7 @@ function MicrocontrollersPage() {
     },
   });
 
-  const { data: microcontrollers, isLoading } = useQuery({
+  const { data: microcontrollers } = useQuery({
     queryKey: ["microcontrollers"],
     queryFn: async () => {
       const auth = getAuth();
@@ -626,7 +620,10 @@ function MicrocontrollersPage() {
 
                     {/*======================Excluir================== */}
 
-                    <Dialog>
+                    <Dialog
+                      open={isDeleteDialogOpen}
+                      onOpenChange={setIsDeleteDialogOpen}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           size="sm"

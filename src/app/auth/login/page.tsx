@@ -11,6 +11,7 @@ import { loginSchema } from "@/schemas/user.schema";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth as firebaseAuth } from "@/lib/adapters/firebase.adapter";
+import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import SessionRedirect from "@/components/session-redirect";
-import { authenticate } from "@/lib/auth/auth.utils";
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
@@ -71,26 +71,26 @@ export default function LoginPage() {
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     setIsLoading(true);
 
-    // 1. Autenticar com NextAuth
-    const { success, error } = await authenticate(data.email, data.password);
+    // Login NextAuth
+    const res = await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    });
 
-    if (success) {
-      try {
-        // 2. Autenticar também no Firebase
-        await signInWithEmailAndPassword(
-          firebaseAuth,
-          data.email,
-          data.password
-        );
+    // Login Firebase Auth (client)
+    try {
+      await signInWithEmailAndPassword(firebaseAuth, data.email, data.password);
+    } catch (error) {
+      // Trate erro do Firebase se necessário
+      console.error("Erro ao autenticar no Firebase:", error);
+    }
 
-        toast.success("Login realizado com sucesso");
-        router.push("/dashboard");
-      } catch (firebaseError: any) {
-        console.error("Erro ao logar no Firebase:", firebaseError);
-        toast.error("Erro ao autenticar no Firebase");
-      }
+    if (res?.ok && !res.error) {
+      toast.success("Login realizado com sucesso");
+      router.push("/dashboard");
     } else {
-      toast.error(error || "Erro ao fazer login");
+      toast.error("Email ou senha inválidos");
     }
 
     setIsLoading(false);

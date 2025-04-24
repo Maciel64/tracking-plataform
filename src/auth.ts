@@ -8,6 +8,7 @@ import { UsersService } from "./domain/users/users.service";
 import { UsersRepository } from "./domain/users/users.repository";
 import type { User } from "@/types/user";
 
+
 // Inicializando o serviço de usuários
 const usersService = new UsersService(new UsersRepository(firestoreAdapter));
 
@@ -53,15 +54,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const email = credentials?.email as string;
         const password = credentials?.password as string;
-
+        
+      
         try {
-          // Chamando o serviço de login para autenticar
           const user = await usersService.login({ email, password });
-
-          // Se não encontrar o usuário, retorna null
+          
+      
           if (!user) return null;
-
-          // Retorna o objeto de usuário com id, name, email e role
+      
           return {
             id: user.id ?? "",
             name: user.name ?? "",
@@ -72,7 +72,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           console.error("Erro ao logar:", e);
           return null;
         }
-      },
+      }
     }),
   ],
 });

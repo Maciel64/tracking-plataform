@@ -11,12 +11,15 @@ export async function authenticate(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     
+
     // Autentica com NextAuth
     const res = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
+
+    
 
     if (!res?.ok) {
       return {
@@ -27,6 +30,7 @@ export async function authenticate(
 
     // Autentica com Firebase
     await signInWithEmailAndPassword(firebaseAuth, email, password);
+    
 
     return { success: true };
   } catch (error) {

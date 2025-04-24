@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut as nextAuthSignOut } from "next-auth/react";
-import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
+import { signOut as firebaseSignOut } from "firebase/auth";
 import Image from "next/image";
 import {
   DropdownMenu,
