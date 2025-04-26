@@ -1,12 +1,23 @@
 import { Coordinate, Microcontroller } from "@/@types/microcontroller";
 import { db } from "@/lib/adapters/firebase.adapter";
-
+import { auth } from "@/auth";
 import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 import { collection, query, where } from "firebase/firestore";
 
 export async function Microcontrollers() {
+  const session = await auth();
+
+  if (!session) {
+    throw new Error("Usuário não autenticado");
+  }
+
   const microcontrollersSnapshot = await firestoreAdapter.getDocs(
-    firestoreAdapter.collection(db, "microcontrollers")
+    query(
+      collection(db, "microcontrollers"),
+      session.user.role === "ADMIN"
+        ? where("userId", "==", session.user.id)
+        : where("userId", "==", session.user.id)
+    )
   );
 
   const microcontrollersPromises = microcontrollersSnapshot.docs.map(

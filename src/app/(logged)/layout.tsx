@@ -18,11 +18,13 @@ export default async function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex h-screen w-full">
         <AppSidebar user={await User()} />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1">
           <AppHeader />
-          <main className="bg-muted/40 p-6 min-h-screen">{children}</main>
+          <main className="flex-1 bg-muted/40 p-6 overflow-y-auto">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>
