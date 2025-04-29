@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { useState } from "react";
+import {
+  doc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import * as motion from "motion/react-client";
 import {
   Camera,
@@ -46,6 +53,7 @@ import {
 } from "firebase/auth";
 import { auth, db } from "@/lib/adapters/firebase.adapter";
 import { z } from "zod";
+import { FirebaseError } from "firebase/app";
 
 // Schema de validação para o formulário principal
 const userFormSchema = z.object({
@@ -109,11 +117,28 @@ export function PerfilPage({ user }: { user: TUser }) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Efeito para carregar o histórico de acessos (simulado)
-  useEffect(() => {
-    // Aqui você poderia carregar dados do histórico de acessos do Firebase
-    // Por enquanto, deixamos vazio
-  }, []);
+  // Função para buscar o histórico de acessos usando query
+  const fetchAccessHistory = async () => {
+    try {
+      if (!user?.email) return;
+
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", user.email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docData = querySnapshot.docs[0].data();
+        setAccessHistory(docData.accessHistory || []);
+      } else {
+        console.warn("Nenhum usuário encontrado com esse e-mail.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar histórico de acesso:", error);
+    }
+  };
+
+  // Executa a busca do histórico direto
+  fetchAccessHistory();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -121,7 +146,6 @@ export function PerfilPage({ user }: { user: TUser }) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Limpar erro específico quando o campo é alterado
     if (formErrors[name]) {
       setFormErrors((prev) => {
         const updated = { ...prev };
@@ -135,7 +159,6 @@ export function PerfilPage({ user }: { user: TUser }) {
     const { name, value } = e.target;
     setPasswordData((prev) => ({ ...prev, [name]: value }));
 
-    // Limpar erro específico quando o campo é alterado
     if (passwordErrors[name]) {
       setPasswordErrors((prev) => {
         const updated = { ...prev };
@@ -150,10 +173,8 @@ export function PerfilPage({ user }: { user: TUser }) {
     setIsLoading(true);
 
     try {
-      // Validar o formulário com Zod
       const validatedData = userFormSchema.parse(formData);
 
-      // Verificar autenticação de dois fatores se estiver ativada
       if (twoFactorEnabled) {
         const code = prompt(
           "Por favor, insira o código de autenticação de dois fatores:"
@@ -165,23 +186,15 @@ export function PerfilPage({ user }: { user: TUser }) {
           return;
         }
 
-        try {
-          // Lógica para verificar código 2FA (implementação real necessária)
-          const isValidCode = true;
+        const isValidCode = true;
 
-          if (!isValidCode) {
-            toast.error("Código de autenticação inválido.");
-            setIsLoading(false);
-            return;
-          }
-        } catch (error) {
-          toast.error("Erro ao verificar o código de autenticação.");
+        if (!isValidCode) {
+          toast.error("Código de autenticação inválido.");
           setIsLoading(false);
           return;
         }
       }
 
-      // Atualizar perfil no Firebase
       const currentUser = auth.currentUser;
       if (currentUser) {
         const userDocRef = doc(db, "users", currentUser.uid);
@@ -191,7 +204,6 @@ export function PerfilPage({ user }: { user: TUser }) {
           telefone: validatedData.telefone,
           bio: validatedData.bio,
           twoFactorEnabled: twoFactorEnabled,
-          // Não atualizamos o role (cargo) aqui pois deve ser restrito
         });
 
         toast.success("Perfil atualizado com sucesso");
@@ -200,7 +212,6 @@ export function PerfilPage({ user }: { user: TUser }) {
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        // Tratamento de erros de validação
         const errorMap: Record<string, string> = {};
         error.errors.forEach((err) => {
           if (err.path) {
@@ -226,11 +237,8 @@ export function PerfilPage({ user }: { user: TUser }) {
     }
 
     try {
-      // Validar dados de senha com Zod
       const validatedPasswordData = passwordSchema.parse(passwordData);
-
       setIsLoading(true);
-
       const currentUser = auth.currentUser;
 
       if (!currentUser || !currentUser.email) {
@@ -238,37 +246,23 @@ export function PerfilPage({ user }: { user: TUser }) {
         return;
       }
 
-      try {
-        const credential = EmailAuthProvider.credential(
-          currentUser.email,
-          validatedPasswordData.currentPassword
-        );
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        validatedPasswordData.currentPassword
+      );
 
-        await reauthenticateWithCredential(currentUser, credential);
-        await updatePassword(currentUser, validatedPasswordData.newPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, validatedPasswordData.newPassword);
 
-        toast.success("Senha alterada com sucesso");
-        setIsChangingPassword(false);
-        setPasswordData({
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
-      } catch (authError: any) {
-        if (authError.code === "auth/wrong-password") {
-          setPasswordErrors({ currentPassword: "Senha atual incorreta" });
-          toast.error("Senha atual incorreta");
-        } else if (authError.code === "auth/requires-recent-login") {
-          toast.error(
-            "Por segurança, faça login novamente antes de alterar a senha"
-          );
-        } else {
-          throw authError;
-        }
-      }
+      toast.success("Senha alterada com sucesso, faça login novamente");
+      setIsChangingPassword(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        // Tratamento de erros de validação
         const errorMap: Record<string, string> = {};
         error.errors.forEach((err) => {
           if (err.path) {
@@ -276,8 +270,21 @@ export function PerfilPage({ user }: { user: TUser }) {
           }
         });
         setPasswordErrors(errorMap);
+      } else if (error instanceof FirebaseError) {
+        // Use o tipo correto para erros do Firebase
+        if (error.code === "auth/wrong-password") {
+          setPasswordErrors({ currentPassword: "Senha atual incorreta" });
+          toast.error("Senha atual incorreta");
+        } else if (error.code === "auth/requires-recent-login") {
+          toast.error(
+            "Por segurança, faça login novamente antes de alterar a senha"
+          );
+        } else {
+          console.error("Erro ao alterar senha:", error);
+          toast.error("Erro ao alterar senha: tente novamente mais tarde");
+        }
       } else {
-        console.error("Erro ao alterar senha:", error);
+        console.error("Erro inesperado ao alterar senha:", error);
         toast.error("Erro ao alterar senha: tente novamente mais tarde");
       }
     } finally {
@@ -624,10 +631,10 @@ export function PerfilPage({ user }: { user: TUser }) {
                       <div className="space-y-2">
                         <Label htmlFor="telefone">Telefone</Label>
                         <Input
-                          id="telefone"
                           name="telefone"
                           value={formData.telefone}
                           onChange={handleChange}
+                          placeholder="(99) 99999-9999"
                           className={
                             formErrors.telefone ? "border-red-500" : ""
                           }
@@ -654,11 +661,10 @@ export function PerfilPage({ user }: { user: TUser }) {
                     <div className="space-y-2">
                       <Label htmlFor="bio">Biografia</Label>
                       <Textarea
-                        id="bio"
                         name="bio"
                         value={formData.bio}
                         onChange={handleChange}
-                        rows={4}
+                        placeholder="Conte um pouco sobre você..."
                         className={`resize-none ${
                           formErrors.bio ? "border-red-500" : ""
                         }`}
