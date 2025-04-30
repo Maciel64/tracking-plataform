@@ -12,7 +12,7 @@ export async function getMicrocontrollerId(macAddress: string): Promise<Microcon
     
     // Consulta para encontrar o microcontrolador pelo MAC address
     const microcontrollersRef = collection(db, "microcontrollers");
-    const q = query(microcontrollersRef, where("macAddress", "==", macAddress));
+    const q = query(microcontrollersRef, where("mac_address", "==", macAddress));
     const querySnapshot = await getDocs(q);
 
     console.log(`Resultados encontrados: ${querySnapshot.size}`);
