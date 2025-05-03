@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,15 +25,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createUserSchema } from "@/schemas/user.schema";
-import { registerAction } from "./actions";
-import { z } from "zod";
+import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { signIn } from "next-auth/react";
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const form = useForm<z.infer<typeof createUserSchema>>({
+  const form = useForm<CreateUserSchema>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: "",
@@ -44,25 +43,30 @@ export default function SignupPage() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof createUserSchema>) {
-    try {
-      setIsLoading(true);
-      const result = await registerAction(data);
+  const registerMutation = useMutation<
+    CreateUserSchema,
+    Error,
+    CreateUserSchema
+  >({
+    mutationFn: async (data: CreateUserSchema) => {
+      const res = await api.post("/auth/register", data);
+      return res.data;
+    },
+    onSuccess: async (data) => {
+      toast.success("Cadastro realizado com sucesso");
 
-      if (result.success) {
-        toast.success("Cadastro realizado com sucesso");
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Email já cadastrado no sistema");
-      } else {
-        toast.error("Ocorreu um erro durante o cadastro");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
+      await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -103,7 +107,11 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
+              <form
+                onSubmit={form.handleSubmit((data) =>
+                  registerMutation.mutate(data)
+                )}
+              >
                 <motion.div
                   variants={containerVariants}
                   initial="hidden"
@@ -194,9 +202,9 @@ export default function SignupPage() {
                     <Button
                       type="submit"
                       className="w-full mt-6"
-                      disabled={isLoading}
+                      disabled={registerMutation.isPending}
                     >
-                      {isLoading ? (
+                      {registerMutation.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Processando...
