@@ -1,4 +1,5 @@
 import Map from "@/components/map";
+import { MicrocontrollerCard } from "@/components/microcontroller/microcontroller-card";
 import { Microcontrollers } from "@/components/server/microcontrollers";
 import * as motion from "motion/react-client";
 
@@ -23,19 +24,24 @@ export default async function Maps() {
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {microcontrollers.map((microcontroller) => (
-          <Map
+          <MicrocontrollerCard
             key={microcontroller.uid}
-            center={[
-              microcontroller.coordinates?.[0]?.latitude ?? 0,
-              microcontroller.coordinates?.[0]?.longitude ?? 0,
-            ]}
-            locations={
-              microcontroller.coordinates?.map((coord) => ({
-                position: [coord.latitude, coord.longitude],
-                name: microcontroller.name,
-              })) ?? []
+            microcontroller={microcontroller}
+            map={
+              <Map
+                center={[
+                  microcontroller.coordinates?.[0]?.latitude ?? 0,
+                  microcontroller.coordinates?.[0]?.longitude ?? 0,
+                ]}
+                locations={
+                  microcontroller.coordinates?.map((coord) => ({
+                    position: [coord.latitude, coord.longitude],
+                    name: microcontroller.name,
+                  })) ?? []
+                }
+              />
             }
           />
         ))}
