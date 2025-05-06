@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMicrocontrollerId } from "./microcontroller.service";
+import { getMicrocontrollerId, saveCoordinate } from "./microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("Requisição POST recebida");
+    
     let body;
     try {
+      console.log("Tentando parsear o corpo da requisição");
       body = await request.json();
+      console.log("Corpo da requisição parseado com sucesso");
     } catch (e) {
+      console.error("Erro ao parsear o corpo da requisição", e);
       return NextResponse.json(
         {
           error: "Bad Request",
@@ -16,9 +21,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("Corpo da requisição:", body);
+    
     const macAddress = body.macAddress as string;
     
     if (!macAddress) {
+      console.error("macAddress não fornecido");
       return NextResponse.json(
         {
           error: "Bad Request",
@@ -28,14 +36,24 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    
+    console.log("macAddress:", macAddress);
     
     try {
-      // Usar o serviço para buscar o microcontrolador
+      console.log("Tentando buscar o microcontrolador");
       const result = await getMicrocontrollerId(macAddress);
+      console.log("Microcontrolador encontrado com sucesso");
       
-      // Log do resultado antes de retornar
+      console.log("Resultado:", result);
       
+      // Salvar a coordenada no banco
+      const coordinate = {
+        microcontrollerId: result.id,
+        userId: result.userId,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        created_at: new Date().toISOString()
+      };
+      await saveCoordinate(coordinate);
       
       // Garantir que estamos retornando os campos corretos
       const response = {
@@ -43,11 +61,14 @@ export async function POST(request: NextRequest) {
         userId: result.userId
       };
       
-      
+      console.log("Resposta:", response);
       
       return NextResponse.json(response);
     } catch (error: any) {
+      console.error("Erro ao buscar o microcontrolador", error);
+      
       if (error.message && error.message.includes("não está registrado")) {
+        console.error("Microcontrolador não encontrado");
         return NextResponse.json(
           {
             error: "Not Found",
@@ -60,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
     
   } catch (error: any) {
-    console.error("Erro no endpoint de identificação:", error);
+    console.error("Erro no endpoint de identificação", error);
     
     return NextResponse.json(
       {
@@ -73,5 +94,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  console.log("Requisição GET recebida");
   return NextResponse.json({ message: "Endpoint de identificação disponível" });
 }
