@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMicrocontrollerId } from "./microcontroller.service";
 
+//http://localhost:3000/api/identify
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -16,20 +18,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `Recebida solicitação de identificação para MAC: ${macAddress}`
-    );
-
     const result = await getMicrocontrollerId(macAddress);
-    console.log(`Microcontrolador identificado: ${JSON.stringify(result)}`);
 
     return NextResponse.json({
       microcontroller: result.id,
       userId: result.userId,
     });
   } catch (error: any) {
-    console.error("Erro no endpoint de identificação:", error);
-
     if (error.message && error.message.includes("não está registrado")) {
       return NextResponse.json(
         {

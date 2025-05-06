@@ -28,14 +28,14 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log(`Recebida solicitação de identificação para MAC: ${macAddress}`);
+    
     
     try {
       // Usar o serviço para buscar o microcontrolador
       const result = await getMicrocontrollerId(macAddress);
       
       // Log do resultado antes de retornar
-      console.log(`Resultado do serviço: ${JSON.stringify(result)}`);
+      
       
       // Garantir que estamos retornando os campos corretos
       const response = {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         userId: result.userId
       };
       
-      console.log(`Resposta final: ${JSON.stringify(response)}`);
+      
       
       return NextResponse.json(response);
     } catch (error: any) {
