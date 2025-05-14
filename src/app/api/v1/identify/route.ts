@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMicrocontrollerId, saveCoordinate } from "./microcontroller.repository";
+import { getMicrocontrollerId } from "../../../../domain/repositories/microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,17 +45,7 @@ export async function POST(request: NextRequest) {
       
       console.log("Resultado:", result);
       
-      // Salvar a coordenada no banco
-      const coordinate = {
-        microcontrollerId: result.id,
-        userId: result.userId,
-        latitude: body.latitude,
-        longitude: body.longitude,
-        created_at: new Date().toISOString()
-      };
-      await saveCoordinate(coordinate);
-      
-      // Garantir que estamos retornando os campos corretos
+      // Retornar os dados do microcontrolador
       const response = {
         microcontroller: result.id,
         userId: result.userId

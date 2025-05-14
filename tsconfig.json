@@ -28,6 +28,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "types/**/*.d.ts"
-, "src/app/api/microcontroller/microcontroller.service.ts"  ],
+, "src/app/api/v1/microcontroller/microcontroller.service.ts"  ],
   "exclude": ["node_modules"]
 }

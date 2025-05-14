@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { getMicrocontrollerId } from "../identify/microcontroller.repository";
+import { getMicrocontrollerId } from "../../../../domain/repositories/microcontroller.repository";
 
 const db = getFirestore();
 
