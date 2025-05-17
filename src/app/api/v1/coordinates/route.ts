@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMicrocontrollerId, saveCoordinate } from "../../../../domain/repositories/microcontroller.repository";
 import { Coordinate } from '../../../../domain/repositories/microcontroller.repository';
+import { UsersRepository } from '@/domain/users/users.repository';
+import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +27,9 @@ export async function POST(request: NextRequest) {
     console.log("Corpo da requisição:", body);
     
     const macAddress = body.macAddress as string;
+    const userId = body.user_id as string;
+    const latitude = body.latitude as number;
+    const longitude = body.longitude as number;
     
     if (!macAddress) {
       console.error("macAddress não fornecido");
@@ -37,8 +42,64 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log("macAddress:", macAddress);
+    if (!userId) {
+      console.error("userId não fornecido");
+      return NextResponse.json(
+        {
+          error: "Bad Request",
+          message: "userId é obrigatório",
+        },
+        { status: 400 }
+      );
+    }
     
+    if (latitude === undefined || longitude === undefined) {
+      console.error("Coordenadas não fornecidas");
+      return NextResponse.json(
+        {
+          error: "Bad Request",
+          message: "Coordenadas são obrigatórias",
+        },
+        { status: 400 }
+      );
+    }
+    
+    if (latitude < -90 || latitude > 90) {
+      console.error("Latitude inválida");
+      return NextResponse.json(
+        {
+          error: "Bad Request",
+          message: "Latitude deve estar entre -90 e 90",
+        },
+        { status: 400 }
+      );
+    }
+    
+    if (longitude < -180 || longitude > 180) {
+      console.error("Longitude inválida");
+      return NextResponse.json(
+        {
+          error: "Bad Request",
+          message: "Longitude deve estar entre -180 e 180",
+        },
+        { status: 400 }
+      );
+    }
+    const userRepository: UsersRepository = new UsersRepository(firestoreAdapter);
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      console.error("Usuário não encontrado");
+      return NextResponse.json(
+        {
+          error: "Not Found",
+          message: "Usuário não encontrado",
+        },
+        { status: 404 }
+      );
+    }
+
+    // Buscar o microcontrolador
     try {
       console.log("Tentando buscar o microcontrolador");
       const result = await getMicrocontrollerId(macAddress);
@@ -49,22 +110,15 @@ export async function POST(request: NextRequest) {
       // Salvar a coordenada no banco
       const coordinate: Coordinate = {
         microcontroller_uid: result.id,
-        user_id: result.userId,
-        latitude: body.latitude,
-        longitude: body.longitude,
-        created_at: new Date() // Adicionei essa linha para salvar o created_at
+        user_id: userId,
+        latitude,
+        longitude,
+        created_at: new Date()
       } as Coordinate;
       await saveCoordinate(coordinate);
       
-      // Retornar os dados do microcontrolador
-      const response = {
-        microcontroller: result.id,
-        userId: result.userId
-      };
-      
-      console.log("Resposta:", response);
-      
-      return NextResponse.json(response);
+      // Retornar mensagem de sucesso
+      return NextResponse.json({ message: "Coordenada salva com sucesso!" });
     } catch (error: any) {
       console.error("Erro ao buscar o microcontrolador", error);
       
@@ -93,7 +147,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 export async function GET() {
   console.log("Requisição GET recebida");
   return NextResponse.json({ message: "Endpoint de identificação disponível" });

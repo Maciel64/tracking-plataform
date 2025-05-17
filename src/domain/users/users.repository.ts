@@ -8,6 +8,9 @@ import {
 } from "firebase/auth";
 
 export class UsersRepository {
+  exists(userId: string) {
+    throw new Error("Method not implemented.");
+  }
   private readonly usersCollection;
 
   constructor(private readonly firebaseAdapter: TFirestoreAdapter) {

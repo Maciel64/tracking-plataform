@@ -10,28 +10,31 @@ export async function authenticate(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Primeiro, tente autenticar com Firebase
+    try {
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
+    } catch (firebaseError) {
+      console.error("Firebase authentication error:", firebaseError);
+      return {
+        success: false,
+        error: "Email ou senha inválidos",
+      };
+    }
     
-
-    // Autentica com NextAuth
+    // Se o Firebase autenticar com sucesso, então autentique com NextAuth
     const res = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
-
     
-
     if (!res?.ok) {
       return {
         success: false,
         error: "Email ou senha inválidos",
       };
     }
-
-    // Autentica com Firebase
-    await signInWithEmailAndPassword(firebaseAuth, email, password);
     
-
     return { success: true };
   } catch (error) {
     console.error("Authentication error:", error);
@@ -45,17 +48,26 @@ export async function authenticate(
 // Registra usuário na API e no Firebase, e já faz login
 export async function registerAndLogin(data: CreateUserSchema) {
   try {
-    // Registra no backend (sua API + Firestore)
-    await api.post("/auth/register", data);
-
-    // Cria conta no Firebase Authentication
-    await createUserWithEmailAndPassword(firebaseAuth, data.email, data.password);
-
+    // Primeiro, tente criar a conta no Firebase Authentication
+    try {
+      await createUserWithEmailAndPassword(firebaseAuth, data.email, data.password);
+    } catch (firebaseError) {
+      console.error("Firebase registration error:", firebaseError);
+      throw new Error("Erro ao criar conta no Firebase");
+    }
+    
+    // Depois, registre no backend (sua API + Firestore)
+    try {
+      await api.post("/auth/register", data);
+    } catch (apiError) {
+      console.error("API registration error:", apiError);
+      throw new Error("Erro ao registrar usuário na API");
+    }
+    
     // Faz login nos dois (NextAuth e Firebase)
     const { success, error } = await authenticate(data.email, data.password);
-
     if (!success) throw new Error(error);
-
+    
     return { success: true };
   } catch (error) {
     console.error("Registration error:", error);
