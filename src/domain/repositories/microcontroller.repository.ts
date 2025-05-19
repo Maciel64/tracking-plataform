@@ -1,9 +1,8 @@
-
 import { db } from "@/lib/adapters/firebase.adapter";
 import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
 
 interface MicrocontrollerResult {
-  user_uid: any;
+  user_uid: string | undefined;
   id: string;
   userId: string;
 }
@@ -13,6 +12,7 @@ export interface Coordinate {
   user_id: string;
   latitude: number;
   longitude: number;
+  created_at: Date;
 }
 
 export async function getMicrocontrollerId(macAddress: string): Promise<MicrocontrollerResult> {
@@ -31,12 +31,12 @@ export async function getMicrocontrollerId(macAddress: string): Promise<Microcon
     const data = microcontrollerDoc.data();
 
     // Acessar diretamente o campo user_id e fazer log do valor
-    const userId = data.user_id;
+    const userId = data.user_id as string;
 
     // Criar o objeto de resultado com os valores corretos
     const result: MicrocontrollerResult = {
       id: microcontrollerDoc.id,
-      userId: userId || "",
+      userId,
       user_uid: undefined
     };
 
@@ -55,6 +55,4 @@ export async function saveCoordinate(coordinate: Coordinate): Promise<void> {
     console.error("Erro ao salvar coordenada:", error);
     throw error;
   }
-
-  
 }

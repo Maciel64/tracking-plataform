@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
       console.log("Tentando parsear o corpo da requisição");
       body = await request.json();
       console.log("Corpo da requisição parseado com sucesso");
-    } catch (e) {
-      console.error("Erro ao parsear o corpo da requisição", e);
+    } catch (error) {
+      console.error("Erro ao parsear o corpo da requisição", error);
       return NextResponse.json(
         {
           error: "Bad Request",
@@ -54,10 +54,10 @@ export async function POST(request: NextRequest) {
       console.log("Resposta:", response);
       
       return NextResponse.json(response);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao buscar o microcontrolador", error);
       
-      if (error.message && error.message.includes("não está registrado")) {
+      if (error instanceof Error && error.message && error.message.includes("não está registrado")) {
         console.error("Microcontrolador não encontrado");
         return NextResponse.json(
           {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
     
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro no endpoint de identificação", error);
     
     return NextResponse.json(

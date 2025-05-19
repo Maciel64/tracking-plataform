@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMicrocontrollerId, saveCoordinate } from "../../../../domain/repositories/microcontroller.repository";
-import { Coordinate } from '../../../../domain/repositories/microcontroller.repository';
+import { getMicrocontrollerId, saveCoordinate, Coordinate } from "@/domain/repositories/microcontroller.repository";
 import { UsersRepository } from '@/domain/users/users.repository';
 import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
@@ -114,15 +113,15 @@ export async function POST(request: NextRequest) {
         latitude,
         longitude,
         created_at: new Date()
-      } as Coordinate;
+      };
       await saveCoordinate(coordinate);
       
       // Retornar mensagem de sucesso
       return NextResponse.json({ message: "Coordenada salva com sucesso!" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao buscar o microcontrolador", error);
       
-      if (error.message && error.message.includes("não está registrado")) {
+      if (error instanceof Error && error.message && error.message.includes("não está registrado")) {
         console.error("Microcontrolador não encontrado");
         return NextResponse.json(
           {
@@ -135,7 +134,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erro no endpoint de identificação", error);
     
     return NextResponse.json(
@@ -146,8 +145,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-export async function GET() {
-  console.log("Requisição GET recebida");
+
+}export async function GET() {  console.log("Requisição GET recebida");
   return NextResponse.json({ message: "Endpoint de identificação disponível" });
 }

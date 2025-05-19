@@ -1,47 +1,71 @@
-// coordinates.repository.ts
-
-import { Microcontroller } from "@/@types/microcontroller";import { Coordinates } from "@/@types/coordinates";
+import { Microcontroller } from "@/@types/microcontroller";
+import { Coordinate } from "@/@types/coordinates";
+import { collection, doc, getDoc, getDocs, addDoc, DocumentData, Firestore } from "firebase/firestore";
 
 export class CoordinatesRepository {
-  private firestore: any;
-
-  constructor(firestoreAdapter: any) {
+  private firestore: Firestore;
+  
+  constructor(firestoreAdapter: Firestore) {
     this.firestore = firestoreAdapter;
   }
 
   public async findMicrocontrollerByMac(mac: string): Promise<Microcontroller | null> {
-  const microcontrollersRef = this.firestore.collection('microcontrollers');
-  const microcontrollerRef = microcontrollersRef.doc(mac);
-  const microcontrollerDoc = await microcontrollerRef.get();
-  if (microcontrollerDoc.exists) {
-    return microcontrollerDoc.data() as Microcontroller;
-  } else {
-    return null;
+    try {
+      const microcontrollersRef = collection(this.firestore, 'microcontrollers');
+      const microcontrollerRef = doc(microcontrollersRef, mac);
+      const microcontrollerDoc = await getDoc(microcontrollerRef);
+      
+      if (microcontrollerDoc.exists()) {
+        return microcontrollerDoc.data() as Microcontroller;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Erro ao buscar microcontrolador:", error);
+      throw error;
+    }
   }
-}
 
- public async findUserById(user_id: string): Promise<any> {
-  const usersRef = this.firestore.collection('users');
-  const userRef = usersRef.doc(user_id);
-  const userDoc = await userRef.get();
-  if (userDoc.exists) {
-    return userDoc.data();
-  } else {
-    return null;
+  public async findUserById(user_id: string): Promise<DocumentData | null> {
+    try {
+      const usersRef = collection(this.firestore, 'users');
+      const userRef = doc(usersRef, user_id);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        return userDoc.data();
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Erro ao buscar usuário:", error);
+      throw error;
+    }
   }
-}
 
- public async create(coordinate: Coordinates): Promise<Coordinates> {
-  const coordinatesRef = this.firestore.collection('coordinates');
-  const newCoordinateRef = await coordinatesRef.add(coordinate);
-  const newCoordinateDoc = await newCoordinateRef.get();
-  return newCoordinateDoc.data() as Coordinates;
-}
+  public async create(coordinate: Coordinate): Promise<Coordinate> {
+    try {
+      const coordinatesRef = collection(this.firestore, 'coordinates');
+      await addDoc(coordinatesRef, coordinate);
+      // Retorna o objeto coordinate original, já que não estamos modificando-o
+      return coordinate;
+    } catch (error) {
+      console.error("Erro ao criar coordenada:", error);
+      throw error;
+    }
+  }
 
- public async find(): Promise<Coordinates[]> {
-  const coordinatesRef = this.firestore.collection('coordinates');
-  const coordinatesDocs = await coordinatesRef.get();
-  const coordinates = coordinatesDocs.docs.map((doc: any) => doc.data() as Coordinates);
-  return coordinates;
-}
+  public async find(): Promise<Coordinate[]> {
+    try {
+      const coordinatesRef = collection(this.firestore, 'coordinates');
+      const coordinatesDocs = await getDocs(coordinatesRef);
+      const coordinates = coordinatesDocs.docs.map((doc) => 
+        doc.data() as Coordinate
+      );
+      return coordinates;
+    } catch (error) {
+      console.error("Erro ao buscar coordenadas:", error);
+      throw error;
+    }
+  }
 }

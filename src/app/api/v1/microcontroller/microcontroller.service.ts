@@ -49,26 +49,14 @@ export async function POST(request: NextRequest) {
         latitude,
         longitude,
       });
-      console.log("Dados salvos com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+    } catch (error: unknown) {
+      console.error("Erro ao salvar os dados", error);
+      throw error;
     }
 
-    return NextResponse.json({
-      microcontroller: result.id,
-      userId: result.userId,
-    });
-  } catch (error: any) {
-    if (error.message && error.message.includes("não está registrado")) {
-      return NextResponse.json(
-        {
-          error: "Not Found",
-          message: error.message,
-        },
-        { status: 404 }
-      );
-    }
-
+    return NextResponse.json({ message: "Dados salvos com sucesso" });
+  } catch (error: unknown) {
+    console.error("Erro no endpoint de microcontrolador", error);
     return NextResponse.json(
       {
         error: "Internal Server Error",
@@ -78,5 +66,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export { getMicrocontrollerId };
