@@ -6,6 +6,7 @@ export interface Coordinate {
 }
 
 export interface Microcontroller {
+
   uid: string;
   name: string;
   mac_address: string;
