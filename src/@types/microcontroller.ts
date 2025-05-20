@@ -1,6 +1,7 @@
 import { Coordinates } from "./coordinates";
 
 export interface Microcontroller {
+
   uid: string;
   name: string;
   mac_address: string;

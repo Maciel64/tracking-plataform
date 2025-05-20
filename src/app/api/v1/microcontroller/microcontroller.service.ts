@@ -5,13 +5,13 @@ import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Requisição POST recebida");
+    console.log("==== INÍCIO DO PROCESSAMENTO DA REQUISIÇÃO POST ====");
     
     let body;
     try {
       console.log("Tentando parsear o corpo da requisição");
       body = await request.json();
-      console.log("Corpo da requisição parseado com sucesso");
+      console.log("Corpo da requisição parseado com sucesso:", body);
     } catch (e) {
       console.error("Erro ao parsear o corpo da requisição", e);
       return NextResponse.json(
@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log("Corpo da requisição:", body);
     
     const macAddress = body.macAddress as string;
     const userId = body.user_id as string;
     const latitude = body.latitude as number;
     const longitude = body.longitude as number;
+    
+    console.log("Dados extraídos:", { macAddress, userId, latitude, longitude });
     
     if (!macAddress) {
       console.error("macAddress não fornecido");
@@ -84,6 +84,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log("Validações passaram, verificando usuário:", userId);
     const userRepository: UsersRepository = new UsersRepository(firestoreAdapter);
     const user = await userRepository.findById(userId);
 
@@ -97,14 +99,13 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+    console.log("Usuário encontrado:", user);
 
     // Buscar o microcontrolador
     try {
-      console.log("Tentando buscar o microcontrolador");
+      console.log("==== BUSCANDO MICROCONTROLADOR ====", { macAddress });
       const result = await getMicrocontrollerId(macAddress);
-      console.log("Microcontrolador encontrado com sucesso");
-      
-      console.log("Resultado:", result);
+      console.log("Microcontrolador encontrado com sucesso. ID:", result.id);
       
       // Salvar a coordenada no banco
       const coordinate: Coordinate = {
@@ -114,7 +115,16 @@ export async function POST(request: NextRequest) {
         longitude,
         created_at: new Date()
       };
-      await saveCoordinate(coordinate);
+      
+      console.log("==== SALVANDO COORDENADA ====", JSON.stringify(coordinate, null, 2));
+      
+      try {
+        await saveCoordinate(coordinate);
+        console.log("==== COORDENADA SALVA COM SUCESSO ====");
+      } catch (saveError) {
+        console.error("Erro ao salvar coordenada:", saveError);
+        throw saveError;
+      }
       
       // Retornar mensagem de sucesso
       return NextResponse.json({ message: "Coordenada salva com sucesso!" });
@@ -135,7 +145,7 @@ export async function POST(request: NextRequest) {
     }
     
   } catch (error: unknown) {
-    console.error("Erro no endpoint de identificação", error);
+    console.error("Erro no endpoint de coordenadas:", error);
     
     return NextResponse.json(
       {
@@ -145,7 +155,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
 
-}export async function GET() {  console.log("Requisição GET recebida");
-  return NextResponse.json({ message: "Endpoint de identificação disponível" });
+export async function GET() {
+  console.log("Requisição GET recebida");
+  return NextResponse.json({ message: "Endpoint de coordenadas disponível" });
 }

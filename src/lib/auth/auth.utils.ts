@@ -8,8 +8,6 @@ export async function authenticate(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await signInWithEmailAndPassword(firebaseAuth, email, password);
-
     return { success: true };
   } catch (error) {
     console.error("Authentication error:", error);
@@ -25,9 +23,8 @@ export async function registerAndLogin(data: CreateUserSchema) {
     await api.post("/auth/register", data);
 
     const { success, error } = await authenticate(data.email, data.password);
-
     if (!success) throw new Error(error);
-
+    
     return { success: true };
   } catch (error) {
     console.error("Registration error:", error);

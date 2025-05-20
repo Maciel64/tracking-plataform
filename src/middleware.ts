@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { User } from "./@types/user";
 
+
 const routesByRole = {
   ADMIN: [
     "/profile",
@@ -14,7 +15,8 @@ const routesByRole = {
   USER: ["/microcontrollers", "/maps", "/profile", "/settings", "/dashboard"],
 };
 
-const publicRoutes = ["/auth/login", "/auth/register", "/"];
+// Adicione a rota do identify às rotas públicas
+const publicRoutes = ["/auth/login", "/auth/register", "/", "/api/identify"];
 
 export async function middleware(request: NextRequest) {
   const session = await auth();
@@ -24,6 +26,12 @@ export async function middleware(request: NextRequest) {
   if (publicRoutes.includes(path)) {
     return NextResponse.next();
   }
+  
+  // Você também pode verificar se a rota começa com /api/identify
+  if (path.startsWith("/api/identify")) {
+    return NextResponse.next();
+  }
+  
   const role = user?.role?.toUpperCase();
 
   const isValidRole =
@@ -44,5 +52,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/|_next/static|_next/image|favicon.ico).*)"],
+  // Modifique o matcher para excluir a rota /api/identify
+  matcher: ["/((?!api/identify|api/|_next/static|_next/image|favicon.ico).*)"],
 };
