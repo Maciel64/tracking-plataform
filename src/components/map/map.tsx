@@ -109,7 +109,7 @@ export default function Map({
       center={center}
       zoom={zoom}
       style={{ height, width }}
-      className={cn("rounded-lg z-10", className)}
+      className={cn("z-10", className)}
       zoomControl={showZoomControls}
       ref={mapRef}
     >

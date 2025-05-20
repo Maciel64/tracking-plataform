@@ -1,8 +1,9 @@
-import { Coordinate, Microcontroller } from "@/@types/microcontroller";
+import { Microcontroller } from "@/@types/microcontroller";
 import { db } from "@/lib/adapters/firebase.adapter";
 import { auth } from "@/auth";
 import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
-import { collection, query, where } from "firebase/firestore";
+import { collection, limit, orderBy, query, where } from "firebase/firestore";
+import { Coordinates } from "@/@types/coordinates";
 
 export async function Microcontrollers() {
   const session = await auth();
@@ -11,14 +12,18 @@ export async function Microcontrollers() {
     throw new Error("Usuário não autenticado");
   }
 
-  const microcontrollersSnapshot = await firestoreAdapter.getDocs(
-    query(
+  let q;
+
+  if (session.user.role === "ADMIN") {
+    q = query(collection(db, "microcontrollers"));
+  } else {
+    q = query(
       collection(db, "microcontrollers"),
-      session.user.role === "ADMIN"
-        ? where("userId", "==", session.user.id)
-        : where("userId", "==", session.user.id)
-    )
-  );
+      where("user_id", "==", session.user.id)
+    );
+  }
+
+  const microcontrollersSnapshot = await firestoreAdapter.getDocs(q);
 
   const microcontrollersPromises = microcontrollersSnapshot.docs.map(
     async (doc) => {
@@ -26,7 +31,9 @@ export async function Microcontrollers() {
       const coordinatesSnapshot = await firestoreAdapter.getDocs(
         query(
           collection(db, "coordinates"),
-          where("microcontroller", "==", doc.ref)
+          where("microcontroller_uid", "==", doc.ref.id),
+          orderBy("created_at", "desc"),
+          limit(1)
         )
       );
 
@@ -36,14 +43,16 @@ export async function Microcontrollers() {
           return {
             uid: coordDoc.id,
             ...coordData,
-          } as Coordinate;
+          } as Coordinates;
         }
       );
+
+      const coordinates = await Promise.all(coordinatesPromises);
 
       return {
         uid: doc.id,
         ...data,
-        coordinates: await Promise.all(coordinatesPromises),
+        coordinates,
       } as Microcontroller;
     }
   );

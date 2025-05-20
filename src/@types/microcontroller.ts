@@ -1,16 +1,11 @@
-export interface Coordinate {
-  uid: string;
-  latitude: number;
-  longitude: number;
-  microcontroller: Microcontroller;
-}
+import { Coordinates } from "./coordinates";
 
 export interface Microcontroller {
 
   uid: string;
   name: string;
   mac_address: string;
-  coordinates?: Coordinate[];
+  coordinates?: Coordinates[];
   model: "Raster1" | "Raster2";
   chip: "VIVO" | "CLARO" | "TIM";
   plate: string;
