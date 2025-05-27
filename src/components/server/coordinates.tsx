@@ -1,4 +1,4 @@
-import { Coordinates as TCoordinates } from "@/@types/coordinates";
+import { Coordinate as TCoordinates } from "@/@types/coordinates";
 import { Microcontroller } from "@/@types/microcontroller";
 import { db, firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
@@ -28,7 +28,7 @@ export async function Coordinates() {
         uid: microcontrollerDoc.id,
         ...microcontrollerData,
       } as Microcontroller,
-    } as TCoordinates;
+    } as unknown as TCoordinates;
   });
 
   return await Promise.all(coordinatesPromises);

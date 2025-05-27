@@ -8,6 +8,19 @@ export async function authenticate(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Utilizando signInWithEmailAndPassword e firebaseAuth
+    const userCredential = await signInWithEmailAndPassword(
+      firebaseAuth,
+      email,
+      password
+    );
+    
+    // Atualiza o horário do último login do usuário
+    await api.post("/users/update-login", {
+      userId: userCredential.user.uid,
+      lastLogin: new Date().toISOString(),
+    });
+    
     return { success: true };
   } catch (error) {
     console.error("Authentication error:", error);

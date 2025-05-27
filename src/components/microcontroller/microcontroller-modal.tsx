@@ -407,7 +407,10 @@ export function MicrocontrollerModal({
                                   variant="outline"
                                   className="ml-2 text-xs"
                                 >
-                                  UID: {coord.uid.substring(0, 8)}...
+                                  UID:{" "}
+                                  {coord.uid
+                                    ? `${String(coord.uid).substring(0, 8)}...`
+                                    : "N/A"}
                                 </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground">

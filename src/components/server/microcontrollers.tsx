@@ -3,7 +3,7 @@ import { db } from "@/lib/adapters/firebase.adapter";
 import { auth } from "@/auth";
 import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 import { collection, limit, orderBy, query, where } from "firebase/firestore";
-import { Coordinates } from "@/@types/coordinates";
+import { Coordinate } from "@/@types/coordinates";
 
 export async function Microcontrollers() {
   const session = await auth();
@@ -43,7 +43,7 @@ export async function Microcontrollers() {
           return {
             uid: coordDoc.id,
             ...coordData,
-          } as Coordinates;
+          } as Coordinate;
         }
       );
 
