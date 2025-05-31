@@ -3,14 +3,9 @@ export const runtime = "nodejs";
 import NextAuth from "next-auth";
 import { pages } from "./domain/config/pages";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { firestoreAdapter } from "./lib/adapters/firebase.adapter";
-import { UsersService } from "./domain/users/users.service";
-import { UsersRepository } from "./domain/users/users.repository";
 import type { User } from "@/types/user";
 
-
 // Inicializando o serviço de usuários
-const usersService = new UsersService(new UsersRepository(firestoreAdapter));
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages,
@@ -51,17 +46,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       // Função de autenticação
-      async authorize(credentials) {
-        const email = credentials?.email as string;
-        const password = credentials?.password as string;
-        
-      
+      async authorize() {
         try {
-          const user = await usersService.login({ email, password });
-          
-      
+          const user = {
+            id: "1",
+            name: "John Doe",
+            email: "john.doe@example.com",
+            role: "USER",
+          };
+
           if (!user) return null;
-      
+
           return {
             id: user.id ?? "",
             name: user.name ?? "",
@@ -72,7 +67,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           console.error("Erro ao logar:", e);
           return null;
         }
-      }
+      },
     }),
   ],
 });

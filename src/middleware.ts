@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { User } from "./@types/user";
 
-
 const routesByRole = {
   ADMIN: [
     "/profile",
@@ -26,19 +25,20 @@ export async function middleware(request: NextRequest) {
   if (publicRoutes.includes(path)) {
     return NextResponse.next();
   }
-  
+
   // Você também pode verificar se a rota começa com /api/identify
   if (path.startsWith("/api/identify")) {
     return NextResponse.next();
   }
-  
+
   const role = user?.role?.toUpperCase();
 
   const isValidRole =
     typeof role === "string" && Object.keys(routesByRole).includes(role);
-  
+
   const userCanAccess =
-    isValidRole && routesByRole[role as keyof typeof routesByRole]?.includes(path);
+    isValidRole &&
+    routesByRole[role as keyof typeof routesByRole]?.includes(path);
 
   if (!userCanAccess) {
     if (!user) {

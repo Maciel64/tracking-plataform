@@ -7,7 +7,6 @@ import {
   LoginSchema,
 } from "@/schemas/user.schema";
 
-
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
@@ -33,18 +32,24 @@ export class UsersService {
     try {
       // Chama o método de exclusão no repositório
       await this.usersRepository.delete(id);
-      
     } catch (error) {
-      console.error('Erro ao excluir usuário:', error);
-      throw new Error('Não foi possível excluir o usuário.');
+      console.error("Erro ao excluir usuário:", error);
+      throw new Error("Não foi possível excluir o usuário.");
     }
   }
 
   async login(data: LoginSchema) {
     loginSchema.parse(data);
-    
-    
 
     return this.usersRepository.login(data);
+  }
+
+  returnUser() {
+    return {
+      id: "1",
+      name: "John Doe",
+      email: "john.doe@example.com",
+      role: "USER",
+    };
   }
 }

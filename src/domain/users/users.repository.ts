@@ -1,95 +1,54 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { User } from "@/@types/user";
-import { auth, db, TFirestoreAdapter } from "@/lib/adapters/firebase.adapter";
 import { CreateUserSchema, LoginSchema } from "@/schemas/user.schema";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import { prisma } from "@/providers/prisma/prisma.provider";
 
 export class UsersRepository {
-  exists(userId: string) {
-    throw new Error("Method not implemented.");
-  }
-  private readonly usersCollection;
-
-  constructor(private readonly firebaseAdapter: TFirestoreAdapter) {
-    this.usersCollection = this.firebaseAdapter.collection(db, "users");
-  }
-
   async create(data: CreateUserSchema): Promise<User> {
-    const { email, name, password } = data;
+    return await prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: "USER",
+        status: "ENABLED",
+      },
+    });
+  }
 
-    const res = await createUserWithEmailAndPassword(auth, email, password);
-
-    const user: User = {
-      id: res.user.uid, // 👈 alterado de uid para id
-      email,
-      name,
-      createdAt: new Date(),
-      updatedAt: null,
-      role: "USER",
-      status: "ENABLED",
-    };
-
-    const userDoc = this.firebaseAdapter.doc(this.usersCollection, user.id);
-    await this.firebaseAdapter.setDoc(userDoc, user);
-
-    return user;
+  async find(): Promise<User[]> {
+    return await prisma.user.findMany();
   }
 
   async findById(id: string): Promise<User | null> {
-    const ref = this.firebaseAdapter.doc(this.usersCollection, id);
-    const snapshot = await this.firebaseAdapter.getDoc(ref);
-
-    if (!snapshot.exists()) {
-      return null;
-    }
-
-    return snapshot.data() as User;
+    return await prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 
-  update(id: string, user: User): Promise<User> {
-    throw new Error("Method not implemented.");
+  async update(id: string, updateUserSchema: User): Promise<User> {
+    const user = await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        name: updateUserSchema.name,
+        email: updateUserSchema.email,
+        role: updateUserSchema.role,
+        status: updateUserSchema.status,
+      },
+    });
+
+    return user;
   }
 
   delete(id: string): Promise<void> {
     throw new Error("Method not implemented.");
   }
 
-  async find(): Promise<User[]> {
-    const snapshot = await this.firebaseAdapter.getDocs(this.usersCollection);
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as User)); // 👈 id
-  }
-
   async login(data: LoginSchema): Promise<User | null> {
-    try {
-      const { email, password } = data;
-      
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      
-  
-      const ref = this.firebaseAdapter.doc(db, "users", res.user.uid);
-      const snapshot = await this.firebaseAdapter.getDoc(ref);
-  
-      if (!snapshot.exists()) {
-        
-        return null;
-      }
-  
-      
-  
-      return {
-        id: res.user.uid,
-        email: res.user.email ?? "",
-        name: snapshot.data()?.name ?? "",
-        createdAt: snapshot.data()?.createdAt ?? new Date(),
-        updatedAt: snapshot.data()?.updatedAt ?? null,
-        role: snapshot.data()?.role ?? "USER",
-      } as User;
-    } catch (e) {
-      console.error("Erro no login do UsersRepository:", e);
-      return null;
-    }
+    throw new Error("Method not implemented.");
   }
 }
