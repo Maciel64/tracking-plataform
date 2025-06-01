@@ -3,7 +3,7 @@ import {
   getMicrocontrollerId,
   saveCoordinate,
   Coordinate,
-} from "@/domain/repositories/microcontroller.repository";
+} from "@/domain/microcontrollers/microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {

@@ -27,18 +27,29 @@ model User {
 }
 
 model Microcontroller {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
   chip        String
-  macAddress  String      @unique
+  macAddress  String       @unique
   model       String
   plate       String
   vehicleType VehicleType
   active      Boolean
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  user        User        @relation(fields: [userId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id])
   userId      String
+  coordinates Coordinate[]
+}
+
+model Coordinate {
+  id                String          @id @default(cuid())
+  latitude          Float
+  longitude         Float
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  microcontroller   Microcontroller @relation(fields: [microcontrollerId], references: [id])
+  microcontrollerId String
 }
 
 enum UserRole {

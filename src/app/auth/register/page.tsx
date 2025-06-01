@@ -27,8 +27,9 @@ import {
 } from "@/components/ui/card";
 import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
 import { useMutation } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { register } from "@/domain/users/user.actions";
 import { signIn } from "next-auth/react";
+import { UserResponseDTO } from "@/domain/users/user.model";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -44,20 +45,17 @@ export default function SignupPage() {
   });
 
   const registerMutation = useMutation<
-    CreateUserSchema,
+    UserResponseDTO,
     Error,
     CreateUserSchema
   >({
-    mutationFn: async (data: CreateUserSchema) => {
-      const res = await api.post("/auth/register", data);
-      return res.data;
-    },
-    onSuccess: async (data) => {
+    mutationFn: async (data: CreateUserSchema) => register(data),
+    onSuccess: async (_, variables) => {
       toast.success("Cadastro realizado com sucesso");
 
       await signIn("credentials", {
-        email: data.email,
-        password: data.password,
+        email: variables.email,
+        password: variables.password,
         redirect: false,
       });
 

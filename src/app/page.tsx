@@ -1,6 +1,5 @@
 "use client";
 
-import { User } from "@/@types/user";
 import Map from "@/components/map";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,7 @@ import {
 
 import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { User } from "@/domain/users/user.model";
 
 export default function RasterLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

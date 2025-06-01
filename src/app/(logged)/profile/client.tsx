@@ -36,7 +36,6 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { User as TUser } from "@/@types/user";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -54,6 +53,7 @@ import {
 import { auth, db } from "@/lib/adapters/firebase.adapter";
 import { z } from "zod";
 import { FirebaseError } from "firebase/app";
+import { User as TUser } from "@/domain/users/user.model";
 
 // Schema de validação para o formulário principal
 const userFormSchema = z.object({
@@ -84,9 +84,7 @@ const passwordSchema = z
 export function PerfilPage({ user }: { user: TUser }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(
-    user.twoFactorEnabled || false
-  );
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -95,9 +93,7 @@ export function PerfilPage({ user }: { user: TUser }) {
   const [formData, setFormData] = useState({
     nome: user.name,
     email: user.email,
-    telefone: user.telefone || "",
     cargo: user.role,
-    bio: user.bio || "",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
@@ -335,7 +331,9 @@ export function PerfilPage({ user }: { user: TUser }) {
                   <CardContent className="flex flex-col items-center justify-center space-y-4">
                     <Avatar className="h-32 w-32">
                       <AvatarImage
-                        src={user.photoURL || "/placeholder.svg"}
+                        src={
+                          "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+                        }
                         alt="Foto de perfil"
                       />
                       <AvatarFallback className="text-4xl">
@@ -559,19 +557,18 @@ export function PerfilPage({ user }: { user: TUser }) {
                         <span className="text-sm text-muted-foreground">
                           Data/Hora:
                         </span>
-                        <span>{user.lastLogin || "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           IP:
                         </span>
-                        <span>{user.lastIp || "N/A"}</span>
+                        <span>{user.id || "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           Dispositivo:
                         </span>
-                        <span>{user.lastDevice || "N/A"}</span>
+                        <span>{user.role || "N/A"}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -632,7 +629,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                         <Label htmlFor="telefone">Telefone</Label>
                         <Input
                           name="telefone"
-                          value={formData.telefone}
                           onChange={handleChange}
                           placeholder="(99) 99999-9999"
                           className={
@@ -662,7 +658,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                       <Label htmlFor="bio">Biografia</Label>
                       <Textarea
                         name="bio"
-                        value={formData.bio}
                         onChange={handleChange}
                         placeholder="Conte um pouco sobre você..."
                         className={`resize-none ${
@@ -673,9 +668,7 @@ export function PerfilPage({ user }: { user: TUser }) {
                       {formErrors.bio ? (
                         <p className="text-sm text-red-500">{formErrors.bio}</p>
                       ) : (
-                        <p className="text-sm text-muted-foreground">
-                          {formData.bio.length}/200 caracteres
-                        </p>
+                        <p className="text-sm text-muted-foreground"></p>
                       )}
                     </div>
                   </CardContent>

@@ -4,6 +4,7 @@ import NextAuth from "next-auth";
 import { pages } from "./domain/config/pages";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { User } from "@/types/user";
+import { getUserService } from "./domain/users/user.hooks";
 
 // Inicializando o serviço de usuários
 
@@ -45,28 +46,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      // Função de autenticação
-      async authorize() {
-        try {
-          const user = {
-            id: "1",
-            name: "John Doe",
-            email: "john.doe@example.com",
-            role: "USER",
-          };
+      async authorize(data) {
+        const email = data?.email as string;
+        const password = data?.password as string;
 
-          if (!user) return null;
+        const userService = getUserService();
 
-          return {
-            id: user.id ?? "",
-            name: user.name ?? "",
-            email: user.email ?? "",
-            role: user.role ?? "USER",
-          };
-        } catch (e) {
-          console.error("Erro ao logar:", e);
-          return null;
-        }
+        return await userService.login({ email, password });
       },
     }),
   ],

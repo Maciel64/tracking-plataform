@@ -1,17 +1,10 @@
 "use server";
 
 import { CreateUserSchema } from "@/schemas/user.schema";
-import { container, DI } from "@/lib/di/container";
-import { UsersService } from "./users.service";
+import { getUserService } from "./user.hooks";
 
-export function getUserService() {
-  return container.get<UsersService>(DI.USER_SERVICE);
-}
-
-export async function registerAction(data: CreateUserSchema) {
+export async function register(data: CreateUserSchema) {
   const usersService = getUserService();
-
-  console.log(usersService.returnUser());
 
   return usersService.create(data);
 }

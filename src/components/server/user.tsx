@@ -1,4 +1,4 @@
-import { User as TUser } from "@/@types/user";
+import { User as TUser } from "@/domain/users/user.model";
 import { auth } from "@/auth";
 
 export async function User() {

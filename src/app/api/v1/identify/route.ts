@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMicrocontrollerId } from "../../../../domain/repositories/microcontroller.repository";
+import { getMicrocontrollerId } from "../../../../domain/microcontrollers/microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {
     console.log("Requisição POST recebida");
-    
+
     let body;
     try {
       console.log("Tentando parsear o corpo da requisição");
@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Corpo da requisição:", body);
-    
+
     const macAddress = body.macAddress as string;
-    
+
     if (!macAddress) {
       console.error("macAddress não fornecido");
       return NextResponse.json(
@@ -35,44 +35,47 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     console.log("macAddress:", macAddress);
-    
+
     try {
       console.log("Tentando buscar o microcontrolador");
       const result = await getMicrocontrollerId(macAddress);
       console.log("Microcontrolador encontrado com sucesso");
-      
+
       console.log("Resultado:", result);
-      
+
       // Retornar os dados do microcontrolador
       const response = {
         microcontroller: result.id,
-        userId: result.userId
+        userId: result.userId,
       };
-      
+
       console.log("Resposta:", response);
-      
+
       return NextResponse.json(response);
     } catch (error) {
       console.error("Erro ao buscar o microcontrolador", error);
-      
-      if (error instanceof Error && error.message && error.message.includes("não está registrado")) {
+
+      if (
+        error instanceof Error &&
+        error.message &&
+        error.message.includes("não está registrado")
+      ) {
         console.error("Microcontrolador não encontrado");
         return NextResponse.json(
           {
             error: "Not Found",
-            message: error.message
+            message: error.message,
           },
           { status: 404 }
         );
       }
       throw error;
     }
-    
   } catch (error) {
     console.error("Erro no endpoint de identificação", error);
-    
+
     return NextResponse.json(
       {
         error: "Internal Server Error",

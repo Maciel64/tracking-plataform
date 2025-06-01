@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMicrocontrollerId } from "../../../../domain/repositories/microcontroller.repository";
+import { getMicrocontrollerId } from "../../../../domain/microcontrollers/microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {

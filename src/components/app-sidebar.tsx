@@ -35,8 +35,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import Link from "next/link";
-import { User } from "@/@types/user";
 import logo from "@/assets/images/logo.png";
+import { User } from "@/domain/users/user.model";
 
 type Route = {
   label: string;

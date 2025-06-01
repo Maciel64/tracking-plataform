@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { User } from "./@types/user";
+import { User } from "./domain/users/user.model";
 
 const routesByRole = {
   ADMIN: [

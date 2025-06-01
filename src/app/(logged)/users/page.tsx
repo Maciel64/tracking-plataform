@@ -70,12 +70,12 @@ import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User } from "@/@types/user";
 import { FirebaseError } from "firebase/app";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { query } from "@/providers/client-provider";
 import { deleteOnFireAuth } from "./actions";
+import { User } from "@/domain/users/user.model";
 
 export type UserRoles = "USER" | "ADMIN";
 export type UserStatus = "ENABLED" | "DISABLED";

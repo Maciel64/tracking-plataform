@@ -1,5 +1,5 @@
-import { UsersRepository } from "@/domain/users/users.repository";
-import { UsersService } from "@/domain/users/users.service";
+import { UserRepository } from "@/domain/users/user.repository";
+import { UserService } from "@/domain/users/user.service";
 import { createContainer } from "@evyweb/ioctopus";
 
 export const DI = {
@@ -9,7 +9,5 @@ export const DI = {
 
 export const container = createContainer();
 
-container.bind(DI.USER_REPOSITORY).toClass(UsersRepository);
-container
-  .bind(DI.USER_SERVICE)
-  .toClass(UsersService, { usersRepository: DI.USER_REPOSITORY });
+container.bind(DI.USER_REPOSITORY).toClass(UserRepository);
+container.bind(DI.USER_SERVICE).toClass(UserService, [DI.USER_REPOSITORY]);
