@@ -7,13 +7,9 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("==== INÍCIO DO PROCESSAMENTO DA REQUISIÇÃO POST ====");
-
     let body;
     try {
-      console.log("Tentando parsear o corpo da requisição");
       body = await request.json();
-      console.log("Corpo da requisição parseado com sucesso:", body);
     } catch (e) {
       console.error("Erro ao parsear o corpo da requisição", e);
       return NextResponse.json(
@@ -29,13 +25,6 @@ export async function POST(request: NextRequest) {
     const userId = body.user_id as string;
     const latitude = body.latitude as number;
     const longitude = body.longitude as number;
-
-    console.log("Dados extraídos:", {
-      macAddress,
-      userId,
-      latitude,
-      longitude,
-    });
 
     if (!macAddress) {
       console.error("macAddress não fornecido");
@@ -92,13 +81,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Validações passaram, verificando usuário:", userId);
-
     // Buscar o microcontrolador
     try {
-      console.log("==== BUSCANDO MICROCONTROLADOR ====", { macAddress });
       const result = await getMicrocontrollerId(macAddress);
-      console.log("Microcontrolador encontrado com sucesso. ID:", result.id);
 
       // Salvar a coordenada no banco
       const coordinate: Coordinate = {
@@ -109,14 +94,8 @@ export async function POST(request: NextRequest) {
         created_at: new Date(),
       };
 
-      console.log(
-        "==== SALVANDO COORDENADA ====",
-        JSON.stringify(coordinate, null, 2)
-      );
-
       try {
         await saveCoordinate(coordinate);
-        console.log("==== COORDENADA SALVA COM SUCESSO ====");
       } catch (saveError) {
         console.error("Erro ao salvar coordenada:", saveError);
         throw saveError;
@@ -157,6 +136,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  console.log("Requisição GET recebida");
   return NextResponse.json({ message: "Endpoint de coordenadas disponível" });
 }

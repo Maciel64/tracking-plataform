@@ -3,13 +3,9 @@ import { getMicrocontrollerId } from "../../../../domain/microcontrollers/microc
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Requisição POST recebida");
-
     let body;
     try {
-      console.log("Tentando parsear o corpo da requisição");
       body = await request.json();
-      console.log("Corpo da requisição parseado com sucesso");
     } catch (error: unknown) {
       console.error("Erro ao parsear o corpo da requisição", error);
       return NextResponse.json(
@@ -20,8 +16,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log("Corpo da requisição:", body);
 
     const macAddress = body.macAddress as string;
 
@@ -36,22 +30,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("macAddress:", macAddress);
-
     try {
-      console.log("Tentando buscar o microcontrolador");
       const result = await getMicrocontrollerId(macAddress);
-      console.log("Microcontrolador encontrado com sucesso");
-
-      console.log("Resultado:", result);
 
       // Retornar os dados do microcontrolador
       const response = {
         microcontroller: result.id,
         userId: result.userId,
       };
-
-      console.log("Resposta:", response);
 
       return NextResponse.json(response);
     } catch (error: unknown) {
@@ -87,6 +73,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  console.log("Requisição GET recebida");
   return NextResponse.json({ message: "Endpoint de identificação disponível" });
 }

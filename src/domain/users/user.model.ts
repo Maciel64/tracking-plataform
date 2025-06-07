@@ -29,6 +29,7 @@ export class UserResponseDTO {
   name: string;
   email: string;
   role: UserRoles;
+  status: UserStatus;
 
   constructor(data: User | null) {
     if (!data) {
@@ -39,6 +40,7 @@ export class UserResponseDTO {
     this.name = data.name;
     this.email = data.email;
     this.role = data.role;
+    this.status = data.status;
   }
 
   static toJSON(user: User): UserResponseDTO {
@@ -47,6 +49,7 @@ export class UserResponseDTO {
       name: user.name,
       email: user.email,
       role: user.role,
+      status: user.status,
     };
   }
 }

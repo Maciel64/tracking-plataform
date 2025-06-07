@@ -20,7 +20,9 @@ export class UserRepository {
   }
 
   async findMany(): Promise<User[]> {
-    return await prisma.user.findMany();
+    const users = await prisma.user.findMany();
+
+    return users;
   }
 
   async findById(id: string): Promise<User | null> {

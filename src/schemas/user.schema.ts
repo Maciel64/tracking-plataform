@@ -27,5 +27,17 @@ export const loginSchema = z.object({
   password: z.string().min(1, { message: "A senha é obrigatória" }),
 });
 
+export const adminCreatesUserSchema = z.object({
+  name: z
+    .string()
+    .min(3, { message: "O nome deve ter pelo menos 3 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
+  password: z
+    .string()
+    .min(8, { message: "A senha deve ter pelo menos 8 caracteres" }),
+  role: z.enum(["USER", "ADMIN"]).default("USER"),
+  status: z.enum(["ENABLED", "DISABLED"]).default("ENABLED"),
+});
+
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type CreateUserSchema = z.infer<typeof createUserSchema>;

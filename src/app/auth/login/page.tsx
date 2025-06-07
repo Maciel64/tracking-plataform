@@ -9,8 +9,6 @@ import { Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { loginSchema } from "@/schemas/user.schema";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth as firebaseAuth } from "@/lib/adapters/firebase.adapter";
 import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -71,20 +69,11 @@ export default function LoginPage() {
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     setIsLoading(true);
 
-    // Login NextAuth
     const res = await signIn("credentials", {
       email: data.email,
       password: data.password,
       redirect: false,
     });
-
-    // Login Firebase Auth (client)
-    try {
-      await signInWithEmailAndPassword(firebaseAuth, data.email, data.password);
-    } catch (error) {
-      // Trate erro do Firebase se necessário
-      console.error("Erro ao autenticar no Firebase:", error);
-    }
 
     if (res?.ok && !res.error) {
       toast.success("Login realizado com sucesso");

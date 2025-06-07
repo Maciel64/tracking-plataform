@@ -16,6 +16,12 @@ export class UserService {
     return this.usersRepository.findById(id);
   }
 
+  async findMany(): Promise<UserResponseDTO[]> {
+    const users = await this.usersRepository.findMany();
+
+    return users.map((user) => UserResponseDTO.toJSON(user));
+  }
+
   async create(data: CreateUserSchema): Promise<UserResponseDTO> {
     createUserSchema.parse(data);
 
