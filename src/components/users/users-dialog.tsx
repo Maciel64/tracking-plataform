@@ -24,12 +24,20 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User, UserRoles, UserStatus } from "@/domain/users/user.model";
-import { adminCreatesUserSchema } from "@/schemas/user.schema";
+import {
+  AdminCreatesUserSchema,
+  adminCreatesUserSchema,
+} from "@/schemas/user.schema";
+import { useTransition } from "react";
+import { adminCreateUserAction } from "@/domain/admin/admin.actions";
+import { toast } from "sonner";
 
 interface UsersDialogProps {
   currentUser: User | null;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
+  deletingUserId: string | null;
+  setDeletingUserId: (id: string | null) => void;
 }
 
 export function UsersDialog({
@@ -42,8 +50,8 @@ export function UsersDialog({
     formState: { errors },
     setValue,
     reset,
-    handleSubmit,
     watch,
+    handleSubmit,
   } = useForm({
     resolver: zodResolver(adminCreatesUserSchema),
     defaultValues: {
@@ -54,6 +62,21 @@ export function UsersDialog({
       status: currentUser?.status || ("ENABLED" as UserStatus),
     },
   });
+
+  const [isPending, startTransition] = useTransition();
+
+  function onSubmit(data: AdminCreatesUserSchema) {
+    startTransition(async () => {
+      const result = await adminCreateUserAction(data);
+
+      if (result.error) {
+        toast.error("Erro ao criar usuário");
+      }
+
+      toast.success("Usuário criado com sucesso");
+      setIsDialogOpen(false);
+    });
+  }
 
   return (
     <motion.div
@@ -87,7 +110,7 @@ export function UsersDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit(() => {})} className="mt-4 space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
@@ -164,33 +187,11 @@ export function UsersDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit"></Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Salvando..." : "Confirmar"}
+              </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-lg font-medium leading-none tracking-tight">
-              Confirmar Exclusão
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Tem certeza que deseja apagar este usuário? Esta ação não pode ser
-              desfeita.
-            </p>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive">Confirmar Exclusão</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>

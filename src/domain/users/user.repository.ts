@@ -5,14 +5,14 @@ import { prisma } from "@/providers/prisma/prisma.provider";
 import { UserRole, UserStatus as PrismaUserStatus } from "@/generated/prisma";
 
 export class UserRepository {
-  async create(data: CreateUserSchema): Promise<User> {
+  async create(data: User): Promise<User> {
     const user = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
-        password: data.password,
-        role: UserRole.USER,
-        status: PrismaUserStatus.ENABLED,
+        password: data.password!,
+        role: data.role,
+        status: data.status,
       },
     });
 
@@ -53,7 +53,9 @@ export class UserRepository {
     return user;
   }
 
-  delete(id: string): Promise<void> {
-    throw new Error("Method not implemented.");
+  async delete(id: string): Promise<void> {
+    await prisma.user.delete({
+      where: { id },
+    });
   }
 }

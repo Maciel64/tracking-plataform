@@ -23,6 +23,7 @@ import { Button } from "../ui/button";
 import { User, UserResponseDTO } from "@/domain/users/user.model";
 import { UsersDialog } from "./users-dialog";
 import { use, useState } from "react";
+import { UsersDeleteDialog } from "./users-delete-dialog";
 
 interface UserTableProps {
   usersPromise: Promise<UserResponseDTO[]>;
@@ -33,58 +34,7 @@ export function UsersTable({ usersPromise }: UserTableProps) {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  // const createEditUserMutation = useMutation<
-  //   void,
-  //   FirebaseError,
-  //   TCreateUserSchema
-  // >({
-  //   mutationFn: async (data) => {},
-  //   onSuccess: () => {
-  //     toast.success(
-  //       currentUser
-  //         ? `Usuário ${currentUser.name} atualizado com sucesso`
-  //         : "Usuário criado com sucesso"
-  //     );
-  //     setIsDialogOpen(false);
-  //     query.invalidateQueries({
-  //       queryKey: ["users"],
-  //     });
-  //     reset();
-  //   },
-  //   onError: () => {
-  //     toast.error("Não foi possível criar o usuário");
-  //   },
-  // });
-
-  // const handleDelete = (userId: string) => {
-  //   setUserToDelete(userId);
-  //   setIsDeleteDialogOpen(true);
-  // };
-
-  // //Apaga o usuário do Firestore
-  // const confirmDelete = async () => {
-  //   if (!userToDelete) return;
-
-  //   setIsDeleting(true);
-  //   try {
-  //     const userRef = doc(db, "users", userToDelete);
-  //     await deleteDoc(userRef);
-
-  //     deleteOnFireAuth(userRef.id);
-
-  //     setIsDeleteDialogOpen(false);
-  //     toast.success("O usuário foi apagado com sucesso");
-  //     query.invalidateQueries({
-  //       queryKey: ["users"],
-  //     });
-  //   } catch (error) {
-  //     toast.error("Não foi possível apagar o usuário");
-  //     console.error("Erro ao apagar usuário:", error);
-  //   } finally {
-  //     setIsDeleting(false);
-  //   }
-  // };
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   return (
     <>
@@ -125,30 +75,35 @@ export function UsersTable({ usersPromise }: UserTableProps) {
                 </Badge>
               </TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setCurrentUser(user);
-                        setIsDialogOpen(true);
-                      }}
-                    >
-                      <UserCog className="mr-2 h-4 w-4" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600 focus:text-red-600">
-                      <Trash className="mr-2 h-4 w-4" />
-                      Apagar
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {user.role === "USER" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setCurrentUser(user);
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        <UserCog className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => setDeletingUserId(user.id)}
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Apagar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -159,6 +114,13 @@ export function UsersTable({ usersPromise }: UserTableProps) {
         currentUser={currentUser}
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
+        deletingUserId={deletingUserId}
+        setDeletingUserId={setDeletingUserId}
+      />
+
+      <UsersDeleteDialog
+        deletingUserId={deletingUserId}
+        setDeletingUserId={setDeletingUserId}
       />
     </>
   );

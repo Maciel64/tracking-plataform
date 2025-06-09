@@ -41,3 +41,4 @@ export const adminCreatesUserSchema = z.object({
 
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type CreateUserSchema = z.infer<typeof createUserSchema>;
+export type AdminCreatesUserSchema = z.infer<typeof adminCreatesUserSchema>;

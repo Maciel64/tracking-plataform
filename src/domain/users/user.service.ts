@@ -35,12 +35,15 @@ export class UserService {
 
     const encryptedPassword = await Crypto.encrypt(
       data.password,
-      process.env.PASSWORD_SECRET as string
+      process.env.DATABASE_CRYPTO_PASSWORD as string
     );
 
     const user = await this.usersRepository.create({
+      id: "",
       ...data,
       password: encryptedPassword,
+      role: "USER",
+      status: "ENABLED",
     });
 
     return UserResponseDTO.toJSON(user);
@@ -61,7 +64,7 @@ export class UserService {
 
     const decryptedPassword = await Crypto.decrypt(
       user?.password || "",
-      process.env.PASSWORD_SECRET as string
+      process.env.DATABASE_CRYPTO_PASSWORD as string
     );
 
     if (!user || data?.password !== decryptedPassword) {

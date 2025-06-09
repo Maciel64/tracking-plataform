@@ -13,7 +13,7 @@ export default async function UsersPage() {
   const users = getUserService().findMany();
 
   return (
-    <div className="container py-10 overflow-x-auto h-[calc(100vh-6rem)]">
+    <div className="container py-10 overflow-x-auto">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
