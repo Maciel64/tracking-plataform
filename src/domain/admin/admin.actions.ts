@@ -14,7 +14,20 @@ export async function adminCreateUserAction(data: AdminCreatesUserSchema) {
   };
 }
 
-export async function deleteUserAction(id: string) {
+export async function adminUpdateUserAction(
+  userId: string,
+  data: AdminCreatesUserSchema
+) {
+  await getAdminService().updateUser(userId, data);
+
+  revalidateTag("users");
+
+  return {
+    error: false,
+  };
+}
+
+export async function adminDeleteUserAction(id: string) {
   await getAdminService().deleteUser(id);
 
   revalidateTag("users");

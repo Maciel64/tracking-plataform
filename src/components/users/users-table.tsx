@@ -29,6 +29,16 @@ interface UserTableProps {
   usersPromise: Promise<UserResponseDTO[]>;
 }
 
+enum UserStatusMap {
+  ENABLED = "Ativo",
+  DISABLED = "Inativo",
+}
+
+enum UserRoleMap {
+  USER = "Usuário",
+  ADMIN = "Administrador",
+}
+
 export function UsersTable({ usersPromise }: UserTableProps) {
   const users = use(usersPromise);
 
@@ -38,84 +48,87 @@ export function UsersTable({ usersPromise }: UserTableProps) {
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Usuário</TableHead>
-            <TableHead>Cargo</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users?.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="" />
-                    <AvatarFallback>
-                      {user.name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>{user.role}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={user.status === "ENABLED" ? "default" : "secondary"}
-                >
-                  {user.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {user.role === "USER" && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setCurrentUser(user);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <UserCog className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-600 focus:text-red-600"
-                        onClick={() => setDeletingUserId(user.id)}
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        Apagar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </TableCell>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Usuário</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {users?.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="" />
+                      <AvatarFallback>
+                        {user.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{user.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{UserRoleMap[user.role]}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      user.status === "ENABLED" ? "default" : "secondary"
+                    }
+                  >
+                    {UserStatusMap[user.status]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {user.role === "USER" && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setCurrentUser(user);
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <UserCog className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => setDeletingUserId(user.id)}
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Apagar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <UsersDialog
         currentUser={currentUser}
         isDialogOpen={isDialogOpen}
+        setCurrentUser={setCurrentUser}
         setIsDialogOpen={setIsDialogOpen}
-        deletingUserId={deletingUserId}
-        setDeletingUserId={setDeletingUserId}
       />
 
       <UsersDeleteDialog

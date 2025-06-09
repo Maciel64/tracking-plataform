@@ -1,9 +1,11 @@
+"use client";
+
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { DialogContent } from "../ui/dialog";
 import { useTransition } from "react";
-import { deleteUserAction } from "@/domain/admin/admin.actions";
+import { adminDeleteUserAction } from "@/domain/admin/admin.actions";
 
 interface UsersDeleteDialogProps {
   deletingUserId: string | null;
@@ -18,14 +20,17 @@ export function UsersDeleteDialog({
 
   function handleDeleteUser() {
     startTransition(async () => {
-      const result = await deleteUserAction(deletingUserId || "");
+      const result = await adminDeleteUserAction(deletingUserId!);
 
       if (result.error) {
         toast.error("Erro ao deletar usuário");
+        return;
       }
 
-      toast.success("Usuário deletado com sucesso");
-      setDeletingUserId(null);
+      setTimeout(() => {
+        setDeletingUserId(null);
+        toast.success("Usuário deletado com sucesso");
+      }, 600);
     });
   }
 
@@ -33,10 +38,10 @@ export function UsersDeleteDialog({
     <Dialog
       open={!!deletingUserId}
       onOpenChange={(open) => {
-        if (!open) setDeletingUserId(null);
+        setDeletingUserId(open ? deletingUserId : null);
       }}
     >
-      <DialogContent>
+      <DialogContent aria-describedby="delete-user-dialog">
         <DialogHeader>
           <DialogTitle className="text-lg font-medium leading-none tracking-tight">
             Confirmar Exclusão

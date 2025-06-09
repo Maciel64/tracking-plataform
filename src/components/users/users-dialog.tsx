@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { Plus } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -23,58 +22,78 @@ import {
 } from "../ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User, UserRoles, UserStatus } from "@/domain/users/user.model";
+import { User, UserRoles } from "@/domain/users/user.model";
 import {
   AdminCreatesUserSchema,
   adminCreatesUserSchema,
 } from "@/schemas/user.schema";
-import { useTransition } from "react";
-import { adminCreateUserAction } from "@/domain/admin/admin.actions";
+import { useEffect, useTransition } from "react";
+import {
+  adminCreateUserAction,
+  adminUpdateUserAction,
+} from "@/domain/admin/admin.actions";
 import { toast } from "sonner";
+import { UserStatus } from "@/generated/prisma";
+import { Plus } from "lucide-react";
 
 interface UsersDialogProps {
   currentUser: User | null;
-  isDialogOpen: boolean;
+  setCurrentUser: (user: User | null) => void;
   setIsDialogOpen: (open: boolean) => void;
-  deletingUserId: string | null;
-  setDeletingUserId: (id: string | null) => void;
+  isDialogOpen: boolean;
 }
 
 export function UsersDialog({
   currentUser,
-  isDialogOpen,
+  setCurrentUser,
   setIsDialogOpen,
+  isDialogOpen,
 }: UsersDialogProps) {
+  const [isPending, startTransition] = useTransition();
+
   const {
     register,
     formState: { errors },
-    setValue,
-    reset,
     watch,
     handleSubmit,
+    reset,
+    setValue,
   } = useForm({
     resolver: zodResolver(adminCreatesUserSchema),
-    defaultValues: {
-      email: currentUser?.email || "",
-      name: currentUser?.name || "",
-      password: "raster-password",
-      role: currentUser?.role || ("USER" as UserRoles),
-      status: currentUser?.status || ("ENABLED" as UserStatus),
-    },
   });
 
-  const [isPending, startTransition] = useTransition();
+  useEffect(() => {
+    reset({
+      email: currentUser?.email || "",
+      name: currentUser?.name || "",
+      role: currentUser?.role || "USER",
+      status: currentUser?.status || "ENABLED",
+    });
+  }, [currentUser, reset]);
 
   function onSubmit(data: AdminCreatesUserSchema) {
     startTransition(async () => {
-      const result = await adminCreateUserAction(data);
+      const result = await (currentUser
+        ? adminUpdateUserAction(currentUser.id, data)
+        : adminCreateUserAction(data));
 
       if (result.error) {
-        toast.error("Erro ao criar usuário");
+        toast.error(
+          currentUser ? "Erro ao atualizar usuário" : "Erro ao criar usuário"
+        );
+        return;
       }
 
-      toast.success("Usuário criado com sucesso");
-      setIsDialogOpen(false);
+      setTimeout(() => {
+        setCurrentUser(null);
+        setIsDialogOpen(false);
+
+        toast.success(
+          currentUser
+            ? "Usuário atualizado com sucesso"
+            : "Usuário criado com sucesso"
+        );
+      }, 600);
     });
   }
 
@@ -88,17 +107,27 @@ export function UsersDialog({
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          if (!open) reset();
           setIsDialogOpen(open);
+
+          reset({
+            email: currentUser?.email || "",
+            name: currentUser?.name || "",
+            role: currentUser?.role || "USER",
+            status: currentUser?.status || "ENABLED",
+          });
+
+          setTimeout(() => {
+            setCurrentUser(null);
+          }, 600);
         }}
       >
         <DialogTrigger asChild>
-          <Button className="gap-2">
+          <Button className="gap-2 mt-4">
             <Plus className="h-4 w-4" />
             Adicionar Usuário
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent aria-describedby="user-dialog">
           <DialogHeader>
             <DialogTitle>
               {currentUser ? "Editar Usuário" : "Adicionar Novo Usuário"}
@@ -144,8 +173,10 @@ export function UsersDialog({
                 <Label htmlFor="role">Cargo</Label>
 
                 <Select
-                  onValueChange={(value: UserRoles) => setValue("role", value)}
                   value={watch("role")}
+                  onValueChange={(value) =>
+                    setValue("role", value as UserRoles)
+                  }
                 >
                   <SelectTrigger id="role">
                     <SelectValue placeholder="Selecione o Cargo" />
@@ -162,10 +193,10 @@ export function UsersDialog({
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <Select
-                  onValueChange={(value: UserStatus) =>
-                    setValue("status", value)
-                  }
                   value={watch("status")}
+                  onValueChange={(value) =>
+                    setValue("status", value as UserStatus)
+                  }
                 >
                   <SelectTrigger id="status">
                     <SelectValue placeholder="Selecione" />
@@ -184,6 +215,7 @@ export function UsersDialog({
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
                 type="button"
+                disabled={isPending}
               >
                 Cancelar
               </Button>

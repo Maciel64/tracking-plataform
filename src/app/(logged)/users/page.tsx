@@ -44,11 +44,9 @@ export default async function UsersPage() {
               </Suspense>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
-                <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
-                  <UsersTable usersPromise={users} />
-                </Suspense>
-              </div>
+              <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+                <UsersTable usersPromise={users} />
+              </Suspense>
             </CardContent>
           </Card>
         </motion.div>

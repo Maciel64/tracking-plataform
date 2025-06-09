@@ -1,8 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { User, UserRoles, UserStatus } from "./user.model";
-import { CreateUserSchema, LoginSchema } from "@/schemas/user.schema";
+import { User } from "./user.model";
 import { prisma } from "@/providers/prisma/prisma.provider";
-import { UserRole, UserStatus as PrismaUserStatus } from "@/generated/prisma";
 
 export class UserRepository {
   async create(data: User): Promise<User> {
@@ -39,14 +36,14 @@ export class UserRepository {
     return user;
   }
 
-  async update(id: string, updateUserSchema: User): Promise<User> {
+  async update(id: string, data: User): Promise<User> {
     const user = await prisma.user.update({
       where: { id },
       data: {
-        name: updateUserSchema.name,
-        email: updateUserSchema.email,
-        role: updateUserSchema.role as unknown as UserRole,
-        status: PrismaUserStatus.ENABLED,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        status: data.status,
       },
     });
 
