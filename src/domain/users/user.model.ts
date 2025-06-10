@@ -1,4 +1,4 @@
-import { Microcontroller } from "@/@types/microcontroller";
+import { Microcontroller } from "../microcontrollers/microcontroller.model";
 
 export type UserRoles = "USER" | "ADMIN";
 

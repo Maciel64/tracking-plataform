@@ -1,10 +1,7 @@
-import Map from "@/components/map";
-import { MicrocontrollerCard } from "@/components/microcontroller/microcontroller-card";
-import { Microcontrollers } from "@/components/server/microcontrollers";
 import * as motion from "motion/react-client";
 
 export default async function Maps() {
-  const microcontrollers = await Microcontrollers();
+  // const microcontrollers = await Microcontrollers();
 
   return (
     <div>
@@ -25,7 +22,7 @@ export default async function Maps() {
       </motion.div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {microcontrollers.map((microcontroller) => (
+        {/* {microcontrollers.map((microcontroller) => (
           <MicrocontrollerCard
             key={microcontroller.uid}
             microcontroller={microcontroller}
@@ -44,7 +41,7 @@ export default async function Maps() {
               />
             }
           />
-        ))}
+        ))} */}
       </div>
     </div>
   );

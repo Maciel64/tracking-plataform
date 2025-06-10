@@ -1,5 +1,5 @@
 import { Coordinate as TCoordinates } from "@/@types/coordinates";
-import { Microcontroller } from "@/@types/microcontroller";
+import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 import { db, firestoreAdapter } from "@/lib/adapters/firebase.adapter";
 
 export async function Coordinates() {

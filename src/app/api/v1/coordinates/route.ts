@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getMicrocontrollerId,
-  saveCoordinate,
-  Coordinate,
-} from "@/domain/microcontrollers/microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,18 +78,6 @@ export async function POST(request: NextRequest) {
 
     // Buscar o microcontrolador
     try {
-      const result = await getMicrocontrollerId(macAddress);
-
-      // Salvar a coordenada no banco
-      const coordinate: Coordinate = {
-        microcontroller_uid: result.id,
-        user_id: userId,
-        latitude,
-        longitude,
-        created_at: new Date(),
-      };
-      await saveCoordinate(coordinate);
-
       // Retornar mensagem de sucesso
       return NextResponse.json({ message: "Coordenada salva com sucesso!" });
     } catch (error: unknown) {

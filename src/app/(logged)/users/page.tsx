@@ -13,13 +13,8 @@ export default async function UsersPage() {
   const users = getUserService().findMany();
 
   return (
-    <div className="container py-10 overflow-x-auto">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
+    <div className="container overflow-x-auto">
+      <motion.div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
           <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             Usuários

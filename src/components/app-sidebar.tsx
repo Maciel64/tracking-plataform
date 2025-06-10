@@ -1,8 +1,3 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { auth } from "@/lib/adapters/firebase.adapter";
-
 import {
   LayoutDashboard,
   Users,
@@ -26,7 +21,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut as nextAuthSignOut } from "next-auth/react";
-import { signOut as firebaseSignOut } from "firebase/auth";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -125,27 +119,14 @@ const roleBasedRoutes: RoleBasedRoutes = {
 };
 
 export function AppSidebar({ user }: { user: User }) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) return null;
-
   const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER";
 
   const handleLogout = async () => {
-    try {
-      await firebaseSignOut(auth); // Firebase sign out
-      await nextAuthSignOut(); // NextAuth sign out
-    } catch (error) {
-      console.error("Erro ao deslogar:", error);
-    }
+    await nextAuthSignOut(); // NextAuth sign out
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="md:min-w-[200px]">
       <SidebarHeader className="border-b px-6 py-3">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="Raster Logo" width={16} height={26} />

@@ -1,4 +1,4 @@
-import { Microcontroller } from "@/@types/microcontroller";
+import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 import { db } from "@/lib/adapters/firebase.adapter";
 import { auth } from "@/auth";
 import { firestoreAdapter } from "@/lib/adapters/firebase.adapter";
@@ -53,7 +53,7 @@ export async function Microcontrollers() {
         uid: doc.id,
         ...data,
         coordinates,
-      } as Microcontroller;
+      } as unknown as Microcontroller;
     }
   );
 

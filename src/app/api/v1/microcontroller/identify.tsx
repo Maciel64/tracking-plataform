@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMicrocontrollerId } from "../../../../domain/microcontrollers/microcontroller.repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,15 +30,6 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const result = await getMicrocontrollerId(macAddress);
-
-      // Retornar os dados do microcontrolador
-      const response = {
-        microcontroller: result.id,
-        userId: result.userId,
-      };
-
-      return NextResponse.json(response);
     } catch (error: unknown) {
       console.error("Erro ao buscar o microcontrolador", error);
 

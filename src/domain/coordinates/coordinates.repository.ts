@@ -1,20 +1,33 @@
-import { Microcontroller } from "@/@types/microcontroller";
+import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 import { Coordinate } from "@/@types/coordinates";
-import { collection, doc, getDoc, getDocs, addDoc, DocumentData, Firestore } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  DocumentData,
+  Firestore,
+} from "firebase/firestore";
 
 export class CoordinatesRepository {
   private firestore: Firestore;
-  
+
   constructor(firestoreAdapter: Firestore) {
     this.firestore = firestoreAdapter;
   }
 
-  public async findMicrocontrollerByMac(mac: string): Promise<Microcontroller | null> {
+  public async findMicrocontrollerByMac(
+    mac: string
+  ): Promise<Microcontroller | null> {
     try {
-      const microcontrollersRef = collection(this.firestore, 'microcontrollers');
+      const microcontrollersRef = collection(
+        this.firestore,
+        "microcontrollers"
+      );
       const microcontrollerRef = doc(microcontrollersRef, mac);
       const microcontrollerDoc = await getDoc(microcontrollerRef);
-      
+
       if (microcontrollerDoc.exists()) {
         return microcontrollerDoc.data() as Microcontroller;
       } else {
@@ -28,10 +41,10 @@ export class CoordinatesRepository {
 
   public async findUserById(user_id: string): Promise<DocumentData | null> {
     try {
-      const usersRef = collection(this.firestore, 'users');
+      const usersRef = collection(this.firestore, "users");
       const userRef = doc(usersRef, user_id);
       const userDoc = await getDoc(userRef);
-      
+
       if (userDoc.exists()) {
         return userDoc.data();
       } else {
@@ -45,7 +58,7 @@ export class CoordinatesRepository {
 
   public async create(coordinate: Coordinate): Promise<Coordinate> {
     try {
-      const coordinatesRef = collection(this.firestore, 'coordinates');
+      const coordinatesRef = collection(this.firestore, "coordinates");
       await addDoc(coordinatesRef, coordinate);
       // Retorna o objeto coordinate original, já que não estamos modificando-o
       return coordinate;
@@ -57,10 +70,10 @@ export class CoordinatesRepository {
 
   public async find(): Promise<Coordinate[]> {
     try {
-      const coordinatesRef = collection(this.firestore, 'coordinates');
+      const coordinatesRef = collection(this.firestore, "coordinates");
       const coordinatesDocs = await getDocs(coordinatesRef);
-      const coordinates = coordinatesDocs.docs.map((doc) => 
-        doc.data() as Coordinate
+      const coordinates = coordinatesDocs.docs.map(
+        (doc) => doc.data() as Coordinate
       );
       return coordinates;
     } catch (error) {

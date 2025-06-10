@@ -24,8 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MicrocontrollerModal } from "./microcontroller-modal";
-import type { Microcontroller } from "@/@types/microcontroller";
+import type { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 
 interface MicrocontrollerCardProps {
   microcontroller: Microcontroller;
@@ -36,7 +35,7 @@ export function MicrocontrollerCard({
   microcontroller,
   map,
 }: MicrocontrollerCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [, setIsModalOpen] = useState(false);
 
   // Determinar a cor do chip
   const getChipColor = (chip: string) => {
@@ -54,7 +53,7 @@ export function MicrocontrollerCard({
 
   // Determinar o ícone do tipo de veículo
   const getVehicleIcon = () => {
-    switch (microcontroller.type) {
+    switch (microcontroller.vehicleType) {
       case "CAR":
         return <Car className="h-4 w-4 mr-1" />;
       case "BIKE":
@@ -109,7 +108,7 @@ export function MicrocontrollerCard({
               </Badge>
               <Badge variant="outline" className="flex items-center">
                 {getVehicleIcon()}
-                {microcontroller.type}
+                {microcontroller.vehicleType}
               </Badge>
             </div>
           </CardHeader>
@@ -125,12 +124,6 @@ export function MicrocontrollerCard({
             <div className="flex items-center text-sm text-muted-foreground mb-4">
               <MapPin className="h-4 w-4 mr-1" />
               <span className="font-medium">Coordenadas:</span>{" "}
-              {microcontroller.coordinates &&
-              microcontroller.coordinates.length > 0
-                ? `${microcontroller.coordinates[0].latitude.toFixed(
-                    6
-                  )}, ${microcontroller.coordinates[0].longitude.toFixed(6)}`
-                : "Não disponível"}
             </div>
             <Button
               onClick={() => setIsModalOpen(true)}
@@ -142,13 +135,6 @@ export function MicrocontrollerCard({
           </CardFooter>
         </Card>
       </motion.div>
-
-      <MicrocontrollerModal
-        map={map}
-        microcontroller={microcontroller}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </>
   );
 }
