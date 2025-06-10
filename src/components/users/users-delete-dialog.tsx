@@ -20,17 +20,18 @@ export function UsersDeleteDialog({
 
   function handleDeleteUser() {
     startTransition(async () => {
-      const result = await adminDeleteUserAction(deletingUserId!);
+      try {
+        await adminDeleteUserAction(deletingUserId!);
 
-      if (result.error) {
-        toast.error("Erro ao deletar usuário");
-        return;
+        setTimeout(() => {
+          setDeletingUserId(null);
+          toast.success("Usuário deletado com sucesso");
+        }, 600);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        }
       }
-
-      setTimeout(() => {
-        setDeletingUserId(null);
-        toast.success("Usuário deletado com sucesso");
-      }, 600);
     });
   }
 

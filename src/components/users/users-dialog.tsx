@@ -73,27 +73,26 @@ export function UsersDialog({
 
   function onSubmit(data: AdminCreatesUserSchema) {
     startTransition(async () => {
-      const result = await (currentUser
-        ? adminUpdateUserAction(currentUser.id, data)
-        : adminCreateUserAction(data));
+      try {
+        await (currentUser
+          ? adminUpdateUserAction(currentUser.id, data)
+          : adminCreateUserAction(data));
 
-      if (result.error) {
-        toast.error(
-          currentUser ? "Erro ao atualizar usuário" : "Erro ao criar usuário"
-        );
-        return;
+        setTimeout(() => {
+          setCurrentUser(null);
+          setIsDialogOpen(false);
+
+          toast.success(
+            currentUser
+              ? "Usuário atualizado com sucesso"
+              : "Usuário criado com sucesso"
+          );
+        }, 600);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        }
       }
-
-      setTimeout(() => {
-        setCurrentUser(null);
-        setIsDialogOpen(false);
-
-        toast.success(
-          currentUser
-            ? "Usuário atualizado com sucesso"
-            : "Usuário criado com sucesso"
-        );
-      }, 600);
     });
   }
 

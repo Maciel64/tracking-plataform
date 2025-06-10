@@ -11,6 +11,8 @@ export async function adminCreateUserAction(data: AdminCreatesUserSchema) {
 
   return {
     error: false,
+    message: "Usuário atualizado com sucesso",
+    statusCode: 201,
   };
 }
 
@@ -24,6 +26,8 @@ export async function adminUpdateUserAction(
 
   return {
     error: false,
+    message: "Usuário atualizado com sucesso",
+    statusCode: 200,
   };
 }
 
@@ -34,5 +38,7 @@ export async function adminDeleteUserAction(id: string) {
 
   return {
     error: false,
+    message: "Usuário atualizado com sucesso",
+    statusCode: 200,
   };
 }
