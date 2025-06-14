@@ -8,7 +8,7 @@ export const microcontrollerSchema = z.object({
   model: z.string().min(1, "Modelo é obrigatório"),
   chip: z.string().min(1, "Chip é obrigatório"),
   plate: z.string().min(1, "Placa é obrigatória"),
-  vehicleType: z.enum(["CAR", "BIKE", "TRUCK"], {
+  vehicleType: z.enum(["CAR", "MOTORCYCLE", "TRUCK"], {
     required_error: "Tipo é obrigatório",
   }),
   active: z.boolean().default(true),

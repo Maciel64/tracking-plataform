@@ -109,26 +109,29 @@ export default function RasterLandingPage() {
             </div>
           ) : (
             <div className="hidden md:flex md:gap-4">
-              {/*============Teste sair =========*/}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-3 cursor-pointer">
-                    <Avatar>
-                      <AvatarImage src="/placeholder.svg" />
+              {status === "authenticated" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-3 cursor-pointer">
+                      <Avatar>
+                        <AvatarImage src="/placeholder.svg" />
 
-                      <AvatarFallback>
-                        {user?.email?.substring(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{user?.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {user?.email}
-                      </span>
+                        <AvatarFallback>
+                          {user?.email?.substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {user?.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {user?.email}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </DropdownMenuTrigger>
-              </DropdownMenu>
+                  </DropdownMenuTrigger>
+                </DropdownMenu>
+              )}
 
               <Button
                 variant="outline"
@@ -152,9 +155,7 @@ export default function RasterLandingPage() {
                   <Menu className="h-6 w-6" />
                 )}
               </Button>
-              {/* ========================================*/}
 
-              {/* Botão condicional */}
               {isAuthenticated && (
                 <Button
                   variant="ghost"

@@ -1,4 +1,4 @@
-export type VehicleType = "CAR" | "BIKE" | "TRUCK";
+export type VehicleType = "CAR" | "MOTORCYCLE" | "TRUCK";
 
 export class Microcontroller {
   constructor(
@@ -10,8 +10,8 @@ export class Microcontroller {
     public readonly plate: string,
     public readonly vehicleType: VehicleType,
     public readonly active: boolean,
-    public readonly createdAt: Date,
-    public readonly updatedAt: Date,
-    public readonly userId: string
+    public readonly userId: string,
+    public readonly createdAt?: Date,
+    public readonly updatedAt?: Date
   ) {}
 }

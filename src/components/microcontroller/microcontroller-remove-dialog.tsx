@@ -14,6 +14,7 @@ interface MicrocontrollerRemoveDialogProps {
   microcontroller: Microcontroller | null;
   isLoading: boolean;
   setIsDialogOpen: (open: boolean) => void;
+  setCurrentMicrocontroller: (microcontroller: Microcontroller | null) => void;
   onRemove: (id: string) => void;
 }
 
@@ -22,6 +23,7 @@ export function MicrocontrollerRemoveDialog({
   setIsDialogOpen,
   onRemove,
   microcontroller,
+  setCurrentMicrocontroller,
   isLoading,
 }: MicrocontrollerRemoveDialogProps) {
   return (
@@ -30,7 +32,10 @@ export function MicrocontrollerRemoveDialog({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => setIsDialogOpen(true)}
+          onClick={() => {
+            setIsDialogOpen(true);
+            setCurrentMicrocontroller(microcontroller);
+          }}
           className="text-destructive border-destructive cursor-pointer"
         >
           <Trash2 className="w-4 h-4" />
@@ -41,9 +46,19 @@ export function MicrocontrollerRemoveDialog({
           <DialogTitle>Confirmar exclusão</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <p>Tem certeza que deseja excluir este microcontrolador?</p>
+          <p>
+            Tem certeza que deseja excluir o microcontrolador{" "}
+            <span className="text-purple-600 font-semibold">
+              {microcontroller?.name}
+            </span>
+            ?
+          </p>
           <div className="flex justify-end gap-2">
-            <Button className="cursor-pointer" variant="outline">
+            <Button
+              className="cursor-pointer"
+              variant="outline"
+              disabled={isLoading}
+            >
               Cancelar
             </Button>
             <Button

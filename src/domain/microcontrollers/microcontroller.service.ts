@@ -1,52 +1,111 @@
-import { Microcontroller } from "./microcontroller.model";
+import { MicrocontrollerSchema } from "@/schemas/microcontroller.schema";
 import { MicrocontrollerRepository } from "./microcontroller.repository";
+import { UserRepository } from "../users/user.repository";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from "@/lib/errors/http.error";
 
 export class MicrocontrollerService {
   constructor(
-    private readonly microcontrollerRepository: MicrocontrollerRepository
+    private readonly microcontrollerRepository: MicrocontrollerRepository,
+    private readonly userRepository: UserRepository
   ) {}
 
   async findMany() {
-    return [
-      {
-        id: "1",
-        name: "Microcontroller 1",
-        chip: "Chip 1",
-        macAddress: "00:00:00:00:00:00",
-        model: "Model 1",
-        plate: "Plate 1",
-        vehicleType: "CAR",
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: "1",
-      },
-      {
-        id: "2",
-        name: "Microcontroller 1",
-        chip: "Chip 1",
-        macAddress: "00:00:00:00:00:00",
-        model: "Model 1",
-        plate: "Plate 1",
-        vehicleType: "CAR",
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: "2",
-      },
-      {
-        id: "3",
-        name: "Microcontroller 1",
-        chip: "Chip 1",
-        macAddress: "00:00:00:00:00:00",
-        model: "Model 1",
-        plate: "Plate 1",
-        vehicleType: "CAR",
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: "3",
-      },
-    ] as Microcontroller[];
+    return this.microcontrollerRepository.findMany();
+  }
+
+  async create(userId: string, data: MicrocontrollerSchema) {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError("Usuário não encontrado");
+    }
+
+    const macAddressExists =
+      await this.microcontrollerRepository.findByMacAddress(data.macAddress);
+
+    if (macAddressExists) {
+      throw new ConflictError(
+        "Já existe um microcontrolador com esse MAC Address"
+      );
+    }
+
+    const plateExists = await this.microcontrollerRepository.findByPlate(
+      data.plate
+    );
+
+    if (plateExists) {
+      throw new ConflictError("Já existe um microcontrolador com essa placa");
+    }
+
+    return this.microcontrollerRepository.create({
+      id: "",
+      userId,
+      ...data,
+    });
+  }
+
+  async update(userId: string, id: string, data: MicrocontrollerSchema) {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError("Usuário não encontrado");
+    }
+
+    const microcontroller = await this.microcontrollerRepository.findById(id);
+
+    if (!microcontroller) {
+      throw new NotFoundError("Microcontrolador não encontrado");
+    }
+
+    if (microcontroller.userId !== userId) {
+      throw new ForbiddenError(
+        "Você não tem permissão para atualizar este microcontrolador"
+      );
+    }
+
+    const macAddressExists =
+      await this.microcontrollerRepository.findByMacAddress(data.macAddress);
+
+    if (macAddressExists && macAddressExists.id !== id) {
+      throw new ConflictError(
+        "Já existe um microcontrolador com esse MAC Address"
+      );
+    }
+
+    const plateExists = await this.microcontrollerRepository.findByPlate(
+      data.plate
+    );
+
+    if (plateExists && plateExists.id !== id) {
+      throw new ConflictError("Já existe um microcontrolador com essa placa");
+    }
+
+    return this.microcontrollerRepository.update(id, data);
+  }
+
+  async delete(userId: string, id: string) {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError("Usuário não encontrado");
+    }
+
+    const microcontroller = await this.microcontrollerRepository.findById(id);
+
+    if (!microcontroller) {
+      throw new NotFoundError("Microcontrolador não encontrado");
+    }
+
+    if (microcontroller.userId !== userId) {
+      throw new ForbiddenError(
+        "Você não tem permissão para apagar este microcontrolador"
+      );
+    }
+
+    return this.microcontrollerRepository.delete(id);
   }
 }

@@ -20,9 +20,18 @@ import { SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger } from "@/components/ui/select";
-import { microcontrollerSchema } from "@/schemas/microcontroller.schema";
+import {
+  MicrocontrollerSchema,
+  microcontrollerSchema,
+} from "@/schemas/microcontroller.schema";
 import { generateRandomMicroName } from "@/helpers/microcontroller";
-import { useState } from "react";
+import { useEffect, useTransition } from "react";
+import {
+  createMicrocontroller,
+  updateMicrocontroller,
+} from "@/domain/microcontrollers/microcontroller.actions";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 interface MicrocontrollersDialogProps {
   isDialogOpen: boolean;
@@ -37,11 +46,15 @@ export function MicrocontrollersDialog({
   currentMicro,
   setCurrentMicro,
 }: MicrocontrollersDialogProps) {
+  const [isPending, startTransition] = useTransition();
+  const { data: session } = useSession();
+
   const {
     register,
     setValue,
     reset,
     watch,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(microcontrollerSchema),
@@ -55,7 +68,54 @@ export function MicrocontrollersDialog({
     },
   });
 
-  const [isPending] = useState(false);
+  useEffect(() => {
+    reset({
+      name: currentMicro?.name || generateRandomMicroName(),
+      macAddress: currentMicro?.macAddress || "",
+      model: currentMicro?.model || "Raster1",
+      chip: currentMicro?.chip || "VIVO",
+      plate: currentMicro?.plate || "",
+      vehicleType: currentMicro?.vehicleType || "CAR",
+    });
+  }, [currentMicro, reset]);
+
+  function submit(data: MicrocontrollerSchema) {
+    startTransition(async () => {
+      try {
+        if (!session?.user?.id) toast.error("Usuário não autenticado");
+
+        await (currentMicro
+          ? updateMicrocontroller(
+              session?.user.id || "",
+              currentMicro.id || "",
+              data
+            )
+          : createMicrocontroller(session?.user.id || "", data));
+
+        toast.success(
+          currentMicro
+            ? "Microcontrolador atualizado com sucesso!"
+            : "Microcontrolador criado com sucesso!"
+        );
+
+        setIsDialogOpen(false);
+        setCurrentMicro(null);
+        reset({
+          active: true,
+          chip: "VIVO",
+          macAddress: "",
+          model: "Raster1",
+          name: generateRandomMicroName(),
+          plate: "",
+          vehicleType: "CAR",
+        });
+      } catch (error) {
+        toast.error(
+          "Erro ao criar microcontrolador: " + (error as Error).message
+        );
+      }
+    });
+  }
 
   return (
     <Dialog
@@ -90,7 +150,7 @@ export function MicrocontrollersDialog({
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={() => {}}>
+        <form onSubmit={handleSubmit(submit)}>
           <DialogHeader>
             <DialogTitle>
               {currentMicro
@@ -209,7 +269,7 @@ export function MicrocontrollersDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="cursor-pointer" disabled={false}>
+              <Button type="submit" className="min-w-52" disabled={isPending}>
                 {isPending ? (
                   <LoaderCircle className="animate-spin" />
                 ) : currentMicro ? (

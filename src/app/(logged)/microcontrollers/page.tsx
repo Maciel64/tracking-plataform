@@ -1,8 +1,19 @@
 import { MicrocontrollerTable } from "@/components/microcontroller/microcontroller-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getMicrocontrollerService } from "@/domain/microcontrollers/microcontroller.hooks";
 
 import { Cpu } from "lucide-react";
 import { Suspense } from "react";
+
+import * as motion from "motion/react-client";
+import { container, item } from "@/lib/motion";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function MicrocontrollersPage() {
   const microcontrollersPromise = getMicrocontrollerService().findMany();
@@ -18,21 +29,25 @@ export default function MicrocontrollersPage() {
         Gerencie todos os microcontroladores
       </p>
 
-      <div className="border rounded-lg p-4 bg-card overflow-auto">
-        <div className="flex items-center gap-2 mb-2">
-          <Cpu className="w-5 h-5" />
-          <h2 className="text-xl font-semibold">Lista de microcontroladores</h2>
-        </div>
-        <p className="text-muted-foreground mb-4">
-          Microcontroladores cadastrados
-        </p>
-
-        <Suspense fallback={<div>Carregando...</div>}>
-          <MicrocontrollerTable
-            microcontrollersPromise={microcontrollersPromise}
-          />
-        </Suspense>
-      </div>
+      <motion.div variants={container} initial="hidden" animate="show">
+        <motion.div variants={item}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Cpu className="w-5 h-5" /> Lista de microcontroladores
+              </CardTitle>
+              <CardDescription>Microcontroladores cadastrados</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Suspense fallback={<Skeleton className="h-[200px] w-full" />}>
+                <MicrocontrollerTable
+                  microcontrollersPromise={microcontrollersPromise}
+                />
+              </Suspense>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

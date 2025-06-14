@@ -7,7 +7,7 @@ import { revalidateTag } from "next/cache";
 export async function adminCreateUserAction(data: AdminCreatesUserSchema) {
   await getAdminService().createUser(data);
 
-  revalidateTag("users");
+  revalidateTag("find-users");
 
   return {
     error: false,
@@ -22,7 +22,7 @@ export async function adminUpdateUserAction(
 ) {
   await getAdminService().updateUser(userId, data);
 
-  revalidateTag("users");
+  revalidateTag("find-users");
 
   return {
     error: false,
@@ -34,7 +34,7 @@ export async function adminUpdateUserAction(
 export async function adminDeleteUserAction(id: string) {
   await getAdminService().deleteUser(id);
 
-  revalidateTag("users");
+  revalidateTag("find-users");
 
   return {
     error: false,

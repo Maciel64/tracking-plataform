@@ -56,7 +56,7 @@ export function MicrocontrollerCard({
     switch (microcontroller.vehicleType) {
       case "CAR":
         return <Car className="h-4 w-4 mr-1" />;
-      case "BIKE":
+      case "MOTORCYCLE":
         return <Bike className="h-4 w-4 mr-1" />;
       case "TRUCK":
         return <Truck className="h-4 w-4 mr-1" />;

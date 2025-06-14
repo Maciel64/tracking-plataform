@@ -23,6 +23,9 @@ container
   .toClass(MicrocontrollerRepository);
 container
   .bind(DI.MICROCONTROLLER_SERVICE)
-  .toClass(MicrocontrollerService, [DI.MICROCONTROLLER_REPOSITORY]);
+  .toClass(MicrocontrollerService, [
+    DI.MICROCONTROLLER_REPOSITORY,
+    DI.USER_REPOSITORY,
+  ]);
 
 container.bind(DI.ADMIN_SERVICE).toClass(AdminService, [DI.USER_REPOSITORY]);

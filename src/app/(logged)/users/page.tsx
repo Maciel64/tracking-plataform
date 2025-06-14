@@ -28,7 +28,7 @@ export default async function UsersPage() {
       <motion.div variants={container} initial="hidden" animate="show">
         <motion.div variants={item}>
           <Card>
-            <CardHeader className="pb-0">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Lista de Usuários

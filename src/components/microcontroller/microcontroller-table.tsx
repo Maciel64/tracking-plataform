@@ -16,8 +16,11 @@ import { CheckCircle, XCircle } from "lucide-react";
 import { MicrocontrollersDialog } from "@/components/microcontroller/microcontroller-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
-import { use, useState } from "react";
+import { use, useState, useTransition } from "react";
 import { MicrocontrollerRemoveDialog } from "./microcontroller-remove-dialog";
+import { deleteMicrocontroller } from "@/domain/microcontrollers/microcontroller.actions";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 interface MicrocontrollerTableProps {
   microcontrollersPromise: Promise<Microcontroller[]>;
@@ -27,13 +30,25 @@ export function MicrocontrollerTable({
   microcontrollersPromise,
 }: MicrocontrollerTableProps) {
   const microcontrollers = use(microcontrollersPromise);
+  const { data: session } = useSession();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentMicro, setCurrentMicro] = useState<Microcontroller | null>(
     null
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting] = useState(false);
+  const [isDeleting, startTransition] = useTransition();
+
+  async function onDelete(id: string) {
+    console.log(id);
+    if (!session?.user.id) return toast.error("Usuário não autenticado");
+
+    startTransition(async () => {
+      await deleteMicrocontroller(session?.user.id, id);
+      setIsDeleteDialogOpen(false);
+      setCurrentMicro(null);
+    });
+  }
 
   return (
     <>
@@ -103,9 +118,10 @@ export function MicrocontrollerTable({
                 <MicrocontrollerRemoveDialog
                   isDialogOpen={isDeleteDialogOpen}
                   setIsDialogOpen={setIsDeleteDialogOpen}
-                  microcontroller={currentMicro}
+                  setCurrentMicrocontroller={setCurrentMicro}
+                  microcontroller={item}
                   isLoading={isDeleting}
-                  onRemove={() => {}}
+                  onRemove={onDelete}
                 />
               </TableCell>
             </TableRow>
