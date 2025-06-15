@@ -17,6 +17,27 @@ export class MicrocontrollerService {
     return this.microcontrollerRepository.findMany();
   }
 
+  async findById(id: string) {
+    const microcontroller = await this.microcontrollerRepository.findById(id);
+
+    if (!microcontroller) {
+      throw new NotFoundError("Microcontrolador não encontrado");
+    }
+
+    return microcontroller;
+  }
+
+  async findByMacAddress(macAddress: string) {
+    const microcontroller =
+      await this.microcontrollerRepository.findByMacAddress(macAddress);
+
+    if (!microcontroller) {
+      throw new NotFoundError("Microcontrolador não encontrado");
+    }
+
+    return microcontroller;
+  }
+
   async create(userId: string, data: MicrocontrollerSchema) {
     const user = await this.userRepository.findById(userId);
 
