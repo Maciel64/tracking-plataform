@@ -33,7 +33,7 @@ import {
   adminUpdateUserAction,
 } from "@/domain/admin/admin.actions";
 import { toast } from "sonner";
-import { UserStatus } from "@/generated/prisma";
+import { UserStatus } from "@/domain/users/user.model";
 import { Plus } from "lucide-react";
 
 interface UsersDialogProps {
