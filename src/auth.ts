@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import NextAuth from "next-auth";
 import { pages } from "./domain/config/pages";
 import CredentialsProvider from "next-auth/providers/credentials";
-import type { User } from "@/types/user";
+import type { User } from "@/domain/users/user.model";
 import { getUserService } from "./domain/users/user.hooks";
 
 // Inicializando o serviço de usuários

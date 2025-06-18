@@ -1,3 +1,5 @@
+import { Coordinate } from "../coordinates/coordinate.model";
+
 export type VehicleType = "CAR" | "MOTORCYCLE" | "TRUCK";
 
 export class Microcontroller {
@@ -12,6 +14,7 @@ export class Microcontroller {
     public readonly active: boolean,
     public readonly userId: string,
     public readonly createdAt?: Date,
-    public readonly updatedAt?: Date
+    public readonly updatedAt?: Date,
+    public readonly coordinates?: Coordinate[]
   ) {}
 }

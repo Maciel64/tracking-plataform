@@ -129,4 +129,19 @@ export class MicrocontrollerService {
 
     return this.microcontrollerRepository.delete(id);
   }
+
+  async getWithLatestCoordinates() {
+    return this.microcontrollerRepository.getWithLatestCoordinates();
+  }
+
+  async getOneWithLatestCoordinates(id: string) {
+    const microcontroller =
+      await this.microcontrollerRepository.getOneWithLatestCoordinates(id);
+
+    if (!microcontroller) {
+      throw new NotFoundError("Microcontrolador não encontrado");
+    }
+
+    return microcontroller;
+  }
 }

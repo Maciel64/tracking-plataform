@@ -111,6 +111,9 @@ export default function Map({
       style={{ height, width }}
       className={cn("z-10", className)}
       zoomControl={showZoomControls}
+      dragging={false}
+      minZoom={12}
+      scrollWheelZoom={false}
       ref={mapRef}
     >
       <ChangeView center={center} zoom={zoom} />

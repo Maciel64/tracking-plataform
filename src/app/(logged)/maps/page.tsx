@@ -1,7 +1,12 @@
+import { MapsContent } from "@/components/map/maps-content";
+import { MapsSkeleton } from "@/components/map/maps-skeleton";
+import { getMicrocontrollerService } from "@/domain/microcontrollers/microcontroller.hooks";
 import * as motion from "motion/react-client";
+import { Suspense } from "react";
 
 export default async function Maps() {
-  // const microcontrollers = await Microcontrollers();
+  const microcontrollersPromise =
+    getMicrocontrollerService().getWithLatestCoordinates();
 
   return (
     <div>
@@ -21,28 +26,9 @@ export default async function Maps() {
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* {microcontrollers.map((microcontroller) => (
-          <MicrocontrollerCard
-            key={microcontroller.uid}
-            microcontroller={microcontroller}
-            map={
-              <Map
-                center={[
-                  microcontroller.coordinates?.[0]?.latitude ?? 0,
-                  microcontroller.coordinates?.[0]?.longitude ?? 0,
-                ]}
-                locations={
-                  microcontroller.coordinates?.map((coord) => ({
-                    position: [coord.latitude, coord.longitude],
-                    name: microcontroller.name,
-                  })) ?? []
-                }
-              />
-            }
-          />
-        ))} */}
-      </div>
+      <Suspense fallback={<MapsSkeleton />}>
+        <MapsContent microcontrollersPromise={microcontrollersPromise} />
+      </Suspense>
     </div>
   );
 }

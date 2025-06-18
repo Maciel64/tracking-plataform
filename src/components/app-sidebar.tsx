@@ -118,7 +118,7 @@ const roleBasedRoutes: RoleBasedRoutes = {
   },
 };
 
-export function AppSidebar({ user }: { user: User }) {
+export function AppSidebar({ user }: { user?: User }) {
   const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER";
 
   const handleLogout = async () => {

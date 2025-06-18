@@ -51,7 +51,13 @@ export class MicrocontrollerRepository {
         id,
       },
       data: {
-        ...data,
+        name: data.name,
+        chip: data.chip,
+        macAddress: data.macAddress,
+        model: data.model,
+        plate: data.plate,
+        vehicleType: data.vehicleType,
+        active: data.active,
       },
     });
   }
@@ -60,6 +66,29 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.delete({
       where: {
         id,
+      },
+    });
+  }
+
+  getWithLatestCoordinates() {
+    return prisma.microcontroller.findMany({
+      include: {
+        coordinates: {
+          take: 1,
+        },
+      },
+    });
+  }
+
+  getOneWithLatestCoordinates(id: string) {
+    return prisma.microcontroller.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        coordinates: {
+          take: 1,
+        },
       },
     });
   }

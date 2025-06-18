@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  doc,
-  updateDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
+
 import * as motion from "motion/react-client";
 import {
   Camera,
@@ -35,7 +28,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -45,61 +37,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  updatePassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-} from "firebase/auth";
-import { auth, db } from "@/lib/adapters/firebase.adapter";
-import { z } from "zod";
-import { FirebaseError } from "firebase/app";
+
 import { User as TUser } from "@/domain/users/user.model";
+import { item } from "@/lib/motion";
 
 // Schema de validação para o formulário principal
-const userFormSchema = z.object({
-  nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
-  email: z.string().email("Email inválido"),
-  telefone: z.string().optional(),
-  cargo: z.string(),
-  bio: z
-    .string()
-    .max(200, "A biografia deve ter no máximo 200 caracteres")
-    .optional(),
-});
-
-// Schema de validação para a alteração de senha
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "A senha atual é obrigatória"),
-    newPassword: z
-      .string()
-      .min(8, "A nova senha deve ter pelo menos 8 caracteres"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "As senhas não coincidem",
-    path: ["confirmPassword"],
-  });
 
 export function PerfilPage({ user }: { user: TUser }) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [passwordData, setPasswordData] = useState({
+  const [passwordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [formData, setFormData] = useState({
+  const [formData] = useState({
     nome: user.name,
     email: user.email,
     cargo: user.role,
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
     {}
   );
-  const [accessHistory, setAccessHistory] = useState<
+  const [accessHistory] = useState<
     Array<{
       id: string;
       date: string;
@@ -113,189 +75,16 @@ export function PerfilPage({ user }: { user: TUser }) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Função para buscar o histórico de acessos usando query
-  const fetchAccessHistory = async () => {
-    try {
-      if (!user?.email) return;
+  const handleChange = () => {};
 
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", user.email));
-      const querySnapshot = await getDocs(q);
+  const handlePasswordChange = () => {};
 
-      if (!querySnapshot.empty) {
-        const docData = querySnapshot.docs[0].data();
-        setAccessHistory(docData.accessHistory || []);
-      } else {
-        console.warn("Nenhum usuário encontrado com esse e-mail.");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar histórico de acesso:", error);
-    }
-  };
+  const handleSubmit = async () => {};
 
-  // Executa a busca do histórico direto
-  fetchAccessHistory();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (formErrors[name]) {
-      setFormErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[name];
-        return updated;
-      });
-    }
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordData((prev) => ({ ...prev, [name]: value }));
-
-    if (passwordErrors[name]) {
-      setPasswordErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[name];
-        return updated;
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const validatedData = userFormSchema.parse(formData);
-
-      if (twoFactorEnabled) {
-        const code = prompt(
-          "Por favor, insira o código de autenticação de dois fatores:"
-        );
-
-        if (!code) {
-          toast.error("Código de autenticação não fornecido.");
-          setIsLoading(false);
-          return;
-        }
-
-        const isValidCode = true;
-
-        if (!isValidCode) {
-          toast.error("Código de autenticação inválido.");
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const userDocRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userDocRef, {
-          name: validatedData.nome,
-          email: validatedData.email,
-          telefone: validatedData.telefone,
-          bio: validatedData.bio,
-          twoFactorEnabled: twoFactorEnabled,
-        });
-
-        toast.success("Perfil atualizado com sucesso");
-      } else {
-        toast.error("Usuário não autenticado");
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errorMap: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path) {
-            errorMap[err.path[0]] = err.message;
-          }
-        });
-        setFormErrors(errorMap);
-        toast.error("Verifique os campos destacados");
-      } else {
-        console.error("Erro ao atualizar perfil:", error);
-        toast.error("Erro ao atualizar perfil");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePasswordSubmit = async (
-    e: React.FormEvent | React.MouseEvent
-  ) => {
-    if ("preventDefault" in e) {
-      e.preventDefault();
-    }
-
-    try {
-      const validatedPasswordData = passwordSchema.parse(passwordData);
-      setIsLoading(true);
-      const currentUser = auth.currentUser;
-
-      if (!currentUser || !currentUser.email) {
-        toast.error("Usuário não autenticado");
-        return;
-      }
-
-      const credential = EmailAuthProvider.credential(
-        currentUser.email,
-        validatedPasswordData.currentPassword
-      );
-
-      await reauthenticateWithCredential(currentUser, credential);
-      await updatePassword(currentUser, validatedPasswordData.newPassword);
-
-      toast.success("Senha alterada com sucesso, faça login novamente");
-      setIsChangingPassword(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errorMap: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path) {
-            errorMap[err.path[0]] = err.message;
-          }
-        });
-        setPasswordErrors(errorMap);
-      } else if (error instanceof FirebaseError) {
-        // Use o tipo correto para erros do Firebase
-        if (error.code === "auth/wrong-password") {
-          setPasswordErrors({ currentPassword: "Senha atual incorreta" });
-          toast.error("Senha atual incorreta");
-        } else if (error.code === "auth/requires-recent-login") {
-          toast.error(
-            "Por segurança, faça login novamente antes de alterar a senha"
-          );
-        } else {
-          console.error("Erro ao alterar senha:", error);
-          toast.error("Erro ao alterar senha: tente novamente mais tarde");
-        }
-      } else {
-        console.error("Erro inesperado ao alterar senha:", error);
-        toast.error("Erro ao alterar senha: tente novamente mais tarde");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
-  };
+  const handlePasswordSubmit = async () => {};
 
   function toggleTwoFactorAuth(checked: boolean): void {
     setTwoFactorEnabled(checked);
-    // Aqui você implementaria a lógica de ativar/desativar 2FA
   }
 
   return (
