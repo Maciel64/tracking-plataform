@@ -30,6 +30,7 @@ import { useMutation } from "@tanstack/react-query";
 import { register } from "@/domain/users/user.actions";
 import { signIn } from "next-auth/react";
 import { UserResponseDTO } from "@/domain/users/user.model";
+import { NextResponse } from "next/server";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function SignupPage() {
   });
 
   const registerMutation = useMutation<
-    UserResponseDTO,
+    UserResponseDTO | NextResponse<{ message: string }>,
     Error,
     CreateUserSchema
   >({
