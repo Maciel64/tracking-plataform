@@ -5,7 +5,7 @@ import { HttpError } from "./http.error";
 
 export async function error_handler(callback: (...params: any[]) => any) {
   try {
-    return callback();
+    return await callback();
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
