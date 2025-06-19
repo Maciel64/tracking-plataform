@@ -26,27 +26,23 @@ export async function updateMicrocontroller(
   id: string,
   data: MicrocontrollerSchema
 ) {
-  return error_handler(async () => {
-    await getMicrocontrollerService().update(userId, id, data);
+  await getMicrocontrollerService().update(userId, id, data);
 
-    revalidatePath("/microcontrollers");
+  revalidatePath("/microcontrollers");
 
-    return {
-      success: true,
-      message: "Microcontrolador atualizado com sucesso",
-    };
-  });
+  return {
+    success: true,
+    message: "Microcontrolador atualizado com sucesso",
+  };
 }
 
 export async function deleteMicrocontroller(userId: string, id: string) {
-  return error_handler(async () => {
-    await getMicrocontrollerService().delete(userId, id);
+  await getMicrocontrollerService().delete(userId, id);
 
-    revalidatePath("/microcontrollers");
+  revalidatePath("/microcontrollers");
 
-    return {
-      success: true,
-      message: "Microcontrolador deletado com sucesso",
-    };
-  });
+  return {
+    success: true,
+    message: "Microcontrolador deletado com sucesso",
+  };
 }

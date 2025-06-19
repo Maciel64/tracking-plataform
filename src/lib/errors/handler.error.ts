@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { HttpError } from "./http.error";
 
-export function error_handler(callback: (...params: any[]) => any) {
+export async function error_handler(callback: (...params: any[]) => any) {
   try {
     return callback();
   } catch (error) {
