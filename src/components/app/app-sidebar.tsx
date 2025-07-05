@@ -3,7 +3,6 @@ import {
   Users,
   User as UserIcon,
   Settings,
-  LogOut,
   Microchip,
   MapIcon,
 } from "lucide-react";
@@ -20,17 +19,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut as nextAuthSignOut } from "next-auth/react";
 import Image from "next/image";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import Link from "next/link";
 import logo from "@/assets/images/logo.png";
 import { User } from "@/domain/users/user.model";
+import { AppSidebarDropdowMenuContent } from "./app-sidebar-dropdown-menu-content";
 
 type Route = {
   label: string;
@@ -121,10 +115,6 @@ const roleBasedRoutes: RoleBasedRoutes = {
 export function AppSidebar({ user }: { user?: User }) {
   const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER";
 
-  const handleLogout = async () => {
-    await nextAuthSignOut(); // NextAuth sign out
-  };
-
   return (
     <Sidebar className="md:min-w-[200px]">
       <SidebarHeader className="border-b px-6 py-3">
@@ -179,14 +169,7 @@ export function AppSidebar({ user }: { user?: User }) {
             </div>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent className="w-64">
-            <DropdownMenuItem
-              className="flex items-center justify-between gap-2"
-              onClick={handleLogout}
-            >
-              Sair <LogOut className="h-4 w-4" />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+          <AppSidebarDropdowMenuContent />
         </DropdownMenu>
       </SidebarFooter>
     </Sidebar>

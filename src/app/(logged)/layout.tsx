@@ -1,8 +1,8 @@
 import type React from "react";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { AppHeader } from "@/components/app-header";
+import { AppSidebar } from "@/components/app/app-sidebar";
+import { AppHeader } from "@/components/app/app-header";
 import { Metadata } from "next";
 import { auth } from "@/auth";
 import { User } from "@/domain/users/user.model";
