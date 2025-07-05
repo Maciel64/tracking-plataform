@@ -49,20 +49,6 @@ export function MapsContent({ microcontrollersPromise }: MapsContentProps) {
         setIsModalOpen={setIsModalOpen}
         microcontroller={microcontroller}
         setMicrocontroller={setMicrocontroller}
-        map={
-          <Map
-            center={[
-              microcontroller?.coordinates?.[0]?.latitude ?? 0,
-              microcontroller?.coordinates?.[0]?.longitude ?? 0,
-            ]}
-            locations={
-              microcontroller?.coordinates?.map((coord) => ({
-                position: [coord.latitude, coord.longitude],
-                name: microcontroller.name,
-              })) ?? []
-            }
-          />
-        }
       />
     </>
   );

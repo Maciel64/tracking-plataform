@@ -19,10 +19,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getChipColor, getVehicleIcon } from "./microcontroller-card";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import Map from "../map";
 
 export const formatDate = (date?: Date) => {
   if (!date) return "N/A";
-  console.log("formatDate", date);
+
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -46,7 +47,6 @@ export const getVehicleTypeName = (type: string) => {
 };
 
 interface MicrocontrollerModalProps {
-  map: React.ReactNode;
   microcontroller: Microcontroller | null;
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
@@ -58,7 +58,6 @@ export function MicrocontrollerModal({
   setIsModalOpen,
   microcontroller: defaultMicrocontroller,
   setMicrocontroller,
-  map,
 }: MicrocontrollerModalProps) {
   const { data: microcontroller } = useQuery<Microcontroller | null>({
     queryKey: ["microcontroller", defaultMicrocontroller?.id],
@@ -255,7 +254,20 @@ export function MicrocontrollerModal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-full">
-                <div className="w-full rounded-lg ">{map}</div>
+                <div className="w-full rounded-lg ">
+                  <Map
+                    center={[
+                      microcontroller?.coordinates?.[0]?.latitude ?? 0,
+                      microcontroller?.coordinates?.[0]?.longitude ?? 0,
+                    ]}
+                    locations={
+                      microcontroller?.coordinates?.map((coord) => ({
+                        position: [coord.latitude, coord.longitude],
+                        name: microcontroller.name,
+                      })) ?? []
+                    }
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>

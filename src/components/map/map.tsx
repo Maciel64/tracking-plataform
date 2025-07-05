@@ -37,6 +37,7 @@ function ChangeView({
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
+
   return null;
 }
 
@@ -79,7 +80,7 @@ function MarkerWithCustomIcon({ location }: { location: MapLocation }) {
 
 export default function Map({
   center = [-23.5505, -46.6333],
-  zoom = 13,
+  zoom = 18,
   locations = [],
   height = "500px",
   width = "100%",

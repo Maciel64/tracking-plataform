@@ -74,7 +74,9 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findMany({
       include: {
         coordinates: {
-          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
         },
       },
     });
@@ -88,6 +90,9 @@ export class MicrocontrollerRepository {
       include: {
         coordinates: {
           take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
         },
       },
     });
