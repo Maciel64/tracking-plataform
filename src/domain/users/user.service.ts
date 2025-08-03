@@ -5,7 +5,11 @@ import {
   loginSchema,
   LoginSchema,
 } from "@/schemas/user.schema";
-import { ConflictError, UnauthorizedError } from "@/lib/errors/http.error";
+import {
+  ConflictError,
+  HttpError,
+  UnauthorizedError,
+} from "@/lib/errors/http.error";
 import { User, UserResponseDTO } from "./user.model";
 import { Crypto } from "@/lib/crypto";
 
@@ -22,13 +26,13 @@ export class UserService {
     return users.map((user) => UserResponseDTO.toJSON(user));
   }
 
-  async create(data: CreateUserSchema): Promise<UserResponseDTO> {
+  async create(data: CreateUserSchema): Promise<UserResponseDTO | HttpError> {
     createUserSchema.parse(data);
 
     const userExists = await this.usersRepository.findByEmail(data.email);
 
     if (userExists) {
-      throw new ConflictError(
+      return new ConflictError(
         "Esse email já está em uso. Faça login para continuar"
       );
     }
@@ -57,7 +61,7 @@ export class UserService {
     return this.usersRepository.delete(id);
   }
 
-  async login(data: LoginSchema): Promise<UserResponseDTO> {
+  async login(data: LoginSchema): Promise<UserResponseDTO | HttpError> {
     loginSchema.parse(data);
 
     const user = await this.usersRepository.findByEmail(data.email);
@@ -68,7 +72,7 @@ export class UserService {
     );
 
     if (!user || data?.password !== decryptedPassword) {
-      throw new UnauthorizedError("Email ou senha inválidos");
+      return new UnauthorizedError("Email ou senha inválidos");
     }
 
     return user;

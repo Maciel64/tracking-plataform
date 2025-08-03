@@ -5,6 +5,7 @@ import { pages } from "./domain/config/pages";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { User } from "@/domain/users/user.model";
 import { getUserService } from "./domain/users/user.hooks";
+import { HttpError } from "./lib/errors/http.error";
 
 // Inicializando o serviço de usuários
 
@@ -52,7 +53,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         const userService = getUserService();
 
-        return await userService.login({ email, password });
+        const result = await userService.login({ email, password });
+
+        if (result instanceof HttpError) {
+          return null;
+        }
+
+        return result;
       },
     }),
   ],

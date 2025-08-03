@@ -1,16 +1,23 @@
 import { AdminCreatesUserSchema } from "@/schemas/user.schema";
 import { UserRepository } from "../users/user.repository";
-import { ConflictError, NotFoundError } from "@/lib/errors/http.error";
+import {
+  ConflictError,
+  HttpError,
+  NotFoundError,
+} from "@/lib/errors/http.error";
 import { Crypto } from "@/lib/crypto";
+import { UserResponseDTO } from "../users/user.model";
 
 export class AdminService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async createUser(data: AdminCreatesUserSchema) {
+  async createUser(
+    data: AdminCreatesUserSchema
+  ): Promise<UserResponseDTO | HttpError> {
     const user = await this.userRepository.findByEmail(data.email);
 
     if (user) {
-      throw new ConflictError("Usuário já existe");
+      return new ConflictError("Usuário já existe");
     }
 
     const password = await Crypto.encrypt(
@@ -28,11 +35,14 @@ export class AdminService {
     });
   }
 
-  async updateUser(userId: string, data: AdminCreatesUserSchema) {
+  async updateUser(
+    userId: string,
+    data: AdminCreatesUserSchema
+  ): Promise<UserResponseDTO | HttpError> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("Usuário não encontrado");
+      return new NotFoundError("Usuário não encontrado");
     }
 
     const emailAlreadyExists = await this.userRepository.findByEmail(
@@ -40,7 +50,7 @@ export class AdminService {
     );
 
     if (emailAlreadyExists && emailAlreadyExists.id !== userId) {
-      throw new ConflictError("Email já está em uso");
+      return new ConflictError("Email já está em uso");
     }
 
     return this.userRepository.update(user.id, {
@@ -53,11 +63,11 @@ export class AdminService {
     });
   }
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string): Promise<void | HttpError> {
     const user = await this.userRepository.findById(id);
 
     if (!user) {
-      throw new NotFoundError("Usuário não encontrado");
+      return new NotFoundError("Usuário não encontrado");
     }
 
     await this.userRepository.delete(id);

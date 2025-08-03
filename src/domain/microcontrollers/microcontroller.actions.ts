@@ -3,22 +3,27 @@
 import { MicrocontrollerSchema } from "@/schemas/microcontroller.schema";
 import { getMicrocontrollerService } from "./microcontroller.hooks";
 import { revalidatePath } from "next/cache";
-import { error_handler } from "@/lib/errors/handler.error";
+import { HttpError } from "@/lib/errors/http.error";
 
 export async function createMicrocontroller(
   userId: string,
   data: MicrocontrollerSchema
 ) {
-  return error_handler(async () => {
-    await getMicrocontrollerService().create(userId, data);
+  const result = await getMicrocontrollerService().create(userId, data);
 
-    revalidatePath("/microcontrollers");
-
+  if (result instanceof HttpError) {
     return {
-      success: true,
-      message: "Microcontrolador criado com sucesso",
+      success: false,
+      message: result.message,
     };
-  });
+  }
+
+  revalidatePath("/microcontrollers");
+
+  return {
+    success: true,
+    message: "Microcontrolador criado com sucesso",
+  };
 }
 
 export async function updateMicrocontroller(
@@ -26,7 +31,14 @@ export async function updateMicrocontroller(
   id: string,
   data: MicrocontrollerSchema
 ) {
-  await getMicrocontrollerService().update(userId, id, data);
+  const result = await getMicrocontrollerService().update(userId, id, data);
+
+  if (result instanceof HttpError) {
+    return {
+      success: false,
+      message: result.message,
+    };
+  }
 
   revalidatePath("/microcontrollers");
 
@@ -37,7 +49,14 @@ export async function updateMicrocontroller(
 }
 
 export async function deleteMicrocontroller(userId: string, id: string) {
-  await getMicrocontrollerService().delete(userId, id);
+  const result = await getMicrocontrollerService().delete(userId, id);
+
+  if (result instanceof HttpError) {
+    return {
+      success: false,
+      message: result.message,
+    };
+  }
 
   revalidatePath("/microcontrollers");
 

@@ -29,8 +29,6 @@ import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
 import { useMutation } from "@tanstack/react-query";
 import { register } from "@/domain/users/user.actions";
 import { signIn } from "next-auth/react";
-import { UserResponseDTO } from "@/domain/users/user.model";
-import { NextResponse } from "next/server";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -46,12 +44,16 @@ export default function SignupPage() {
   });
 
   const registerMutation = useMutation<
-    UserResponseDTO | NextResponse<{ message: string }>,
+    { success: boolean; message: string },
     Error,
     CreateUserSchema
   >({
     mutationFn: async (data: CreateUserSchema) => register(data),
-    onSuccess: async (_, variables) => {
+    onSuccess: async (result, variables) => {
+      if (!result.success) {
+        return toast.error(result.message);
+      }
+
       toast.success("Cadastro realizado com sucesso");
 
       await signIn("credentials", {

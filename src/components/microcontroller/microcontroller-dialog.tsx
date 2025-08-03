@@ -81,39 +81,32 @@ export function MicrocontrollersDialog({
 
   function submit(data: MicrocontrollerSchema) {
     startTransition(async () => {
-      try {
-        if (!session?.user?.id) toast.error("Usuário não autenticado");
+      const result = await (currentMicro
+        ? updateMicrocontroller(session!.user.id, currentMicro.id, data)
+        : createMicrocontroller(session!.user.id, data));
 
-        await (currentMicro
-          ? updateMicrocontroller(
-              session?.user.id || "",
-              currentMicro.id || "",
-              data
-            )
-          : createMicrocontroller(session?.user.id || "", data));
-
-        toast.success(
-          currentMicro
-            ? "Microcontrolador atualizado com sucesso!"
-            : "Microcontrolador criado com sucesso!"
-        );
-
-        setIsDialogOpen(false);
-        setCurrentMicro(null);
-        reset({
-          active: true,
-          chip: "VIVO",
-          macAddress: "",
-          model: "Raster1",
-          name: generateRandomMicroName(),
-          plate: "",
-          vehicleType: "CAR",
-        });
-      } catch (error) {
-        toast.error(
-          "Erro ao criar microcontrolador: " + (error as Error).message
-        );
+      if (!result.success) {
+        toast.error(result.message);
+        return;
       }
+
+      toast.success(
+        currentMicro
+          ? "Microcontrolador atualizado com sucesso!"
+          : "Microcontrolador criado com sucesso!"
+      );
+
+      setIsDialogOpen(false);
+      setCurrentMicro(null);
+      reset({
+        active: true,
+        chip: "VIVO",
+        macAddress: "",
+        model: "Raster1",
+        name: generateRandomMicroName(),
+        plate: "",
+        vehicleType: "CAR",
+      });
     });
   }
 

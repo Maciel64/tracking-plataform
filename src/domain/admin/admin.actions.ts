@@ -3,16 +3,23 @@
 import { AdminCreatesUserSchema } from "@/schemas/user.schema";
 import { getAdminService } from "./admin.hooks";
 import { revalidateTag } from "next/cache";
+import { HttpError } from "@/lib/errors/http.error";
 
 export async function adminCreateUserAction(data: AdminCreatesUserSchema) {
-  await getAdminService().createUser(data);
+  const result = await getAdminService().createUser(data);
+
+  if (result instanceof HttpError) {
+    return {
+      success: false,
+      message: result.message,
+    };
+  }
 
   revalidateTag("find-users");
 
   return {
-    error: false,
+    success: true,
     message: "Usuário atualizado com sucesso",
-    statusCode: 201,
   };
 }
 
@@ -20,25 +27,37 @@ export async function adminUpdateUserAction(
   userId: string,
   data: AdminCreatesUserSchema
 ) {
-  await getAdminService().updateUser(userId, data);
+  const result = await getAdminService().updateUser(userId, data);
+
+  if (result instanceof HttpError) {
+    return {
+      success: false,
+      message: result.message,
+    };
+  }
 
   revalidateTag("find-users");
 
   return {
-    error: false,
+    success: true,
     message: "Usuário atualizado com sucesso",
-    statusCode: 200,
   };
 }
 
 export async function adminDeleteUserAction(id: string) {
-  await getAdminService().deleteUser(id);
+  const result = await getAdminService().deleteUser(id);
+
+  if (result instanceof HttpError) {
+    return {
+      success: false,
+      message: result.message,
+    };
+  }
 
   revalidateTag("find-users");
 
   return {
-    error: false,
+    sucess: false,
     message: "Usuário atualizado com sucesso",
-    statusCode: 200,
   };
 }

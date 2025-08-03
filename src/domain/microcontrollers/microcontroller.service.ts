@@ -4,8 +4,10 @@ import { UserRepository } from "../users/user.repository";
 import {
   ConflictError,
   ForbiddenError,
+  HttpError,
   NotFoundError,
 } from "@/lib/errors/http.error";
+import { Microcontroller } from "./microcontroller.model";
 
 export class MicrocontrollerService {
   constructor(
@@ -21,7 +23,7 @@ export class MicrocontrollerService {
     const microcontroller = await this.microcontrollerRepository.findById(id);
 
     if (!microcontroller) {
-      throw new NotFoundError("Microcontrolador não encontrado");
+      return new NotFoundError("Microcontrolador não encontrado");
     }
 
     return microcontroller;
@@ -32,24 +34,27 @@ export class MicrocontrollerService {
       await this.microcontrollerRepository.findByMacAddress(macAddress);
 
     if (!microcontroller) {
-      throw new NotFoundError("Microcontrolador não encontrado");
+      return new NotFoundError("Microcontrolador não encontrado");
     }
 
     return microcontroller;
   }
 
-  async create(userId: string, data: MicrocontrollerSchema) {
+  async create(
+    userId: string,
+    data: MicrocontrollerSchema
+  ): Promise<Microcontroller | HttpError> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("Usuário não encontrado");
+      return new NotFoundError("Usuário não encontrado");
     }
 
     const macAddressExists =
       await this.microcontrollerRepository.findByMacAddress(data.macAddress);
 
     if (macAddressExists) {
-      throw new ConflictError(
+      return new ConflictError(
         "Já existe um microcontrolador com esse MAC Address"
       );
     }
@@ -59,7 +64,7 @@ export class MicrocontrollerService {
     );
 
     if (plateExists) {
-      throw new ConflictError("Já existe um microcontrolador com essa placa");
+      return new ConflictError("Já existe um microcontrolador com essa placa");
     }
 
     return this.microcontrollerRepository.create({
@@ -69,21 +74,25 @@ export class MicrocontrollerService {
     });
   }
 
-  async update(userId: string, id: string, data: MicrocontrollerSchema) {
+  async update(
+    userId: string,
+    id: string,
+    data: MicrocontrollerSchema
+  ): Promise<Microcontroller | HttpError> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("Usuário não encontrado");
+      return new NotFoundError("Usuário não encontrado");
     }
 
     const microcontroller = await this.microcontrollerRepository.findById(id);
 
     if (!microcontroller) {
-      throw new NotFoundError("Microcontrolador não encontrado");
+      return new NotFoundError("Microcontrolador não encontrado");
     }
 
     if (microcontroller.userId !== userId) {
-      throw new ForbiddenError(
+      return new ForbiddenError(
         "Você não tem permissão para atualizar este microcontrolador"
       );
     }
@@ -92,7 +101,7 @@ export class MicrocontrollerService {
       await this.microcontrollerRepository.findByMacAddress(data.macAddress);
 
     if (macAddressExists && macAddressExists.id !== id) {
-      throw new ConflictError(
+      return new ConflictError(
         "Já existe um microcontrolador com esse MAC Address"
       );
     }
@@ -102,44 +111,46 @@ export class MicrocontrollerService {
     );
 
     if (plateExists && plateExists.id !== id) {
-      throw new ConflictError("Já existe um microcontrolador com essa placa");
+      return new ConflictError("Já existe um microcontrolador com essa placa");
     }
 
     return this.microcontrollerRepository.update(id, data);
   }
 
-  async delete(userId: string, id: string) {
+  async delete(userId: string, id: string): Promise<void | HttpError> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("Usuário não encontrado");
+      return new NotFoundError("Usuário não encontrado");
     }
 
     const microcontroller = await this.microcontrollerRepository.findById(id);
 
     if (!microcontroller) {
-      throw new NotFoundError("Microcontrolador não encontrado");
+      return new NotFoundError("Microcontrolador não encontrado");
     }
 
     if (microcontroller.userId !== userId) {
-      throw new ForbiddenError(
+      return new ForbiddenError(
         "Você não tem permissão para apagar este microcontrolador"
       );
     }
 
-    return this.microcontrollerRepository.delete(id);
+    await this.microcontrollerRepository.delete(id);
   }
 
-  async getWithLatestCoordinates() {
+  async getWithLatestCoordinates(): Promise<Microcontroller[]> {
     return this.microcontrollerRepository.getWithLatestCoordinates();
   }
 
-  async getOneWithLatestCoordinates(id: string) {
+  async getOneWithLatestCoordinates(
+    id: string
+  ): Promise<Microcontroller | HttpError> {
     const microcontroller =
       await this.microcontrollerRepository.getOneWithLatestCoordinates(id);
 
     if (!microcontroller) {
-      throw new NotFoundError("Microcontrolador não encontrado");
+      return new NotFoundError("Microcontrolador não encontrado");
     }
 
     return microcontroller;
