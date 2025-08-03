@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/lib/errors/http.error";
+import { HttpError, NotFoundError } from "@/lib/errors/http.error";
 import { MicrocontrollerRepository } from "../microcontrollers/microcontroller.repository";
 import { Coordinate } from "./coordinate.model";
 import { CoordinatesRepository } from "./coordinate.repository";
@@ -10,13 +10,15 @@ export class CoordinateService {
     private microcontrollerRepository: MicrocontrollerRepository
   ) {}
 
-  public async create(data: CreateCoordinateSchema): Promise<Coordinate> {
+  public async create(
+    data: CreateCoordinateSchema
+  ): Promise<Coordinate | HttpError> {
     const micro = await this.microcontrollerRepository.findById(
       data.microcontrollerId
     );
 
     if (!micro) {
-      throw new NotFoundError("Microcontroller not found");
+      return new NotFoundError("Microcontrolador não encontrado");
     }
 
     return this.coordinateRepository.create({

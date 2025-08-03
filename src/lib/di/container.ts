@@ -1,5 +1,6 @@
 import { AdminService } from "@/domain/admin/admin.service";
 import { CoordinatesRepository } from "@/domain/coordinates/coordinate.repository";
+import { CoordinateService } from "@/domain/coordinates/coordinate.service";
 import { MicrocontrollerRepository } from "@/domain/microcontrollers/microcontroller.repository";
 import { MicrocontrollerService } from "@/domain/microcontrollers/microcontroller.service";
 import { UserRepository } from "@/domain/users/user.repository";
@@ -35,7 +36,7 @@ container.bind(DI.COORDINATE_REPOSITORY).toClass(CoordinatesRepository);
 
 container
   .bind(DI.COORDINATE_SERVICE)
-  .toClass(CoordinatesRepository, [
+  .toClass(CoordinateService, [
     DI.COORDINATE_REPOSITORY,
     DI.MICROCONTROLLER_REPOSITORY,
   ]);

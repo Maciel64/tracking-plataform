@@ -1,8 +1,5 @@
 import { getMicrocontrollerService } from "@/domain/microcontrollers/microcontroller.hooks";
-import {
-  NotFoundError,
-  UnprocessableEntityError,
-} from "@/lib/errors/http.error";
+import { HttpError, UnprocessableEntityError } from "@/lib/errors/http.error";
 import { error_middleware } from "@/lib/errors/midleware.error";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -23,8 +20,11 @@ export const GET = error_middleware(
       macAddress
     );
 
-    if (!micro) {
-      throw new NotFoundError("Microcontroller not found");
+    if (micro instanceof HttpError) {
+      return NextResponse.json(
+        { message: micro.message, success: false },
+        { status: micro.statusCode }
+      );
     }
 
     return NextResponse.json(

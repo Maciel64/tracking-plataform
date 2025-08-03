@@ -26,6 +26,7 @@ export function error_middleware(handler: any): any {
           {
             message: "Validation error",
             errors: error.errors.map((e) => e.message),
+            success: false,
           },
           { status: 422 }
         );
@@ -37,8 +38,11 @@ export function error_middleware(handler: any): any {
             error instanceof HttpError || error instanceof Error
               ? error.message
               : "Internal Server Error",
+          success: false,
         },
-        { status: error instanceof HttpError ? error.statusCode : 500 }
+        {
+          status: error instanceof HttpError ? error.statusCode : 500,
+        }
       );
     }
   };

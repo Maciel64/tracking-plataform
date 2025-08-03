@@ -1,4 +1,5 @@
 import { getCoordinatesService } from "@/domain/coordinates/coordinate.hooks";
+import { HttpError } from "@/lib/errors/http.error";
 import { error_middleware } from "@/lib/errors/midleware.error";
 import {
   CreateCoordinateSchema,
@@ -12,6 +13,13 @@ export const POST = error_middleware(async (request: NextRequest) => {
   createCoordinateSchema.parse(body);
 
   const coordinate = await getCoordinatesService().create(body);
+
+  if (coordinate instanceof HttpError) {
+    return NextResponse.json(
+      { message: coordinate.message, success: false },
+      { status: coordinate.statusCode }
+    );
+  }
 
   return NextResponse.json(
     { message: "Coordinate created successfuly", data: coordinate },
