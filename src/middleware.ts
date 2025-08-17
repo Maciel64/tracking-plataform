@@ -3,52 +3,50 @@ import { auth } from "@/auth";
 import { User } from "./domain/users/user.model";
 
 const routesByRole = {
-  ADMIN: [
-    "/profile",
-    "/dashboard",
-    "/users",
-    "/settings",
-    "/microcontrollers",
-    "/maps",
-  ],
+  ADMIN: ["*"],
   USER: ["/microcontrollers", "/maps", "/profile", "/settings", "/dashboard"],
 };
 
-// Adicione a rota do identify às rotas públicas
 const publicRoutes = ["/auth/login", "/auth/register", "/", "/api/identify"];
 
 export async function middleware(request: NextRequest) {
-  const session = await auth();
-  const user = session?.user as User | null;
   const path = request.nextUrl.pathname;
 
   if (publicRoutes.includes(path)) {
     return NextResponse.next();
   }
 
-  // Você também pode verificar se a rota começa com /api/identify
-  if (path.startsWith("/api/identify")) {
-    return NextResponse.next();
+  const user = (await auth())?.user as User | null;
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   const role = user?.role?.toUpperCase();
 
-  const isValidRole =
-    typeof role === "string" && Object.keys(routesByRole).includes(role);
-
-  const userCanAccess =
-    isValidRole &&
-    routesByRole[role as keyof typeof routesByRole]?.includes(path);
-
-  if (!userCanAccess) {
-    if (!user) {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
-    }
-
-    return NextResponse.error();
+  if (roleCanAccessPath({ role, path })) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  return NextResponse.error();
+}
+
+function roleCanAccessPath({ role, path }: { role: string; path: string }) {
+  const userRoutes = routesByRole[role as keyof typeof routesByRole];
+
+  if (!userRoutes) {
+    console.error(
+      "ERR:middleware.ts: Something went wrong with roles management"
+    );
+    console.error("Current role: ", role);
+    console.error("Current path: ", path);
+
+    return false;
+  }
+
+  if (userRoutes.includes("*")) return true;
+
+  return userRoutes?.includes(path);
 }
 
 export const config = {

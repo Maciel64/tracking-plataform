@@ -6,6 +6,14 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findMany();
   }
 
+  findManyByUserId(userId: string) {
+    return prisma.microcontroller.findMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
   findByMacAddress(macAddress: string) {
     return prisma.microcontroller.findFirst({
       where: {
@@ -72,6 +80,22 @@ export class MicrocontrollerRepository {
 
   getWithLatestCoordinates() {
     return prisma.microcontroller.findMany({
+      include: {
+        coordinates: {
+          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+  }
+
+  getWithLatestCoordinatesByUser(userId: string) {
+    return prisma.microcontroller.findMany({
+      where: {
+        userId,
+      },
       include: {
         coordinates: {
           take: 1,

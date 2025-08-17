@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { MapsContent } from "@/components/map/maps-content";
 import { MapsSkeleton } from "@/components/map/maps-skeleton";
 import { getMicrocontrollerService } from "@/domain/microcontrollers/microcontroller.hooks";
@@ -6,10 +5,8 @@ import * as motion from "motion/react-client";
 import { Suspense } from "react";
 
 export default async function Maps() {
-  const session = await auth();
-  const userId = session!.user.id;
   const microcontrollersPromise =
-    getMicrocontrollerService().getWithLatestCoordinatesByUser(userId);
+    getMicrocontrollerService().getWithLatestCoordinates();
 
   return (
     <div>

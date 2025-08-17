@@ -42,6 +42,28 @@ const roleBasedRoutes: RoleBasedRoutes = {
   ADMIN: {
     Admin: [
       {
+        label: "Usuários",
+        href: "/admin/users",
+        icon: Users,
+      },
+      {
+        label: "Microcontroladores",
+        href: "/admin/microcontrollers",
+        icon: Microchip,
+      },
+      {
+        label: "Mapas",
+        href: "/admin/maps",
+        icon: MapIcon,
+      },
+    ],
+    Menu: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
         label: "Microcontroladores",
         href: "/microcontrollers",
         icon: Microchip,
@@ -50,18 +72,6 @@ const roleBasedRoutes: RoleBasedRoutes = {
         label: "Mapas",
         href: "/maps",
         icon: MapIcon,
-      },
-      {
-        label: "Usuários",
-        href: "/users",
-        icon: Users,
-      },
-    ],
-    Menu: [
-      {
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
       },
     ],
     Pessoal: [

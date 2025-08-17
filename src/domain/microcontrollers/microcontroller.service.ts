@@ -19,6 +19,10 @@ export class MicrocontrollerService {
     return this.microcontrollerRepository.findMany();
   }
 
+  async findManyByUserId(userId: string) {
+    return this.microcontrollerRepository.findManyByUserId(userId);
+  }
+
   async findById(id: string) {
     const microcontroller = await this.microcontrollerRepository.findById(id);
 
@@ -141,6 +145,14 @@ export class MicrocontrollerService {
 
   async getWithLatestCoordinates(): Promise<Microcontroller[]> {
     return this.microcontrollerRepository.getWithLatestCoordinates();
+  }
+
+  async getWithLatestCoordinatesByUser(
+    userId: string
+  ): Promise<Microcontroller[]> {
+    return this.microcontrollerRepository.getWithLatestCoordinatesByUser(
+      userId
+    );
   }
 
   async getOneWithLatestCoordinates(

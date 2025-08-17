@@ -14,13 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { auth } from "@/auth";
 
-export default async function MicrocontrollersPage() {
-  const session = await auth();
-  const userId = session!.user.id;
-  const microcontrollersPromise =
-    getMicrocontrollerService().findManyByUserId(userId);
+export default function MicrocontrollersPage() {
+  const microcontrollersPromise = getMicrocontrollerService().findMany();
 
   return (
     <div>
