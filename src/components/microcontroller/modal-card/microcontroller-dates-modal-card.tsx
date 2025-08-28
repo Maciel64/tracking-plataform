@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 import { Calendar } from "lucide-react";
-import { formatDate } from "../microcontroller-modal";
+import { formatDate } from "@/utils/format";
 
 interface MicrocontrollerDatesModalCardProps {
   microcontroller: Microcontroller;

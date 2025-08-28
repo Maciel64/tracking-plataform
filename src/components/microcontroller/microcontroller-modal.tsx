@@ -6,25 +6,15 @@ import { Badge } from "../ui/badge";
 import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 import { motion } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Map from "../map";
 import { MicrocontrollerDetailsModalCard } from "./modal-card/microcontroller-details-modal-card";
 import { MicrocontrollerVeichleModalCard } from "./modal-card/microcontroller-vehicle-modal-card";
 import { MicrocontrollerCoordinatesModalCard } from "./modal-card/microcontroller-coordinates-modal-card";
 import { MicrocontrollerDatesModalCard } from "./modal-card/microcontroller-dates-modal-card";
-
-export const formatDate = (date?: Date) => {
-  if (!date) return "N/A";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
-};
+import { MicrocontrollerCoordinateHistory } from "./microcontroller-coordinates-history/microcontroller-coordinates-history";
+import { Coordinate } from "@/domain/coordinates/coordinate.model";
 
 export const getVehicleTypeName = (type: string) => {
   switch (type) {
@@ -66,6 +56,17 @@ export function MicrocontrollerModal({
     },
   });
 
+  const [selectedCoordinate, setSelectedCoordinate] =
+    useState<Coordinate | null>(null);
+
+  useEffect(() => {
+    const coord = microcontroller?.coordinates;
+
+    if (coord?.length && coord?.length > 0) {
+      setSelectedCoordinate(coord[coord.length - 1]);
+    }
+  }, [microcontroller?.coordinates]);
+
   return (
     <Dialog
       open={isModalOpen}
@@ -97,72 +98,51 @@ export function MicrocontrollerModal({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="grid gap-2
-             grid-cols-1 
-             lg:grid-cols-3 
-             lg:grid-rows-4
-             lg:[grid-template-areas:'details_map_map'_'vehicle_map_map'_'coords_map_map'_'dates_extra_extra']"
+          className="flex gap-4 grow"
         >
-          <div className="lg:[grid-area:details]">
+          <div className="flex flex-col w-1/3 gap-4">
             <MicrocontrollerDetailsModalCard
               microcontroller={microcontroller!}
             />
-          </div>
-
-          <div className="lg:[grid-area:vehicle]">
             <MicrocontrollerVeichleModalCard
               microcontroller={microcontroller!}
             />
-          </div>
-
-          <div className="lg:[grid-area:coords]">
             <MicrocontrollerCoordinatesModalCard
               microcontroller={microcontroller!}
             />
-          </div>
-
-          <div className="lg:[grid-area:dates]">
             <MicrocontrollerDatesModalCard microcontroller={microcontroller!} />
           </div>
 
-          <Card className="lg:[grid-area:map] h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Mapa de Localização
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-full">
-              <div className="w-full h-full rounded-lg">
-                <Map
-                  center={[
-                    microcontroller?.coordinates?.[0]?.latitude ?? 0,
-                    microcontroller?.coordinates?.[0]?.longitude ?? 0,
-                  ]}
-                  locations={
-                    microcontroller?.coordinates?.map((coord) => ({
-                      position: [coord.latitude, coord.longitude],
-                      name: microcontroller.name,
-                    })) ?? []
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="lg:[grid-area:extra]">
+          <div className="w-2/3 gap-4 flex flex-col">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">
-                  Informações Adicionais
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Mapa de Localização
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Conteúdo adicional aqui
-                </p>
+              <CardContent className="h-full">
+                <div className="w-full h-full rounded-lg">
+                  <Map
+                    center={[
+                      selectedCoordinate?.latitude ?? 0,
+                      selectedCoordinate?.longitude ?? 0,
+                    ]}
+                    locations={
+                      microcontroller?.coordinates?.map((coord) => ({
+                        position: [coord.latitude, coord.longitude],
+                        name: microcontroller.name,
+                      })) ?? []
+                    }
+                  />
+                </div>
               </CardContent>
             </Card>
+            <MicrocontrollerCoordinateHistory
+              coordinates={microcontroller?.coordinates}
+              selectedCoordinate={selectedCoordinate}
+              onCoordinateSelect={setSelectedCoordinate}
+            />
           </div>
         </motion.div>
       </DialogContent>

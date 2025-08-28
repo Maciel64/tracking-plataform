@@ -98,7 +98,7 @@ export class MicrocontrollerRepository {
       },
       include: {
         coordinates: {
-          take: 1,
+          take: 10,
           orderBy: {
             createdAt: "desc",
           },
@@ -114,7 +114,7 @@ export class MicrocontrollerRepository {
       },
       include: {
         coordinates: {
-          take: 1,
+          take: 10,
           orderBy: {
             createdAt: "desc",
           },

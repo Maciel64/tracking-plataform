@@ -40,7 +40,6 @@ export function MicrocontrollerTable({
   const [isDeleting, startTransition] = useTransition();
 
   async function onDelete(id: string) {
-    console.log(id);
     if (!session?.user.id) return toast.error("Usuário não autenticado");
 
     startTransition(async () => {
