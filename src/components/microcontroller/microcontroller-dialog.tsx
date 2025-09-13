@@ -240,7 +240,7 @@ export function MicrocontrollersDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="CAR">Carro</SelectItem>
-                  <SelectItem value="BIKE">Moto</SelectItem>
+                  <SelectItem value="MOTORCYCLE">Moto</SelectItem>
                   <SelectItem value="TRUCK">Caminhão</SelectItem>
                 </SelectContent>
               </Select>

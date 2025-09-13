@@ -37,6 +37,7 @@ model Microcontroller {
   active      Boolean
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
   user        User         @relation(fields: [userId], references: [id])
   userId      String
   coordinates Coordinate[]

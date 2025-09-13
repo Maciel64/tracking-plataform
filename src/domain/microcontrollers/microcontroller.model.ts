@@ -15,6 +15,7 @@ export class Microcontroller {
     public readonly userId: string,
     public readonly createdAt?: Date,
     public readonly updatedAt?: Date,
+    public readonly deletedAt?: Date | null,
     public readonly coordinates?: Coordinate[]
   ) {}
 }

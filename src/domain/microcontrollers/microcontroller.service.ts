@@ -140,7 +140,10 @@ export class MicrocontrollerService {
       );
     }
 
-    await this.microcontrollerRepository.delete(id);
+    await this.microcontrollerRepository.update(id, {
+      active: false,
+      deletedAt: new Date(),
+    });
   }
 
   async getWithLatestCoordinates(): Promise<Microcontroller[]> {

@@ -3,13 +3,18 @@ import { Microcontroller } from "./microcontroller.model";
 
 export class MicrocontrollerRepository {
   findMany() {
-    return prisma.microcontroller.findMany();
+    return prisma.microcontroller.findMany({
+      where: {
+        deletedAt: null,
+      },
+    });
   }
 
   findManyByUserId(userId: string) {
     return prisma.microcontroller.findMany({
       where: {
         userId,
+        deletedAt: null,
       },
     });
   }
@@ -18,6 +23,7 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findFirst({
       where: {
         macAddress,
+        deletedAt: null,
       },
     });
   }
@@ -26,6 +32,7 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findFirst({
       where: {
         plate,
+        deletedAt: null,
       },
     });
   }
@@ -66,6 +73,7 @@ export class MicrocontrollerRepository {
         plate: data.plate,
         vehicleType: data.vehicleType,
         active: data.active,
+        deletedAt: data.deletedAt,
       },
     });
   }
@@ -80,6 +88,9 @@ export class MicrocontrollerRepository {
 
   getWithLatestCoordinates() {
     return prisma.microcontroller.findMany({
+      where: {
+        deletedAt: null,
+      },
       include: {
         coordinates: {
           take: 1,
@@ -95,6 +106,7 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findMany({
       where: {
         userId,
+        deletedAt: null,
       },
       include: {
         coordinates: {
@@ -111,6 +123,7 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
       include: {
         coordinates: {

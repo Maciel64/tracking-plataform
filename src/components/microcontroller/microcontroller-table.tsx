@@ -11,7 +11,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { CheckCircle, XCircle } from "lucide-react";
 import { MicrocontrollersDialog } from "@/components/microcontroller/microcontroller-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -113,29 +113,37 @@ export function MicrocontrollerTable({
                     <XCircle className="w-4 h-4" />
                   )}
                 </Button>
-
-                <MicrocontrollerRemoveDialog
-                  isDialogOpen={isDeleteDialogOpen}
-                  setIsDialogOpen={setIsDeleteDialogOpen}
-                  setCurrentMicrocontroller={setCurrentMicro}
-                  microcontroller={item}
-                  isLoading={isDeleting}
-                  onRemove={onDelete}
-                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIsDeleteDialogOpen(true);
+                    setCurrentMicro(item);
+                  }}
+                  className="text-destructive border-destructive cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-      <div className="mt-4">
-        <MicrocontrollersDialog
-          isDialogOpen={isDialogOpen}
-          setIsDialogOpen={setIsDialogOpen}
-          currentMicro={currentMicro}
-          setCurrentMicro={setCurrentMicro}
-        />
-      </div>
+      <MicrocontrollerRemoveDialog
+        isDialogOpen={isDeleteDialogOpen}
+        setIsDialogOpen={setIsDeleteDialogOpen}
+        microcontroller={currentMicro}
+        isLoading={isDeleting}
+        onRemove={onDelete}
+      />
+
+      <MicrocontrollersDialog
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        currentMicro={currentMicro}
+        setCurrentMicro={setCurrentMicro}
+      />
     </>
   );
 }
