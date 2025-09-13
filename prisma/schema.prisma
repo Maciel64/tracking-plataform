@@ -30,7 +30,7 @@ model Microcontroller {
   id          String       @id @default(cuid())
   name        String
   chip        String
-  macAddress  String       @unique
+  macAddress  String
   model       String
   plate       String
   vehicleType VehicleType
