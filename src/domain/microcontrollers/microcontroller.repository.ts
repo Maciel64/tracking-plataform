@@ -41,6 +41,7 @@ export class MicrocontrollerRepository {
     return prisma.microcontroller.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
     });
   }
