@@ -43,7 +43,13 @@ export function MicrocontrollerTable({
     if (!session?.user.id) return toast.error("Usuário não autenticado");
 
     startTransition(async () => {
-      await deleteMicrocontroller(session?.user.id, id);
+      const result = await deleteMicrocontroller(session?.user.id, id);
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
       setIsDeleteDialogOpen(false);
       setCurrentMicro(null);
     });
