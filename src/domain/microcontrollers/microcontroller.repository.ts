@@ -7,6 +7,9 @@ export class MicrocontrollerRepository {
       where: {
         deletedAt: null,
       },
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 

@@ -1,4 +1,7 @@
-import { MicrocontrollerSchema } from "@/schemas/microcontroller.schema";
+import {
+  CreateMicrocontrollerSchema,
+  UpdateMicrocontrollerSchema,
+} from "@/schemas/microcontroller.schema";
 import { MicrocontrollerRepository } from "./microcontroller.repository";
 import { UserRepository } from "../users/user.repository";
 import {
@@ -46,7 +49,7 @@ export class MicrocontrollerService {
 
   async create(
     userId: string,
-    data: MicrocontrollerSchema
+    data: CreateMicrocontrollerSchema
   ): Promise<Microcontroller | HttpError> {
     const user = await this.userRepository.findById(userId);
 
@@ -81,7 +84,7 @@ export class MicrocontrollerService {
   async update(
     userId: string,
     id: string,
-    data: MicrocontrollerSchema
+    data: UpdateMicrocontrollerSchema
   ): Promise<Microcontroller | HttpError> {
     const user = await this.userRepository.findById(userId);
 
@@ -95,27 +98,33 @@ export class MicrocontrollerService {
       return new NotFoundError("Microcontrolador não encontrado");
     }
 
-    if (microcontroller.userId !== userId) {
+    if (!(user.role === "ADMIN") && microcontroller.userId !== userId) {
       return new ForbiddenError(
         "Você não tem permissão para atualizar este microcontrolador"
       );
     }
 
-    const macAddressExists =
-      await this.microcontrollerRepository.findByMacAddress(data.macAddress);
+    if (data.macAddress) {
+      const macAddressExists =
+        await this.microcontrollerRepository.findByMacAddress(data.macAddress);
 
-    if (macAddressExists && macAddressExists.id !== id) {
-      return new ConflictError(
-        "Já existe um microcontrolador com esse MAC Address"
-      );
+      if (macAddressExists && macAddressExists.id !== id) {
+        return new ConflictError(
+          "Já existe um microcontrolador com esse MAC Address"
+        );
+      }
     }
 
-    const plateExists = await this.microcontrollerRepository.findByPlate(
-      data.plate
-    );
+    if (data.plate) {
+      const plateExists = await this.microcontrollerRepository.findByPlate(
+        data.plate
+      );
 
-    if (plateExists && plateExists.id !== id) {
-      return new ConflictError("Já existe um microcontrolador com essa placa");
+      if (plateExists && plateExists.id !== id) {
+        return new ConflictError(
+          "Já existe um microcontrolador com essa placa"
+        );
+      }
     }
 
     return this.microcontrollerRepository.update(id, data);

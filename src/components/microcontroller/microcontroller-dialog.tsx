@@ -21,8 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger } from "@/components/ui/select";
 import {
-  MicrocontrollerSchema,
-  microcontrollerSchema,
+  CreateMicrocontrollerSchema,
+  createMicrocontrollerSchema,
 } from "@/schemas/microcontroller.schema";
 import { generateRandomMicroName } from "@/helpers/microcontroller";
 import { useEffect, useTransition } from "react";
@@ -57,7 +57,7 @@ export function MicrocontrollersDialog({
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(microcontrollerSchema),
+    resolver: zodResolver(createMicrocontrollerSchema),
     defaultValues: {
       name: currentMicro?.name || "",
       macAddress: currentMicro?.macAddress || "",
@@ -79,7 +79,7 @@ export function MicrocontrollersDialog({
     });
   }, [currentMicro, reset]);
 
-  function submit(data: MicrocontrollerSchema) {
+  function submit(data: CreateMicrocontrollerSchema) {
     startTransition(async () => {
       const result = await (currentMicro
         ? updateMicrocontroller(session!.user.id, currentMicro.id, data)
@@ -124,7 +124,7 @@ export function MicrocontrollersDialog({
     >
       <DialogTrigger asChild>
         <Button
-          className="cursor-pointer"
+          className="mt-4"
           onClick={async () => {
             setCurrentMicro(null);
             setIsDialogOpen(true);
@@ -259,6 +259,7 @@ export function MicrocontrollersDialog({
                 }}
                 className="cursor-pointer"
                 variant="outline"
+                disabled={isPending}
               >
                 Cancelar
               </Button>

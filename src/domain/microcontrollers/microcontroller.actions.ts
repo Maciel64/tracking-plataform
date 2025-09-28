@@ -1,13 +1,16 @@
 "use server";
 
-import { MicrocontrollerSchema } from "@/schemas/microcontroller.schema";
+import {
+  CreateMicrocontrollerSchema,
+  UpdateMicrocontrollerSchema,
+} from "@/schemas/microcontroller.schema";
 import { getMicrocontrollerService } from "./microcontroller.hooks";
 import { revalidatePath } from "next/cache";
 import { HttpError } from "@/lib/errors/http.error";
 
 export async function createMicrocontroller(
   userId: string,
-  data: MicrocontrollerSchema
+  data: CreateMicrocontrollerSchema
 ) {
   const result = await getMicrocontrollerService().create(userId, data);
 
@@ -29,7 +32,7 @@ export async function createMicrocontroller(
 export async function updateMicrocontroller(
   userId: string,
   id: string,
-  data: MicrocontrollerSchema
+  data: UpdateMicrocontrollerSchema
 ) {
   const result = await getMicrocontrollerService().update(userId, id, data);
 
