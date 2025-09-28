@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Raster: A melhor solução para rastreio de veículos",
+  title: "Rastcom: A melhor solução para rastreio de veículos",
   description: "Locazação e rastreio de veículos gerenciados por você",
 };
 

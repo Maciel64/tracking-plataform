@@ -129,8 +129,8 @@ export function AppSidebar({ user }: { user?: User }) {
     <Sidebar className="md:min-w-[200px]">
       <SidebarHeader className="border-b px-6 py-3">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="Raster Logo" width={16} height={26} />
-          <span className="text-xl font-bold">Raster</span>
+          <Image src={logo} alt="Rastcom Logo" width={16} height={26} />
+          <span className="text-xl font-bold">Rastcom</span>
         </div>
       </SidebarHeader>
 

@@ -61,7 +61,7 @@ export function MicrocontrollersDialog({
     defaultValues: {
       name: currentMicro?.name || "",
       macAddress: currentMicro?.macAddress || "",
-      model: currentMicro?.model || "Raster1",
+      model: currentMicro?.model || "Rastcom1",
       chip: currentMicro?.chip || "VIVO",
       plate: currentMicro?.plate || "",
       vehicleType: currentMicro?.vehicleType || "CAR",
@@ -72,7 +72,7 @@ export function MicrocontrollersDialog({
     reset({
       name: currentMicro?.name || generateRandomMicroName(),
       macAddress: currentMicro?.macAddress || "",
-      model: currentMicro?.model || "Raster1",
+      model: currentMicro?.model || "Rastcom1",
       chip: currentMicro?.chip || "VIVO",
       plate: currentMicro?.plate || "",
       vehicleType: currentMicro?.vehicleType || "CAR",
@@ -102,7 +102,7 @@ export function MicrocontrollersDialog({
         active: true,
         chip: "VIVO",
         macAddress: "",
-        model: "Raster1",
+        model: "Rastcomw1",
         name: generateRandomMicroName(),
         plate: "",
         vehicleType: "CAR",
@@ -131,7 +131,7 @@ export function MicrocontrollersDialog({
             reset({
               name: generateRandomMicroName(),
               macAddress: "",
-              model: "Raster1",
+              model: "Rastcom1",
               chip: "VIVO",
               plate: "",
               vehicleType: "CAR",
@@ -189,8 +189,8 @@ export function MicrocontrollersDialog({
                   <SelectValue placeholder="Selecione o modelo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Raster1">Raster 1</SelectItem>
-                  <SelectItem value="Raster2">Raster 2</SelectItem>
+                  <SelectItem value="Rastcom1">Rastcom 1</SelectItem>
+                  <SelectItem value="Rastcom2">Rastcom 2</SelectItem>
                 </SelectContent>
               </Select>
             </div>

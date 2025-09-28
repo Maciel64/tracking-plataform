@@ -21,7 +21,7 @@ export class AdminService {
     }
 
     const password = await Crypto.encrypt(
-      "raster-password",
+      "rastcom-password",
       process.env.DATABASE_CRYPTO_PASSWORD as string
     );
 

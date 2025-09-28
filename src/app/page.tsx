@@ -38,7 +38,7 @@ import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { User } from "@/domain/users/user.model";
 
-export default function RasterLandingPage() {
+export default function RastcomLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data, status } = useSession();
   const { theme } = useTheme();
@@ -53,12 +53,12 @@ export default function RasterLandingPage() {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src={logo}
-              alt="Raster Logo"
+              alt="RASTCOM Logo"
               width={40}
               height={40}
               className="h-10 w-auto"
             />
-            <span className="text-xl font-bold text-blue-600">RASTER</span>
+            <span className="text-xl font-bold text-blue-600">RASTCOM</span>
           </Link>
           <nav className="hidden gap-6 md:flex">
             <Link
@@ -366,7 +366,7 @@ export default function RasterLandingPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <Image
                       src={logo}
-                      alt="Raster Logo"
+                      alt="RASTCOM Logo"
                       width={24}
                       height={24}
                       className="h-6 w-auto"
@@ -631,7 +631,7 @@ export default function RasterLandingPage() {
                     Vamos conversar?
                   </h2>
                   <p className="text-blue-100 mb-6">
-                    Entre em contato conosco e descubra como o Raster pode
+                    Entre em contato conosco e descubra como a Rastcom pode
                     trazer mais segurança e tranquilidade para você e sua frota.
                   </p>
 
@@ -807,12 +807,12 @@ export default function RasterLandingPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Image
                   src={logo}
-                  alt="Raster Logo"
+                  alt="Rastcom Logo"
                   width={32}
                   height={32}
                   className="h-8 w-auto"
                 />
-                <span className="text-xl font-bold text-white">Raster</span>
+                <span className="text-xl font-bold text-white">Rastcom</span>
               </div>
               <p className="text-blue-300 mb-4">
                 Soluções avançadas de rastreamento veicular para sua segurança e
@@ -970,7 +970,8 @@ export default function RasterLandingPage() {
 
           <div className="border-t border-blue-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-xs sm:text-sm">
-              © {new Date().getFullYear()} Raster. Todos os direitos reservados.
+              © {new Date().getFullYear()} Rastcom. Todos os direitos
+              reservados.
             </p>
             <div className="flex gap-4 md:gap-6 mt-4 md:mt-0">
               <Link

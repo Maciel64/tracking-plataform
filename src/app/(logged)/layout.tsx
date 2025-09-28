@@ -8,7 +8,7 @@ import { auth } from "@/auth";
 import { User } from "@/domain/users/user.model";
 
 export const metadata: Metadata = {
-  title: "Raster | Dashboard",
+  title: "Rastcom | Dashboard",
   description: "Locazação e rastreio de veículos gerenciados por você",
 };
 
