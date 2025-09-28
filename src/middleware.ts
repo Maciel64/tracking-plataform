@@ -18,9 +18,11 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
+    cookieName:
+      process.env.VERCEL_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
   });
-
-  console.log("Token:", token);
 
   if (!token) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
