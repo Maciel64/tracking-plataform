@@ -15,6 +15,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  console.log(request.cookies.getAll());
+  console.log(request.url);
+  console.log("Request URL:", process.env.VERCEL_ENV);
+  console.log(
+    "VERCEL_ENV",
+    process.env.VERCEL_ENV === "production"
+      ? "__Secure-next-auth.session-token"
+      : "next-auth.session-token"
+  );
+
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
@@ -23,6 +33,8 @@ export async function middleware(request: NextRequest) {
         ? "__Secure-next-auth.session-token"
         : "next-auth.session-token",
   });
+
+  console.log("Token:", token);
 
   if (!token) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
