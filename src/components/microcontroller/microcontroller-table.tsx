@@ -11,7 +11,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Search, Trash2 } from "lucide-react";
 import { CheckCircle, XCircle } from "lucide-react";
 import { MicrocontrollersDialog } from "@/components/microcontroller/microcontroller-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ import {
 } from "@/domain/microcontrollers/microcontroller.actions";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { Input } from "../ui/input";
 
 interface MicrocontrollerTableProps {
   microcontrollersPromise: Promise<Microcontroller[]>;
@@ -75,6 +76,11 @@ export function MicrocontrollerTable({
 
   return (
     <>
+      <div className="flex justify-end items-center gap-4">
+        <Search />
+        <Input placeholder="awdnaw" className="my-2 max-w-48" />
+      </div>
+
       <div className="border rounded-md">
         <Table className="w-full text-sm">
           <TableHeader>

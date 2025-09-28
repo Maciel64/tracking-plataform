@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -29,6 +29,7 @@ import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
 import { useMutation } from "@tanstack/react-query";
 import { register } from "@/domain/users/user.actions";
 import { signIn } from "next-auth/react";
+import { containerVariants, itemVariants } from "@/lib/motion";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -68,28 +69,6 @@ export default function SignupPage() {
       toast.error(error.message);
     },
   });
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-      },
-    },
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">

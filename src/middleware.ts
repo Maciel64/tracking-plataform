@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { jwtVerify } from "jose";
 
 const routesByRole = {
   ADMIN: ["*"],
@@ -7,7 +7,7 @@ const routesByRole = {
 };
 
 type MiddlewareUser = {
-  role: string;
+  role?: string;
 };
 
 const publicRoutes = ["/auth/login", "/auth/register", "/", "/api/identify"];
@@ -19,9 +19,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const user = (await auth())?.user as MiddlewareUser | null;
+  const sessionToken =
+    request.cookies.get("next-auth.session-token")?.value ??
+    request.cookies.get("__Secure-next-auth.session-token")?.value;
 
-  if (!user) {
+  if (!sessionToken) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+
+  let user: MiddlewareUser | null = null;
+
+  try {
+    const { payload } = await jwtVerify(
+      sessionToken,
+      new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
+    );
+
+    user = { role: payload.role as string };
+  } catch (e) {
+    console.error("Invalid session token:", e);
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
@@ -34,7 +50,9 @@ export async function middleware(request: NextRequest) {
   return NextResponse.error();
 }
 
-function roleCanAccessPath({ role, path }: { role: string; path: string }) {
+function roleCanAccessPath({ role, path }: { role?: string; path: string }) {
+  if (!role) return false;
+
   const userRoutes = routesByRole[role as keyof typeof routesByRole];
 
   if (!userRoutes) {
@@ -43,16 +61,14 @@ function roleCanAccessPath({ role, path }: { role: string; path: string }) {
     );
     console.error("Current role: ", role);
     console.error("Current path: ", path);
-
     return false;
   }
 
   if (userRoutes.includes("*")) return true;
 
-  return userRoutes?.includes(path);
+  return userRoutes.includes(path);
 }
 
 export const config = {
-  // Modifique o matcher para excluir a rota /api/identify
   matcher: ["/((?!api/identify|api/|_next/static|_next/image|favicon.ico).*)"],
 };

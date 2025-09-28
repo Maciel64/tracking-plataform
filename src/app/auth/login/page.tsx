@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,6 +30,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import SessionRedirect from "@/components/session-redirect";
+import { containerVariants, itemVariants } from "@/lib/motion";
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
@@ -43,28 +44,6 @@ export default function LoginPage() {
       password: "",
     },
   });
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-      },
-    },
-  };
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     setIsLoading(true);
