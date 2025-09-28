@@ -9,7 +9,7 @@ export const createMicrocontrollerSchema = z.object({
   chip: z.string().min(1, "Chip é obrigatório"),
   plate: z.string().min(1, "Placa é obrigatória"),
   vehicleType: z.enum(["CAR", "MOTORCYCLE", "TRUCK"], {
-    required_error: "Tipo é obrigatório",
+    error: "Tipo é obrigatório",
   }),
   active: z.boolean().default(true),
 });
@@ -25,7 +25,7 @@ export const updateMicrocontrollerSchema = z.object({
   plate: z.string().min(1, "Placa é obrigatória").optional(),
   vehicleType: z
     .enum(["CAR", "MOTORCYCLE", "TRUCK"], {
-      required_error: "Tipo é obrigatório",
+      error: "Tipo é obrigatório",
     })
     .optional(),
   active: z.boolean().default(true).optional(),

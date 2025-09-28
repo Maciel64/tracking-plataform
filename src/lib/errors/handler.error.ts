@@ -11,7 +11,7 @@ export async function error_handler(callback: (...params: any[]) => any) {
       return NextResponse.json(
         {
           message: "Validation error",
-          errors: error.errors.map((e) => e.message),
+          errors: error.issues.map((e) => e.message),
         },
         { status: 422 }
       );

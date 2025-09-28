@@ -25,7 +25,7 @@ export function error_middleware(handler: any): any {
         return NextResponse.json(
           {
             message: "Validation error",
-            errors: error.errors.map((e) => e.message),
+            errors: error.issues.map((e) => e.message),
             success: false,
           },
           { status: 422 }
