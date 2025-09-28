@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { User } from "./domain/users/user.model";
 
 const routesByRole = {
   ADMIN: ["*"],
   USER: ["/microcontrollers", "/maps", "/profile", "/settings", "/dashboard"],
+};
+
+type MiddlewareUser = {
+  role: string;
 };
 
 const publicRoutes = ["/auth/login", "/auth/register", "/", "/api/identify"];
@@ -16,7 +19,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const user = (await auth())?.user as User | null;
+  const user = (await auth())?.user as MiddlewareUser | null;
 
   if (!user) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
