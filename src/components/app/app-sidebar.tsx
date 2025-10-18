@@ -25,6 +25,7 @@ import Link from "next/link";
 import logo from "@/assets/images/logo.png";
 import { User } from "@/domain/users/user.model";
 import { AppSidebarDropdowMenuContent } from "./app-sidebar-dropdown-menu-content";
+import { Card, CardContent, CardTitle } from "../ui/card";
 
 type Route = {
   label: string;
@@ -135,6 +136,15 @@ export function AppSidebar({ user }: { user?: User }) {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <Card>
+              <CardTitle>Teste</CardTitle>
+              <CardContent>Teste</CardContent>
+            </Card>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {roleBasedRoutes[routes] ? (
           Object.keys(roleBasedRoutes[routes]).map((section) => (
             <SidebarGroup key={section}>
