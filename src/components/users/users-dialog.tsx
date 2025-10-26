@@ -1,6 +1,21 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import {
+  adminCreateUserAction,
+  adminUpdateUserAction,
+} from "@/domain/admin/admin.actions";
+import type { User, UserRoles, UserStatus } from "@/domain/users/user.model";
+import {
+  type AdminCreatesUserSchema,
+  adminCreatesUserSchema,
+} from "@/schemas/user.schema";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +25,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -20,25 +34,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { User, UserRoles } from "@/domain/users/user.model";
-import {
-  AdminCreatesUserSchema,
-  adminCreatesUserSchema,
-} from "@/schemas/user.schema";
-import { useEffect, useTransition } from "react";
-import {
-  adminCreateUserAction,
-  adminUpdateUserAction,
-} from "@/domain/admin/admin.actions";
-import { toast } from "sonner";
-import { UserStatus } from "@/domain/users/user.model";
-import { Plus } from "lucide-react";
 
 interface UsersDialogProps {
-  currentUser: User | null;
-  setCurrentUser: (user: User | null) => void;
+  currentUser: (AdminCreatesUserSchema & { id: string }) | null;
+  setCurrentUser: (
+    user: (AdminCreatesUserSchema & { id: string }) | null,
+  ) => void;
   setIsDialogOpen: (open: boolean) => void;
   isDialogOpen: boolean;
 }
@@ -75,7 +76,7 @@ export function UsersDialog({
     startTransition(async () => {
       try {
         await (currentUser
-          ? adminUpdateUserAction(currentUser.id, data)
+          ? adminUpdateUserAction(currentUser.id || "", data)
           : adminCreateUserAction(data));
 
         setTimeout(() => {
@@ -85,7 +86,7 @@ export function UsersDialog({
           toast.success(
             currentUser
               ? "Usuário atualizado com sucesso"
-              : "Usuário criado com sucesso"
+              : "Usuário criado com sucesso",
           );
         }, 600);
       } catch (error) {
@@ -144,7 +145,6 @@ export function UsersDialog({
                 <Label htmlFor="name">Nome Completo</Label>
                 <Input
                   {...register("name")}
-                  id="name"
                   placeholder="Nome completo"
                   className={errors.name ? "border-red-500" : ""}
                 />
@@ -156,7 +156,6 @@ export function UsersDialog({
                 <Label htmlFor="email">Email</Label>
                 <Input
                   {...register("email")}
-                  id="email"
                   type="email"
                   placeholder="email@exemplo.com"
                   className={errors.email ? "border-red-500" : ""}
@@ -174,10 +173,10 @@ export function UsersDialog({
                 <Select
                   value={watch("role")}
                   onValueChange={(value) =>
-                    setValue("role", value as UserRoles)
+                    setValue("role", value as Exclude<UserRoles, "OWNER">)
                   }
                 >
-                  <SelectTrigger id="role">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione o Cargo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -197,7 +196,7 @@ export function UsersDialog({
                     setValue("status", value as UserStatus)
                   }
                 >
-                  <SelectTrigger id="status">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>

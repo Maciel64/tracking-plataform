@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 const routesByRole = {
   ADMIN: ["*"],
+  OWNER: ["*"],
   USER: ["/microcontrollers", "/maps", "/profile", "/settings", "/dashboard"],
 };
 
@@ -28,7 +29,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
-  const role = (token.role as string | undefined)?.toUpperCase();
+  const role = (
+    token.activeEnterprise?.role as string | undefined
+  )?.toUpperCase();
 
   if (roleCanAccessPath({ role, path })) {
     return NextResponse.next();

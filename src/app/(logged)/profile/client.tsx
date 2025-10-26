@@ -1,33 +1,33 @@
 "use client";
 
-import { useState } from "react";
-
-import * as motion from "motion/react-client";
 import {
-  Camera,
-  Mail,
-  Save,
-  User,
-  Lock,
-  Clock,
   Activity,
+  Camera,
+  Clock,
   Eye,
   EyeOff,
+  Lock,
+  Mail,
+  Save,
+  User as UserIcon,
 } from "lucide-react";
+
+import * as motion from "motion/react-client";
+import type { User } from "next-auth";
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -37,13 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { User as TUser } from "@/domain/users/user.model";
+import { Textarea } from "@/components/ui/textarea";
 import { item } from "@/lib/motion";
 
 // Schema de validação para o formulário principal
 
-export function PerfilPage({ user }: { user: TUser }) {
+export function PerfilPage({ user }: { user: User }) {
   const [isLoading] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -55,11 +54,10 @@ export function PerfilPage({ user }: { user: TUser }) {
   const [formData] = useState({
     nome: user.name,
     email: user.email,
-    cargo: user.role,
   });
   const [formErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [accessHistory] = useState<
     Array<{
@@ -113,7 +111,7 @@ export function PerfilPage({ user }: { user: TUser }) {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
+                      <UserIcon className="h-5 w-5" />
                       Foto de Perfil
                     </CardTitle>
                   </CardHeader>
@@ -126,7 +124,7 @@ export function PerfilPage({ user }: { user: TUser }) {
                         alt="Foto de perfil"
                       />
                       <AvatarFallback className="text-4xl">
-                        {user.name.slice(0, 2)}
+                        {user.name?.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <Button variant="outline" className="w-full gap-2">
@@ -158,7 +156,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                           </p>
                         </div>
                         <Switch
-                          id="two-factor"
                           checked={twoFactorEnabled}
                           onCheckedChange={toggleTwoFactorAuth}
                         />
@@ -179,7 +176,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                             <Label htmlFor="currentPassword">Senha Atual</Label>
                             <div className="relative">
                               <Input
-                                id="currentPassword"
                                 name="currentPassword"
                                 type={showCurrentPassword ? "text" : "password"}
                                 value={passwordData.currentPassword}
@@ -222,7 +218,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                             <Label htmlFor="newPassword">Nova Senha</Label>
                             <div className="relative">
                               <Input
-                                id="newPassword"
                                 name="newPassword"
                                 type={showNewPassword ? "text" : "password"}
                                 value={passwordData.newPassword}
@@ -267,7 +262,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                             </Label>
                             <div className="relative">
                               <Input
-                                id="confirmPassword"
                                 name="confirmPassword"
                                 type={showConfirmPassword ? "text" : "password"}
                                 value={passwordData.confirmPassword}
@@ -357,7 +351,7 @@ export function PerfilPage({ user }: { user: TUser }) {
                         <span className="text-sm text-muted-foreground">
                           Dispositivo:
                         </span>
-                        <span>{user.role || "N/A"}</span>
+                        <span>{user?.name || "N/A"}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -382,9 +376,8 @@ export function PerfilPage({ user }: { user: TUser }) {
                       <div className="space-y-2">
                         <Label htmlFor="nome">Nome Completo</Label>
                         <Input
-                          id="nome"
                           name="nome"
-                          value={formData.nome}
+                          value={formData.nome || ""}
                           onChange={handleChange}
                           required
                           className={formErrors.nome ? "border-red-500" : ""}
@@ -398,10 +391,9 @@ export function PerfilPage({ user }: { user: TUser }) {
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
-                          id="email"
                           name="email"
                           type="email"
-                          value={formData.email}
+                          value={formData.email || ""}
                           onChange={handleChange}
                           required
                           className={formErrors.email ? "border-red-500" : ""}
@@ -429,17 +421,6 @@ export function PerfilPage({ user }: { user: TUser }) {
                             {formErrors.telefone}
                           </p>
                         )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cargo">Cargo</Label>
-                        <Input
-                          id="cargo"
-                          name="cargo"
-                          value={formData.cargo}
-                          onChange={handleChange}
-                          readOnly
-                          className="bg-muted cursor-not-allowed"
-                        />
                       </div>
                     </div>
                     <Separator />

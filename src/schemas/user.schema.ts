@@ -16,6 +16,14 @@ export const createUserSchema = z
       .string()
       .min(8, { message: "A senha deve ter pelo menos 8 caracteres" }),
     confirmPassword: z.string(),
+    enterpriseName: z
+      .string()
+      .min(3, {
+        error: "O nome da empresa deve ter no mínimo 3 caracteres",
+      })
+      .max(20, {
+        error: "O nome da empresa deve ter no máximo 20 caracteres",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",
@@ -32,7 +40,7 @@ export const adminCreatesUserSchema = z.object({
     .string()
     .min(3, { message: "O nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
-  role: z.enum(["USER", "ADMIN"]).default("USER"),
+  role: z.enum(["USER", "ADMIN", "OWNER"]).default("USER"),
   status: z.enum(["ENABLED", "DISABLED"]).default("ENABLED"),
 });
 

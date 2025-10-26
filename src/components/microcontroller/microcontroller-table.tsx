@@ -1,30 +1,28 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
-import { Pencil, Search, Trash2 } from "lucide-react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, Pencil, Search, Trash2, XCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { use, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { MicrocontrollersDialog } from "@/components/microcontroller/microcontroller-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
-import { use, useState, useTransition } from "react";
-import { MicrocontrollerRemoveDialog } from "./microcontroller-remove-dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   deleteMicrocontroller,
   updateMicrocontroller,
 } from "@/domain/microcontrollers/microcontroller.actions";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
+import type { Microcontroller } from "@/domain/microcontrollers/microcontroller.model";
 import { Input } from "../ui/input";
+import { MicrocontrollerRemoveDialog } from "./microcontroller-remove-dialog";
 
 interface MicrocontrollerTableProps {
   microcontrollersPromise: Promise<Microcontroller[]>;
@@ -38,7 +36,7 @@ export function MicrocontrollerTable({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentMicro, setCurrentMicro] = useState<Microcontroller | null>(
-    null
+    null,
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, startTransition] = useTransition();
@@ -61,9 +59,14 @@ export function MicrocontrollerTable({
 
   async function toggleActive(id: string, isActive: boolean) {
     startTransition(async () => {
-      const result = await updateMicrocontroller(session?.user.id ?? "", id, {
-        active: !isActive,
-      });
+      const result = await updateMicrocontroller(
+        session?.user.id ?? "",
+        session?.user?.activeEnterprise?.id || "",
+        id,
+        {
+          active: !isActive,
+        },
+      );
 
       if (!result.success) {
         toast.error(result.message);

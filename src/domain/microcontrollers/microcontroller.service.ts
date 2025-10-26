@@ -1,21 +1,21 @@
 import {
+  ConflictError,
+  ForbiddenError,
+  type HttpError,
+  NotFoundError,
+} from "@/lib/errors/http.error";
+import type {
   CreateMicrocontrollerSchema,
   UpdateMicrocontrollerSchema,
 } from "@/schemas/microcontroller.schema";
-import { MicrocontrollerRepository } from "./microcontroller.repository";
-import { UserRepository } from "../users/user.repository";
-import {
-  ConflictError,
-  ForbiddenError,
-  HttpError,
-  NotFoundError,
-} from "@/lib/errors/http.error";
-import { Microcontroller } from "./microcontroller.model";
+import type { UserRepository } from "../users/user.repository";
+import type { Microcontroller } from "./microcontroller.model";
+import type { MicrocontrollerRepository } from "./microcontroller.repository";
 
 export class MicrocontrollerService {
   constructor(
     private readonly microcontrollerRepository: MicrocontrollerRepository,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
   ) {}
 
   async findMany() {
@@ -49,7 +49,7 @@ export class MicrocontrollerService {
 
   async create(
     userId: string,
-    data: CreateMicrocontrollerSchema
+    data: CreateMicrocontrollerSchema,
   ): Promise<Microcontroller | HttpError> {
     const user = await this.userRepository.findById(userId);
 
@@ -62,12 +62,12 @@ export class MicrocontrollerService {
 
     if (macAddressExists) {
       return new ConflictError(
-        "Já existe um microcontrolador com esse MAC Address"
+        "Já existe um microcontrolador com esse MAC Address",
       );
     }
 
     const plateExists = await this.microcontrollerRepository.findByPlate(
-      data.plate
+      data.plate,
     );
 
     if (plateExists) {
@@ -83,8 +83,9 @@ export class MicrocontrollerService {
 
   async update(
     userId: string,
+    enterpriseId: string,
     id: string,
-    data: UpdateMicrocontrollerSchema
+    data: UpdateMicrocontrollerSchema,
   ): Promise<Microcontroller | HttpError> {
     const user = await this.userRepository.findById(userId);
 
@@ -98,9 +99,14 @@ export class MicrocontrollerService {
       return new NotFoundError("Microcontrolador não encontrado");
     }
 
-    if (!(user.role === "ADMIN") && microcontroller.userId !== userId) {
+    if (
+      !(
+        user.enterprises?.find((e) => e.id === enterpriseId)?.role === "ADMIN"
+      ) &&
+      microcontroller.userId !== userId
+    ) {
       return new ForbiddenError(
-        "Você não tem permissão para atualizar este microcontrolador"
+        "Você não tem permissão para atualizar este microcontrolador",
       );
     }
 
@@ -110,19 +116,19 @@ export class MicrocontrollerService {
 
       if (macAddressExists && macAddressExists.id !== id) {
         return new ConflictError(
-          "Já existe um microcontrolador com esse MAC Address"
+          "Já existe um microcontrolador com esse MAC Address",
         );
       }
     }
 
     if (data.plate) {
       const plateExists = await this.microcontrollerRepository.findByPlate(
-        data.plate
+        data.plate,
       );
 
       if (plateExists && plateExists.id !== id) {
         return new ConflictError(
-          "Já existe um microcontrolador com essa placa"
+          "Já existe um microcontrolador com essa placa",
         );
       }
     }
@@ -145,7 +151,7 @@ export class MicrocontrollerService {
 
     if (microcontroller.userId !== userId) {
       return new ForbiddenError(
-        "Você não tem permissão para apagar este microcontrolador"
+        "Você não tem permissão para apagar este microcontrolador",
       );
     }
 
@@ -160,15 +166,15 @@ export class MicrocontrollerService {
   }
 
   async getWithLatestCoordinatesByUser(
-    userId: string
+    userId: string,
   ): Promise<Microcontroller[]> {
     return this.microcontrollerRepository.getWithLatestCoordinatesByUser(
-      userId
+      userId,
     );
   }
 
   async getOneWithLatestCoordinates(
-    id: string
+    id: string,
   ): Promise<Microcontroller | HttpError> {
     const microcontroller =
       await this.microcontrollerRepository.getOneWithLatestCoordinates(id);

@@ -1,11 +1,16 @@
 import {
   LayoutDashboard,
-  Users,
-  User as UserIcon,
-  Settings,
-  Microchip,
   MapIcon,
+  Microchip,
+  Settings,
+  User as UserIcon,
+  Users,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import type { User } from "next-auth";
+import logo from "@/assets/images/logo.png";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sidebar,
   SidebarContent,
@@ -18,14 +23,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Image from "next/image";
+import { Card, CardContent } from "../ui/card";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import Link from "next/link";
-import logo from "@/assets/images/logo.png";
-import { User } from "@/domain/users/user.model";
 import { AppSidebarDropdowMenuContent } from "./app-sidebar-dropdown-menu-content";
-import { Card, CardContent, CardTitle } from "../ui/card";
 
 type Route = {
   label: string;
@@ -40,6 +40,54 @@ type RoleBasedRoutes = {
 };
 
 const roleBasedRoutes: RoleBasedRoutes = {
+  OWNER: {
+    Admin: [
+      {
+        label: "Usuários",
+        href: "/admin/users",
+        icon: Users,
+      },
+      {
+        label: "Microcontroladores",
+        href: "/admin/microcontrollers",
+        icon: Microchip,
+      },
+      {
+        label: "Mapas",
+        href: "/admin/maps",
+        icon: MapIcon,
+      },
+    ],
+    Menu: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        label: "Microcontroladores",
+        href: "/microcontrollers",
+        icon: Microchip,
+      },
+      {
+        label: "Mapas",
+        href: "/maps",
+        icon: MapIcon,
+      },
+    ],
+    Pessoal: [
+      {
+        label: "Perfil",
+        href: "/profile",
+        icon: UserIcon,
+      },
+      {
+        label: "Configurações",
+        href: "/settings",
+        icon: Settings,
+      },
+    ],
+  },
   ADMIN: {
     Admin: [
       {
@@ -124,7 +172,11 @@ const roleBasedRoutes: RoleBasedRoutes = {
 };
 
 export function AppSidebar({ user }: { user?: User }) {
-  const routes = user?.role && roleBasedRoutes[user.role] ? user.role : "USER";
+  const routes =
+    user?.activeEnterprise?.role &&
+    roleBasedRoutes[user?.activeEnterprise?.role]
+      ? user?.activeEnterprise?.role
+      : "USER";
 
   return (
     <Sidebar className="md:min-w-[200px]">
@@ -139,8 +191,7 @@ export function AppSidebar({ user }: { user?: User }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <Card>
-              <CardTitle>Teste</CardTitle>
-              <CardContent>Teste</CardContent>
+              <CardContent>{user?.activeEnterprise?.name}</CardContent>
             </Card>
           </SidebarGroupContent>
         </SidebarGroup>

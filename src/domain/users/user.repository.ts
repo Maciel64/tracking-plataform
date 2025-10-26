@@ -1,15 +1,13 @@
-import { User } from "./user.model";
 import { prisma } from "@/providers/prisma/prisma.provider";
+import type { User } from "./user.model";
 
 export class UserRepository {
   async create(data: User): Promise<User> {
     const user = await prisma.user.create({
       data: {
-        name: data.name,
-        email: data.email,
-        password: data.password!,
-        role: data.role,
-        status: data.status,
+        name: data.name || "",
+        email: data.email || "",
+        password: data.password || "",
       },
     });
 
@@ -42,8 +40,6 @@ export class UserRepository {
       data: {
         name: data.name,
         email: data.email,
-        role: data.role,
-        status: data.status,
       },
     });
 

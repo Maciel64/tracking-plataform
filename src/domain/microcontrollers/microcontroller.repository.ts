@@ -1,5 +1,5 @@
 import { prisma } from "@/providers/prisma/prisma.provider";
-import { Microcontroller } from "./microcontroller.model";
+import type { Microcontroller } from "./microcontroller.model";
 
 export class MicrocontrollerRepository {
   findMany() {

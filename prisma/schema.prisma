@@ -19,11 +19,10 @@ model User {
   name             String
   email            String            @unique
   password         String
-  role             UserRole
-  status           UserStatus
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   microcontrollers Microcontroller[]
+  enterprises      UserEnterprise[]
 }
 
 model Microcontroller {
@@ -53,9 +52,31 @@ model Coordinate {
   microcontrollerId String
 }
 
+model UserEnterprise {
+  id           String     @id @default(cuid())
+  role         UserRole
+  status       UserStatus
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  enterpriseId String
+  enterprise   Enterprise @relation(fields: [enterpriseId], references: [id])
+
+  @@unique([userId, enterpriseId])
+}
+
+model Enterprise {
+  id        String           @id @default(cuid())
+  name      String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+  users     UserEnterprise[]
+}
+
 enum UserRole {
   USER
   ADMIN
+  OWNER
 }
 
 enum UserStatus {

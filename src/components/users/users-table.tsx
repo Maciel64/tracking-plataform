@@ -1,5 +1,9 @@
 "use client";
 
+import { MoreHorizontal, Trash, UserCog } from "lucide-react";
+import { use, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,14 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, Trash, UserCog } from "lucide-react";
+import type { UserResponseDTO, UserRoles } from "@/domain/users/user.model";
 import { Button } from "../ui/button";
-import { User, UserResponseDTO } from "@/domain/users/user.model";
-import { UsersDialog } from "./users-dialog";
-import { use, useState } from "react";
 import { UsersDeleteDialog } from "./users-delete-dialog";
+import { UsersDialog } from "./users-dialog";
 
 interface UserTableProps {
   usersPromise: Promise<UserResponseDTO[]>;
@@ -37,13 +37,14 @@ enum UserStatusMap {
 enum UserRoleMap {
   USER = "Usuário",
   ADMIN = "Administrador",
+  OWNER = "Gerente",
 }
 
 export function UsersTable({ usersPromise }: UserTableProps) {
   const users = use(usersPromise);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserResponseDTO | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   return (
@@ -77,7 +78,7 @@ export function UsersTable({ usersPromise }: UserTableProps) {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{UserRoleMap[user.role]}</TableCell>
+                <TableCell>{UserRoleMap[user.role as UserRoles]}</TableCell>
                 <TableCell>
                   <Badge
                     variant={

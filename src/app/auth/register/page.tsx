@@ -1,22 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   Card,
   CardContent,
@@ -25,11 +9,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
-import { useMutation } from "@tanstack/react-query";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { register } from "@/domain/users/user.actions";
-import { signIn } from "next-auth/react";
 import { containerVariants, itemVariants } from "@/lib/motion";
+import { type CreateUserSchema, createUserSchema } from "@/schemas/user.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -41,6 +40,7 @@ export default function SignupPage() {
       email: "",
       password: "",
       confirmPassword: "",
+      enterpriseName: "",
     },
   });
 
@@ -89,7 +89,7 @@ export default function SignupPage() {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((data) =>
-                  registerMutation.mutate(data)
+                  registerMutation.mutate(data),
                 )}
               >
                 <motion.div
@@ -167,6 +167,22 @@ export default function SignupPage() {
                               type="password"
                               {...field}
                             />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="enterpriseName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome da Sua Empresa</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

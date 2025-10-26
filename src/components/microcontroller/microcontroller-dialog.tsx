@@ -1,37 +1,41 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, PlusCircle } from "lucide-react";
-
-import {
-  Microcontroller,
-  VehicleType,
-} from "@/domain/microcontrollers/microcontroller.model";
+import { useSession } from "next-auth/react";
+import { useEffect, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { DialogTrigger } from "@/components/ui/dialog";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger } from "@/components/ui/select";
 import {
-  CreateMicrocontrollerSchema,
-  createMicrocontrollerSchema,
-} from "@/schemas/microcontroller.schema";
-import { generateRandomMicroName } from "@/helpers/microcontroller";
-import { useEffect, useTransition } from "react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   createMicrocontroller,
   updateMicrocontroller,
 } from "@/domain/microcontrollers/microcontroller.actions";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
+import type {
+  Microcontroller,
+  VehicleType,
+} from "@/domain/microcontrollers/microcontroller.model";
+import { generateRandomMicroName } from "@/helpers/microcontroller";
+import {
+  type CreateMicrocontrollerSchema,
+  createMicrocontrollerSchema,
+} from "@/schemas/microcontroller.schema";
 
 interface MicrocontrollersDialogProps {
   isDialogOpen: boolean;
@@ -82,8 +86,13 @@ export function MicrocontrollersDialog({
   function submit(data: CreateMicrocontrollerSchema) {
     startTransition(async () => {
       const result = await (currentMicro
-        ? updateMicrocontroller(session!.user.id, currentMicro.id, data)
-        : createMicrocontroller(session!.user.id, data));
+        ? updateMicrocontroller(
+            session?.user?.id || "",
+            session?.user?.activeEnterprise?.id || "",
+            currentMicro.id,
+            data,
+          )
+        : createMicrocontroller(session?.user?.id || "", data));
 
       if (!result.success) {
         toast.error(result.message);
@@ -93,7 +102,7 @@ export function MicrocontrollersDialog({
       toast.success(
         currentMicro
           ? "Microcontrolador atualizado com sucesso!"
-          : "Microcontrolador criado com sucesso!"
+          : "Microcontrolador criado com sucesso!",
       );
 
       setIsDialogOpen(false);
@@ -156,7 +165,7 @@ export function MicrocontrollersDialog({
               <Label htmlFor="name" className="text-foreground">
                 Nome
               </Label>
-              <Input {...register("name")} id="name" className="bg-card" />
+              <Input {...register("name")} className="bg-card" />
               {errors.name && (
                 <p className="text-sm text-destructive">
                   {errors.name.message}
@@ -168,7 +177,6 @@ export function MicrocontrollersDialog({
               <Label htmlFor="mac">MAC Address</Label>
               <Input
                 {...register("macAddress")}
-                id="mac"
                 value={undefined}
                 placeholder="00:11:22:33:44:55"
               />
@@ -219,7 +227,7 @@ export function MicrocontrollersDialog({
 
             <div className="space-y-2">
               <Label htmlFor="plate">Placa</Label>
-              <Input {...register("plate")} id="plate" placeholder="ABC1A23" />
+              <Input {...register("plate")} placeholder="ABC1A23" />
               {errors.plate && (
                 <p className="text-sm text-destructive">
                   {errors.plate.message}
