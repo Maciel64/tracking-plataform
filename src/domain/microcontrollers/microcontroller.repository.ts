@@ -2,10 +2,11 @@ import { prisma } from "@/providers/prisma/prisma.provider";
 import type { Microcontroller } from "./microcontroller.model";
 
 export class MicrocontrollerRepository {
-  findMany() {
+  findMany(enterpriseId?: string) {
     return prisma.microcontroller.findMany({
       where: {
         deletedAt: null,
+        enterpriseId,
       },
       orderBy: {
         id: "asc",

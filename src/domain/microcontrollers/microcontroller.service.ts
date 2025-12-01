@@ -18,7 +18,7 @@ export class MicrocontrollerService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async findMany() {
+  async findMany(enterpriseId?: string) {
     return this.microcontrollerRepository.findMany();
   }
 
