@@ -22,8 +22,11 @@ export class MicrocontrollerService {
     return this.microcontrollerRepository.findMany();
   }
 
-  async findManyByUserId(userId: string) {
-    return this.microcontrollerRepository.findManyByUserId(userId);
+  async findManyByUserId(userId: string, enterpriseId?: string) {
+    return this.microcontrollerRepository.findManyByUserId(
+      userId,
+      enterpriseId,
+    );
   }
 
   async findById(id: string) {
@@ -136,7 +139,7 @@ export class MicrocontrollerService {
     return this.microcontrollerRepository.update(id, data);
   }
 
-  async delete(userId: string, id: string): Promise<void | HttpError> {
+  async delete(userId: string, id: string): Promise<undefined | HttpError> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {

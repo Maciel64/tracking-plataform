@@ -26,20 +26,22 @@ model User {
 }
 
 model Microcontroller {
-  id          String       @id @default(cuid())
-  name        String
-  chip        String
-  macAddress  String
-  model       String
-  plate       String
-  vehicleType VehicleType
-  active      Boolean
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
-  user        User         @relation(fields: [userId], references: [id])
-  userId      String
-  coordinates Coordinate[]
+  id           String       @id @default(cuid())
+  name         String
+  chip         String
+  macAddress   String
+  model        String
+  plate        String
+  vehicleType  VehicleType
+  active       Boolean
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+  user         User         @relation(fields: [userId], references: [id])
+  userId       String
+  coordinates  Coordinate[]
+  enterprise   Enterprise?  @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String?
 }
 
 model Coordinate {
@@ -65,12 +67,13 @@ model UserEnterprise {
 }
 
 model Enterprise {
-  id        String           @id @default(cuid())
-  name      String
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  deletedAt DateTime?
-  users     UserEnterprise[]
+  id               String            @id @default(cuid())
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  users            UserEnterprise[]
+  microcontrollers Microcontroller[]
 }
 
 enum UserRole {

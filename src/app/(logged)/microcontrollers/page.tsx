@@ -1,12 +1,8 @@
-import { MicrocontrollerTable } from "@/components/microcontroller/microcontroller-table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getMicrocontrollerService } from "@/domain/microcontrollers/microcontroller.hooks";
-
 import { Cpu } from "lucide-react";
-import { Suspense } from "react";
-
 import * as motion from "motion/react-client";
-import { container, item } from "@/lib/motion";
+import { Suspense } from "react";
+import { auth } from "@/auth";
+import { MicrocontrollerTable } from "@/components/microcontroller/microcontroller-table";
 import {
   Card,
   CardContent,
@@ -14,13 +10,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { auth } from "@/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getMicrocontrollerService } from "@/domain/microcontrollers/microcontroller.hooks";
+import { container, item } from "@/lib/motion";
 
 export default async function MicrocontrollersPage() {
   const session = await auth();
-  const userId = session!.user.id;
-  const microcontrollersPromise =
-    getMicrocontrollerService().findManyByUserId(userId);
+  const userId = session?.user.id;
+  const enterpriseId = session?.user.activeEnterprise?.id;
+  const microcontrollersPromise = getMicrocontrollerService().findManyByUserId(
+    userId ?? "",
+    enterpriseId,
+  );
+
+  console.log("enterpriseId", enterpriseId);
 
   return (
     <div>

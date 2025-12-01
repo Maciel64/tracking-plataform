@@ -13,11 +13,12 @@ export class MicrocontrollerRepository {
     });
   }
 
-  findManyByUserId(userId: string) {
+  findManyByUserId(userId: string, enterpriseId?: string) {
     return prisma.microcontroller.findMany({
       where: {
         userId,
         deletedAt: null,
+        enterpriseId,
       },
     });
   }
