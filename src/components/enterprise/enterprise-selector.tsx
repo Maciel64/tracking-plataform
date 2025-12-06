@@ -12,20 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { mapRoleToLabel } from "@/domain/users/user.helpers";
 
 interface EnterpriseSelectorProps {
   user: User;
 }
-
-export const mapRoleToLabel = (role: string): string => {
-  const mapper: Record<string, string> = {
-    OWNER: "Proprietário",
-    ADMIN: "Administrador",
-    USER: "Usuário",
-  };
-
-  return mapper[role] ?? "Desconhecido";
-};
 
 export function EnterpriseSelector({ user }: EnterpriseSelectorProps) {
   const [isLoading, setIsLoading] = useState(false);

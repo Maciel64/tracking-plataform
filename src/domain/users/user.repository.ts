@@ -23,6 +23,19 @@ export class UserRepository {
           },
         },
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+        enterprises: {
+          select: {
+            role: true,
+            status: true,
+          },
+        },
+      },
     });
 
     return users;

@@ -13,8 +13,6 @@ export default async function AdminUsersPage() {
   const enterpriseId = (await auth())?.user.activeEnterprise?.id;
   const users = getUserService().findMany(enterpriseId);
 
-  console.log("Enterprise ID:", enterpriseId);
-
   return (
     <div className="container overflow-x-auto">
       <motion.div className="mb-8">

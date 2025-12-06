@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { motion } from "motion/react";
+import { useSession } from "next-auth/react";
 import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -50,6 +51,7 @@ export function UsersDialog({
   setIsDialogOpen,
   isDialogOpen,
 }: UsersDialogProps) {
+  const { data: session } = useSession();
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -75,9 +77,17 @@ export function UsersDialog({
   function onSubmit(data: AdminCreatesUserSchema) {
     startTransition(async () => {
       try {
-        await (currentUser
+        const result = await (currentUser
           ? adminUpdateUserAction(currentUser.id || "", data)
-          : adminCreateUserAction(data));
+          : adminCreateUserAction(
+              data,
+              session?.user.activeEnterprise?.id || "",
+            ));
+
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
 
         setTimeout(() => {
           setCurrentUser(null);

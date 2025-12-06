@@ -3,6 +3,14 @@ import type { UserEnterprise } from "../users/user.model";
 import type { Enterprise } from "./enterprise.model";
 
 export class EnterpriseRepository {
+  find(id: string) {
+    return prisma.enterprise.findFirst({
+      where: {
+        id,
+      },
+    });
+  }
+
   findByName(name: string) {
     return prisma.enterprise.findFirst({
       where: {
@@ -31,6 +39,7 @@ export class EnterpriseRepository {
         createdAt: true,
         updatedAt: true,
         users: {
+          where: { userId },
           select: {
             role: true,
             status: true,
@@ -54,6 +63,17 @@ export class EnterpriseRepository {
             },
           ],
         },
+      },
+    });
+  }
+
+  addUser(enterprise: UserEnterprise) {
+    return prisma.userEnterprise.create({
+      data: {
+        role: enterprise.role,
+        status: enterprise.status,
+        userId: enterprise.userId || "",
+        enterpriseId: enterprise.enterpriseId || "",
       },
     });
   }

@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { mapRoleToLabel, mapStatusToLabel } from "@/domain/users/user.helpers";
 import type { UserResponseDTO, UserRoles } from "@/domain/users/user.model";
 import { Button } from "../ui/button";
 import { UsersDeleteDialog } from "./users-delete-dialog";
@@ -27,17 +28,6 @@ import { UsersDialog } from "./users-dialog";
 
 interface UserTableProps {
   usersPromise: Promise<UserResponseDTO[]>;
-}
-
-enum UserStatusMap {
-  ENABLED = "Ativo",
-  DISABLED = "Inativo",
-}
-
-enum UserRoleMap {
-  USER = "Usuário",
-  ADMIN = "Administrador",
-  OWNER = "Gerente",
 }
 
 export function UsersTable({ usersPromise }: UserTableProps) {
@@ -78,14 +68,14 @@ export function UsersTable({ usersPromise }: UserTableProps) {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{UserRoleMap[user.role as UserRoles]}</TableCell>
+                <TableCell>{mapRoleToLabel(user.role)}</TableCell>
                 <TableCell>
                   <Badge
                     variant={
                       user.status === "ENABLED" ? "default" : "secondary"
                     }
                   >
-                    {UserStatusMap[user.status]}
+                    {mapStatusToLabel(user.status)}
                   </Badge>
                 </TableCell>
                 <TableCell>

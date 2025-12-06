@@ -5,14 +5,19 @@ import {
   NotFoundError,
 } from "@/lib/errors/http.error";
 import type { AdminCreatesUserSchema } from "@/schemas/user.schema";
+import type { EnterpriseService } from "../enterprises/enterprise.service";
 import { UserResponseDTO } from "../users/user.model";
 import type { UserRepository } from "../users/user.repository";
 
 export class AdminService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly enterpriseService: EnterpriseService,
+  ) {}
 
   async createUser(
     data: AdminCreatesUserSchema,
+    enterpriseId: string,
   ): Promise<UserResponseDTO | HttpError> {
     const user = await this.userRepository.findByEmail(data.email);
 
@@ -30,6 +35,13 @@ export class AdminService {
       password,
       email: data.email,
       name: data.name,
+    });
+
+    await this.enterpriseService.addUser({
+      enterpriseId,
+      role: data.role,
+      status: data.status,
+      userId: createdUser.id || "",
     });
 
     return UserResponseDTO.toJSON(createdUser);

@@ -99,8 +99,8 @@ export class UserResponseDTO {
       id: user.id || "",
       name: user.name || "",
       email: user.email || "",
-      role: enterprise?.role || "USER",
-      status: enterprise?.status || "ENABLED",
+      role: enterprise?.role || user?.enterprises?.[0]?.role || "USER",
+      status: enterprise?.status || user?.enterprises?.[0]?.status || "ENABLED",
     };
   }
 }

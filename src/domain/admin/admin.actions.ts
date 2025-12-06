@@ -1,13 +1,15 @@
 "use server";
 
-import { AdminCreatesUserSchema } from "@/schemas/user.schema";
-import { getAdminService } from "./admin.hooks";
 import { revalidateTag } from "next/cache";
 import { HttpError } from "@/lib/errors/http.error";
+import type { AdminCreatesUserSchema } from "@/schemas/user.schema";
+import { getAdminService } from "./admin.hooks";
 
-export async function adminCreateUserAction(data: AdminCreatesUserSchema) {
-  const result = await getAdminService().createUser(data);
-
+export async function adminCreateUserAction(
+  data: AdminCreatesUserSchema,
+  enterpriseId: string,
+) {
+  const result = await getAdminService().createUser(data, enterpriseId);
   if (result instanceof HttpError) {
     return {
       success: false,
@@ -25,7 +27,7 @@ export async function adminCreateUserAction(data: AdminCreatesUserSchema) {
 
 export async function adminUpdateUserAction(
   userId: string,
-  data: AdminCreatesUserSchema
+  data: AdminCreatesUserSchema,
 ) {
   const result = await getAdminService().updateUser(userId, data);
 
