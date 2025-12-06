@@ -87,6 +87,13 @@ const roleBasedRoutes: RoleBasedRoutes = {
         icon: Settings,
       },
     ],
+    Empresa: [
+      {
+        label: "Gerenciar Empresa",
+        href: "/enterprise",
+        icon: Users,
+      },
+    ],
   },
   ADMIN: {
     Admin: [
@@ -133,6 +140,13 @@ const roleBasedRoutes: RoleBasedRoutes = {
         label: "Configurações",
         href: "/settings",
         icon: Settings,
+      },
+    ],
+    Empresa: [
+      {
+        label: "Gerenciar Empresa",
+        href: "/enterprise",
+        icon: Users,
       },
     ],
   },
@@ -188,7 +202,11 @@ export function AppSidebar({ user }: { user?: User }) {
       </SidebarHeader>
 
       <SidebarContent>
-        {user && <EnterpriseSelector user={user} />}
+        {user && (
+          <div className="px-2">
+            <EnterpriseSelector user={user} />
+          </div>
+        )}
 
         {roleBasedRoutes[routes] ? (
           Object.keys(roleBasedRoutes[routes]).map((section) => (

@@ -14,8 +14,16 @@ export class UserRepository {
     return user;
   }
 
-  async findMany(): Promise<User[]> {
-    const users = await prisma.user.findMany();
+  async findMany(enterpriseId?: string): Promise<User[]> {
+    const users = await prisma.user.findMany({
+      where: {
+        enterprises: {
+          some: {
+            enterpriseId,
+          },
+        },
+      },
+    });
 
     return users;
   }

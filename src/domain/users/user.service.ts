@@ -29,8 +29,8 @@ export class UserService {
     return UserResponseDTO.toJSON(user);
   }
 
-  async findMany(): Promise<UserResponseDTO[]> {
-    const users = await this.usersRepository.findMany();
+  async findMany(enterpriseId?: string): Promise<UserResponseDTO[]> {
+    const users = await this.usersRepository.findMany(enterpriseId);
 
     return users.map((user) => UserResponseDTO.toJSON(user));
   }

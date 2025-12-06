@@ -1,16 +1,19 @@
+import { Users } from "lucide-react";
 import * as motion from "motion/react-client";
-
+import { Suspense } from "react";
+import { auth } from "@/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UsersCardDescription } from "@/components/users/users-card-description";
+import { UsersTable } from "@/components/users/users-table";
 import { getUserService } from "@/domain/users/user.hooks";
 import { container, item } from "@/lib/motion";
-import { UsersCardDescription } from "@/components/users/users-card-description";
-import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { UsersTable } from "@/components/users/users-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
 
 export default async function AdminUsersPage() {
-  const users = getUserService().findMany();
+  const enterpriseId = (await auth())?.user.activeEnterprise?.id;
+  const users = getUserService().findMany(enterpriseId);
+
+  console.log("Enterprise ID:", enterpriseId);
 
   return (
     <div className="container overflow-x-auto">
