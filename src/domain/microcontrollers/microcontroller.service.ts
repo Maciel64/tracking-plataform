@@ -19,7 +19,7 @@ export class MicrocontrollerService {
   ) {}
 
   async findMany(enterpriseId?: string) {
-    return this.microcontrollerRepository.findMany();
+    return this.microcontrollerRepository.findMany(enterpriseId);
   }
 
   async findManyByUserId(userId: string, enterpriseId?: string) {

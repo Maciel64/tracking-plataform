@@ -23,8 +23,6 @@ export default async function MicrocontrollersPage() {
     enterpriseId,
   );
 
-  console.log("enterpriseId", enterpriseId);
-
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">

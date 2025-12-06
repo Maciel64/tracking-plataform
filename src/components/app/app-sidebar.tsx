@@ -23,7 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Card, CardContent } from "../ui/card";
+import { EnterpriseSelector } from "../enterprise/enterprise-selector";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { AppSidebarDropdowMenuContent } from "./app-sidebar-dropdown-menu-content";
 
@@ -188,13 +188,7 @@ export function AppSidebar({ user }: { user?: User }) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <Card>
-              <CardContent>{user?.activeEnterprise?.name}</CardContent>
-            </Card>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {user && <EnterpriseSelector user={user} />}
 
         {roleBasedRoutes[routes] ? (
           Object.keys(roleBasedRoutes[routes]).map((section) => (
