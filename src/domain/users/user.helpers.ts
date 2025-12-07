@@ -17,3 +17,16 @@ export const mapStatusToLabel = (status: string): string => {
 
   return mapper[status] ?? "Desconhecido";
 };
+
+export function userCanEdit(
+  currentUserRole: string,
+  targetUserRole: string,
+): boolean {
+  const roleHierarchy: Record<string, number> = {
+    OWNER: 3,
+    ADMIN: 2,
+    USER: 1,
+  };
+
+  return roleHierarchy[currentUserRole] > roleHierarchy[targetUserRole];
+}

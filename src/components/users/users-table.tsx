@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal, Trash, UserCog } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { use, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +21,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mapRoleToLabel, mapStatusToLabel } from "@/domain/users/user.helpers";
-import type { UserResponseDTO, UserRoles } from "@/domain/users/user.model";
+import {
+  mapRoleToLabel,
+  mapStatusToLabel,
+  userCanEdit,
+} from "@/domain/users/user.helpers";
+import type { UserResponseDTO } from "@/domain/users/user.model";
 import { Button } from "../ui/button";
 import { UsersDeleteDialog } from "./users-delete-dialog";
 import { UsersDialog } from "./users-dialog";
@@ -32,6 +37,7 @@ interface UserTableProps {
 
 export function UsersTable({ usersPromise }: UserTableProps) {
   const users = use(usersPromise);
+  const { data: session } = useSession();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserResponseDTO | null>(null);
@@ -79,7 +85,10 @@ export function UsersTable({ usersPromise }: UserTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {user.role === "USER" && (
+                  {userCanEdit(
+                    session?.user?.activeEnterprise?.role || "USER",
+                    user.role,
+                  ) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="icon">

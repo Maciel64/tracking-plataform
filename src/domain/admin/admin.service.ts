@@ -6,6 +6,7 @@ import {
 } from "@/lib/errors/http.error";
 import type { AdminCreatesUserSchema } from "@/schemas/user.schema";
 import type { EnterpriseService } from "../enterprises/enterprise.service";
+import type { NotificationService } from "../notifications/notification.service";
 import { UserResponseDTO } from "../users/user.model";
 import type { UserRepository } from "../users/user.repository";
 
@@ -13,6 +14,7 @@ export class AdminService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly enterpriseService: EnterpriseService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createUser(
@@ -22,7 +24,25 @@ export class AdminService {
     const user = await this.userRepository.findByEmail(data.email);
 
     if (user) {
-      return new ConflictError("Usuário já existe");
+      const enterprise = await this.enterpriseService.find(enterpriseId);
+
+      await this.enterpriseService.addUser({
+        enterpriseId,
+        role: data.role,
+        status: "PENDING",
+        userId: user.id || "",
+      });
+
+      await this.notificationService.create({
+        userId: user.id || "",
+        enterpriseId,
+        title: `Convite para ${enterprise?.name}`,
+        message: `Você foi convidado para fazer parte de uma nova empresa.`,
+        type: "CONFIRMATION",
+        action: "ENTERPRISE_INVITATION",
+      });
+
+      return UserResponseDTO.toJSON(user);
     }
 
     const password = await Crypto.encrypt(
@@ -66,7 +86,6 @@ export class AdminService {
     }
 
     const updatedUser = await this.userRepository.update(user.id || "", {
-      id: user.id,
       password: user.password,
       name: data.name,
       email: data.email,

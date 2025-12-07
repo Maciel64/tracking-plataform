@@ -6,6 +6,8 @@ import { EnterpriseRepository } from "@/domain/enterprises/enterprise.repository
 import { EnterpriseService } from "@/domain/enterprises/enterprise.service";
 import { MicrocontrollerRepository } from "@/domain/microcontrollers/microcontroller.repository";
 import { MicrocontrollerService } from "@/domain/microcontrollers/microcontroller.service";
+import { NotificationRepository } from "@/domain/notifications/notification.repository";
+import { NotificationService } from "@/domain/notifications/notification.service";
 import { UserRepository } from "@/domain/users/user.repository";
 import { UserService } from "@/domain/users/user.service";
 
@@ -19,6 +21,8 @@ export const DI = {
   COORDINATE_REPOSITORY: Symbol("COORDINATE_REPOSITORY"),
   ENTERPRISE_SERVICE: Symbol("ENTERPRISE_SERVICE"),
   ENTERPRISE_REPOSITORY: Symbol("ENTERPRISE_REPOSITORY"),
+  NOTIFICATION_SERVICE: Symbol("NOTIFICATION_SERVICE"),
+  NOTIFICATION_REPOSITORY: Symbol("NOTIFICATION_REPOSITORY"),
 };
 
 export const container = createContainer();
@@ -49,10 +53,20 @@ container
 
 container
   .bind(DI.ADMIN_SERVICE)
-  .toClass(AdminService, [DI.USER_REPOSITORY, DI.ENTERPRISE_SERVICE]);
+  .toClass(AdminService, [
+    DI.USER_REPOSITORY,
+    DI.ENTERPRISE_SERVICE,
+    DI.NOTIFICATION_SERVICE,
+  ]);
 
 container.bind(DI.ENTERPRISE_REPOSITORY).toClass(EnterpriseRepository);
 
 container
   .bind(DI.ENTERPRISE_SERVICE)
   .toClass(EnterpriseService, [DI.ENTERPRISE_REPOSITORY, DI.USER_REPOSITORY]);
+
+container.bind(DI.NOTIFICATION_REPOSITORY).toClass(NotificationRepository);
+
+container
+  .bind(DI.NOTIFICATION_SERVICE)
+  .toClass(NotificationService, [DI.NOTIFICATION_REPOSITORY, DI.USER_SERVICE]);

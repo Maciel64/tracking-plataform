@@ -1,4 +1,5 @@
 import { prisma } from "@/providers/prisma/prisma.provider";
+import type { UpdateUserSchema } from "@/schemas/user.schema";
 import type { User } from "./user.model";
 
 export class UserRepository {
@@ -30,6 +31,7 @@ export class UserRepository {
         createdAt: true,
         updatedAt: true,
         enterprises: {
+          where: { enterpriseId },
           select: {
             role: true,
             status: true,
@@ -55,7 +57,7 @@ export class UserRepository {
     return user;
   }
 
-  async update(id: string, data: User): Promise<User> {
+  async update(id: string, data: UpdateUserSchema): Promise<User> {
     const user = await prisma.user.update({
       where: { id },
       data: {

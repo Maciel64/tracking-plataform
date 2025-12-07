@@ -23,6 +23,7 @@ model User {
   updatedAt        DateTime          @updatedAt
   microcontrollers Microcontroller[]
   enterprises      UserEnterprise[]
+  notifications    Notification[]
 }
 
 model Microcontroller {
@@ -74,6 +75,23 @@ model Enterprise {
   deletedAt        DateTime?
   users            UserEnterprise[]
   microcontrollers Microcontroller[]
+  notifications    Notification[]
+}
+
+model Notification {
+  id           String             @id @default(cuid())
+  title        String
+  message      String
+  read         Boolean            @default(false)
+  confirmed    Boolean?
+  type         NotificationType   @default(INFO)
+  action       NotificationAction @default(ENTERPRISE_INVITATION)
+  createdAt    DateTime           @default(now())
+  deletedAt    DateTime?
+  user         User               @relation(fields: [userId], references: [id])
+  userId       String
+  enterprise   Enterprise         @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String
 }
 
 enum UserRole {
@@ -85,10 +103,21 @@ enum UserRole {
 enum UserStatus {
   ENABLED
   DISABLED
+  PENDING
 }
 
 enum VehicleType {
   CAR
   MOTORCYCLE
   TRUCK
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  CONFIRMATION
+}
+
+enum NotificationAction {
+  ENTERPRISE_INVITATION
 }

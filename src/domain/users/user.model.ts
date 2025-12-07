@@ -7,7 +7,7 @@ import type { Microcontroller } from "../microcontrollers/microcontroller.model"
 export const userRoles = ["USER", "ADMIN", "OWNER"] as const;
 export type UserRoles = (typeof userRoles)[number];
 
-export const userStatus = ["ENABLED", "DISABLED"] as const;
+export const userStatus = ["ENABLED", "DISABLED", "PENDING"] as const;
 export type UserStatus = (typeof userStatus)[number];
 
 export class User {
