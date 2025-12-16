@@ -50,6 +50,22 @@ export class UserRepository {
     return user;
   }
 
+  async findByIdComplete(id: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        createdAt: true,
+        email: true,
+        enterprises: true,
+        id: true,
+        name: true,
+        updatedAt: true,
+      },
+    });
+
+    return user;
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { email },

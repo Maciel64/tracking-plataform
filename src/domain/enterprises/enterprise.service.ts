@@ -32,8 +32,8 @@ export class EnterpriseService {
     });
   }
 
-  async find(id: string) {
-    return this.enterpriseRepository.find(id);
+  async find(id: string, userId?: string) {
+    return this.enterpriseRepository.find(id, userId);
   }
 
   async findByName(name: string) {

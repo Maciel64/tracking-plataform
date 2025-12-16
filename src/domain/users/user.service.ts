@@ -1,6 +1,7 @@
 import { Crypto } from "@/lib/crypto";
 import {
   ConflictError,
+  ForbiddenError,
   HttpError,
   NotFoundError,
   UnauthorizedError,
@@ -12,8 +13,14 @@ import {
   loginSchema,
 } from "@/schemas/user.schema";
 import type { EnterpriseService } from "../enterprises/enterprise.service";
-import { type User, UserAuthDTO, UserResponseDTO } from "./user.model";
+import {
+  type User,
+  UserAuthDTO,
+  UserResponseDTO,
+  UserWithEnterprisesResponseDTO,
+} from "./user.model";
 import type { UserRepository } from "./user.repository";
+import { EnterpriseDTO } from "../enterprises/enterprise.model";
 
 export class UserService {
   constructor(
@@ -27,6 +34,16 @@ export class UserService {
     if (!user) return new NotFoundError("User not found");
 
     return UserResponseDTO.toJSON(user);
+  }
+
+  async findByIdComplete(
+    id: string,
+  ): Promise<UserWithEnterprisesResponseDTO | HttpError> {
+    const user = await this.usersRepository.findByIdComplete(id);
+
+    if (!user) return new NotFoundError("User not found");
+
+    return UserWithEnterprisesResponseDTO.toJSON(user);
   }
 
   async findMany(enterpriseId?: string): Promise<UserResponseDTO[]> {
@@ -116,5 +133,29 @@ export class UserService {
     );
 
     return UserAuthDTO.toJSON(user, enterprises);
+  }
+
+  async getUserEnterprise(
+    userId: string,
+    enterpriseId: string,
+  ): Promise<EnterpriseDTO | HttpError> {
+    const user = await this.usersRepository.findByIdComplete(userId);
+
+    if (!user) return new NotFoundError("Usuário não encontrado");
+
+    const enterprise = await this.enterpriseService.find(enterpriseId, user.id);
+
+    console.log(enterprise);
+
+    if (!enterprise) return new NotFoundError("Empresa não encontrada");
+
+    const userBelongsToEnteprise = user.enterprises?.some(
+      (e) => e.enterpriseId === enterpriseId,
+    );
+
+    if (!userBelongsToEnteprise)
+      return new ForbiddenError("Você não tem acesso a essa empresa");
+
+    return EnterpriseDTO.toJson(enterprise);
   }
 }

@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import type { User } from "next-auth";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,30 +14,38 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { mapRoleToLabel } from "@/domain/users/user.helpers";
+import { getUserEnterprise } from "@/domain/enterprises/enterprise.actions";
+import { toast } from "sonner";
+import { HttpError } from "@/lib/errors/http.error";
 
 interface EnterpriseSelectorProps {
   user: User;
 }
 
 export function EnterpriseSelector({ user }: EnterpriseSelectorProps) {
+  const { update } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session } = useSession();
+  const userId = session?.user.id || "";
 
   const handleSelectEnterprise = async (enterpriseId: string) => {
     setIsLoading(true);
+
     try {
-      // await setActiveEnterprise(enterpriseId);
-      // A página será revalidada automaticamente
-      console.log();
+      const activeEnterprise = await getUserEnterprise(userId, enterpriseId);
+
+      if (activeEnterprise instanceof HttpError)
+        return toast.error(activeEnterprise.message);
+
+      await update({
+        activeEnterprise,
+      });
     } catch (error) {
       console.error("Erro ao mudar empresa:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (!user) {
-    return <p>Usuário não autenticado</p>;
-  }
 
   return (
     <DropdownMenu>
@@ -50,9 +59,11 @@ export function EnterpriseSelector({ user }: EnterpriseSelectorProps) {
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel>Suas Empresas</DropdownMenuLabel>
         <DropdownMenuSeparator />
+
         {user.enterprises?.map((enterprise) => (
           <DropdownMenuItem
             key={enterprise.id}

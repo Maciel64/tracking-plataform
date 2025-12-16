@@ -104,3 +104,26 @@ export class UserResponseDTO {
     };
   }
 }
+
+export class UserWithEnterprisesResponseDTO {
+  id: string;
+  name: string;
+  email: string;
+  enterprises: Enterprise[];
+
+  constructor(user: User) {
+    this.id = user.id || "";
+    this.name = user.name || "";
+    this.email = user.email || "";
+    this.enterprises = user.enterprises || [];
+  }
+
+  static toJSON(user: User): UserWithEnterprisesResponseDTO {
+    return {
+      id: user.id || "",
+      name: user.name || "",
+      email: user.email || "",
+      enterprises: user.enterprises || [],
+    };
+  }
+}

@@ -3,10 +3,25 @@ import type { UserEnterprise } from "../users/user.model";
 import type { Enterprise } from "./enterprise.model";
 
 export class EnterpriseRepository {
-  find(id: string) {
+  find(id: string, userId?: string) {
+    console.log(userId);
+
     return prisma.enterprise.findFirst({
       where: {
         id,
+      },
+      select: {
+        createdAt: true,
+        deletedAt: true,
+        id: true,
+        microcontrollers: true,
+        name: true,
+        updatedAt: true,
+        users: {
+          where: {
+            userId,
+          },
+        },
       },
     });
   }
