@@ -145,8 +145,6 @@ export class UserService {
 
     const enterprise = await this.enterpriseService.find(enterpriseId, user.id);
 
-    console.log(enterprise);
-
     if (!enterprise) return new NotFoundError("Empresa não encontrada");
 
     const userBelongsToEnteprise = user.enterprises?.some(

@@ -4,8 +4,6 @@ import type { Enterprise } from "./enterprise.model";
 
 export class EnterpriseRepository {
   find(id: string, userId?: string) {
-    console.log(userId);
-
     return prisma.enterprise.findFirst({
       where: {
         id,
